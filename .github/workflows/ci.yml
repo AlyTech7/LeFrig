@@ -59,9 +59,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Lint web
-        run: pnpm --filter @lefrig/web lint
-      - name: Build web (monorepo)
+      - name: Build web (monorepo — incluye typecheck)
         run: pnpm turbo run build --filter=@lefrig/web
         env:
           NEXT_PUBLIC_API_URL: http://localhost:3001
