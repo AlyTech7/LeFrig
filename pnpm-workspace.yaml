@@ -1,0 +1,10 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+nodeLinker: hoisted
+
+pnpm:
+  overrides:
+    "@clerk/backend>react": "19.1.0"
+    "@clerk/backend>react-dom": "19.1.0"

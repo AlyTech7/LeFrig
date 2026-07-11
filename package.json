@@ -1,0 +1,33 @@
+{
+  "name": "lefrig",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Lefrig — Superapp saharaui: marketplace, efectivo, fiado, transporte, diáspora y comunidad",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:e2e": "pnpm --filter @lefrig/e2e test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "db:migrate": "pnpm --filter @lefrig/api db:migrate",
+    "db:seed": "pnpm --filter @lefrig/api db:seed",
+    "db:studio": "pnpm --filter @lefrig/api db:studio",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:prod": "docker compose -f docker-compose.prod.yml up --build -d",
+    "docker:prod:down": "docker compose -f docker-compose.prod.yml down",
+    "clean": "turbo run clean && rimraf node_modules"
+  },
+  "devDependencies": {
+    "@lefrig/config": "workspace:*",
+    "prettier": "^3.4.2",
+    "rimraf": "^6.0.1",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

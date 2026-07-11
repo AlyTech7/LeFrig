@@ -1,0 +1,200 @@
+/* ═══ LEFRIG COMPASS — rosa del Sáhara ═══ */
+
+.lf-compass {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lf-compass__svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.lf-compass--live .lf-compass__eye {
+  animation: lf-eye 3s ease-in-out infinite;
+}
+
+.lf-compass--live .lf-compass__orbit {
+  animation: lf-orbit-fade 4s ease-in-out infinite;
+}
+
+@keyframes lf-eye {
+  0%, 100% { opacity: 0.82; }
+  50% { opacity: 1; }
+}
+
+@keyframes lf-orbit-fade {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* ─── Brand lockup ─── */
+.lf-brand-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.lf-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
+.lf-brand__trail {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 0.65rem 0 0.5rem;
+  padding-bottom: 0.15rem;
+}
+
+.lf-brand__trail-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(26, 22, 18, 0.15);
+  flex-shrink: 0;
+}
+
+.lf-brand__trail-dot--on {
+  width: 5px;
+  height: 5px;
+  background: var(--sv-oasis);
+  box-shadow: 0 0 6px rgba(45, 138, 98, 0.35);
+}
+
+.lf-brand__wordmark {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.lf-brand__name {
+  font-family: var(--sv-display);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--sv-text);
+  line-height: 1;
+}
+
+.lf-brand__tagline {
+  font-family: var(--sv-body);
+  font-weight: 400;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  color: var(--sv-dune);
+  line-height: 1;
+  font-style: italic;
+}
+
+/* Variants */
+.lf-brand--hero {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.lf-brand--hero .lf-brand__trail {
+  display: none;
+}
+
+.lf-brand--hero .lf-brand__wordmark {
+  align-items: center;
+  text-align: center;
+}
+
+.lf-brand--hero .lf-brand__name {
+  font-size: clamp(1.65rem, 5vw, 2.25rem);
+  letter-spacing: 0.24em;
+}
+
+.lf-brand--hero .lf-brand__tagline {
+  font-size: clamp(0.8rem, 2.2vw, 0.92rem);
+}
+
+.lf-brand--header .lf-brand__name {
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+}
+
+.lf-brand--header .lf-brand__trail {
+  margin: 0 0.45rem 0 0.35rem;
+  gap: 3px;
+}
+
+@media (max-width: 420px) {
+  .lf-brand--header .lf-brand__trail {
+    display: none;
+  }
+
+  .lf-brand--header .lf-brand__name {
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+  }
+}
+
+.lf-brand--header .lf-brand__trail-dot {
+  width: 3px;
+  height: 3px;
+}
+
+.lf-brand--header .lf-brand__trail-dot--on {
+  width: 4px;
+  height: 4px;
+}
+
+.lf-brand--footer .lf-brand__name {
+  font-size: 0.85rem;
+  letter-spacing: 0.18em;
+}
+
+.lf-brand--footer .lf-brand__tagline {
+  font-size: 0.75rem;
+}
+
+.lf-brand--footer {
+  gap: 0.65rem;
+}
+
+/* Header mark slot */
+.sv-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.sv-crown__home:hover {
+  opacity: 0.92;
+}
+
+.sv-crown__home--active .lf-compass__eye {
+  filter: drop-shadow(0 0 5px rgba(244, 241, 234, 0.9));
+}
+
+.sv-mark .lf-compass {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Dock */
+.sv-dock__item .lf-compass {
+  opacity: 0.5;
+}
+
+.sv-dock__item--active .lf-compass {
+  opacity: 1;
+}

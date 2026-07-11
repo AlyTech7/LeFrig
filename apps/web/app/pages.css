@@ -1,0 +1,314 @@
+/* ═══════════════════════════════════════════════════════════
+   PAGES — Perla Sahara (mismo lenguaje que la home)
+   Aplica a todo el contenido dentro de .sv-main
+   ═══════════════════════════════════════════════════════════ */
+
+.sv-main {
+  --page-ink: #1a1612;
+  --page-ink-muted: rgba(26, 22, 18, 0.62);
+  --page-ink-faint: rgba(26, 22, 18, 0.46);
+  --page-surface: #ffffff;
+  --page-surface-up: #faf8f4;
+  --page-line: rgba(26, 22, 18, 0.1);
+  --page-line-hover: rgba(168, 132, 45, 0.35);
+  --page-shadow: 0 4px 24px rgba(26, 22, 18, 0.06);
+  --page-shadow-lg: 0 12px 40px rgba(26, 22, 18, 0.08);
+  color: var(--page-ink);
+  color-scheme: light;
+}
+
+/* ─── Superficie clara reutilizable (sustituye glass oscuro) ─── */
+.sv-main :is(
+  .lf-page-hero-inner,
+  .mkt-dept,
+  .mkt-search,
+  .pub-panel,
+  .pub-aside,
+  .pub-step,
+  .pub-cat,
+  .pub-camp,
+  .pub-field,
+  .pub-preview,
+  .pub-summary,
+  .sv-dept,
+  .sv-stat
+) {
+  background: var(--page-surface) !important;
+  border: 1px solid var(--page-line) !important;
+  box-shadow: var(--page-shadow) !important;
+  backdrop-filter: none !important;
+}
+
+.sv-main :is(.mkt-dept:hover, .pub-cat:hover) {
+  border-color: var(--page-line-hover) !important;
+  box-shadow: var(--page-shadow-lg) !important;
+}
+
+/* ─── Page hero (PageHero + páginas inline) ─── */
+.sv-main .lf-page-hero {
+  padding: 0.5rem 1.25rem 1rem;
+  margin: 0;
+  color: var(--page-ink);
+}
+
+.sv-main .lf-page-hero-inner {
+  border-radius: 3px;
+  padding: 1.35rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.sv-main .lf-page-hero-inner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--sv-oasis), var(--sv-dune));
+}
+
+.sv-main .lf-page-title {
+  font-family: var(--sv-display);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin: 0;
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  color: var(--page-ink);
+}
+
+.sv-main .lf-page-sub {
+  color: var(--page-ink-muted);
+  font-size: 0.9rem;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.sv-main .lf-page-body {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 1.25rem 3rem;
+  color: var(--page-ink);
+}
+
+.sv-main .lf-page-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--page-surface-up);
+  border: 1px solid var(--page-line);
+  flex-shrink: 0;
+}
+
+/* ─── Filtros y formularios ─── */
+.sv-main .lf-filter-bar {
+  background: var(--page-surface);
+  border: 1px solid var(--page-line);
+  border-radius: 3px;
+  box-shadow: var(--page-shadow);
+  padding: 1rem;
+}
+
+.sv-main .lf-filter-bar input,
+.sv-main .lf-filter-bar select,
+.sv-main :is(.mkt-search select, .pub-field input, .pub-field textarea, .pub-field select) {
+  background: var(--page-surface-up) !important;
+  border: 1px solid var(--page-line) !important;
+  color: var(--page-ink) !important;
+  border-radius: 3px;
+}
+
+.sv-main :is(.mkt-search input, .pub-field input)::placeholder,
+.sv-main .lf-filter-bar input::placeholder {
+  color: var(--page-ink-faint);
+}
+
+.sv-main .mkt-search {
+  border-radius: 3px;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+}
+
+.sv-main .mkt-search input {
+  color: var(--page-ink);
+}
+
+/* ─── Marketplace ─── */
+.sv-main :is(.mkt-page, .pub-page, .svc-page, .shp-page) {
+  animation: lf-page-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes lf-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sv-main .mkt-hero h1,
+.sv-main .pub-hero h1 {
+  color: var(--page-ink);
+}
+
+.sv-main :is(.mkt-gradient, .pub-gradient) {
+  background: linear-gradient(120deg, var(--page-ink), var(--sv-dune));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.sv-main :is(.mkt-lead, .pub-lead) {
+  color: var(--page-ink-muted);
+}
+
+.sv-main .mkt-dept__icon {
+  background: var(--page-surface-up) !important;
+  border: 1px solid var(--page-line) !important;
+}
+
+.sv-main .mkt-dept__head h3 {
+  color: var(--page-ink);
+}
+
+.sv-main .mkt-dept__head p {
+  color: var(--page-ink-muted);
+}
+
+.sv-main .mkt-dept__chip {
+  background: var(--page-surface-up) !important;
+  border: 1px solid var(--page-line) !important;
+  color: var(--page-ink) !important;
+}
+
+.sv-main .mkt-dept__chip:hover {
+  border-color: var(--page-line-hover) !important;
+  background: var(--page-surface) !important;
+}
+
+/* ─── Publish ─── */
+.sv-main .pub-panel h2 {
+  color: var(--page-ink);
+}
+
+.sv-main .pub-hint,
+.sv-main .pub-subtitle {
+  color: var(--page-ink-muted);
+}
+
+.sv-main .pub-step--on {
+  border-color: var(--sv-dune) !important;
+  background: var(--page-surface-up) !important;
+}
+
+.sv-main .pub-cat--on {
+  border-color: var(--sv-dune) !important;
+  box-shadow: 0 0 0 1px rgba(168, 132, 45, 0.2) !important;
+}
+
+.sv-main .pub-cat strong,
+.sv-main .pub-camp strong {
+  color: var(--page-ink);
+}
+
+.sv-main .pub-cat small,
+.sv-main .pub-camp small {
+  color: var(--page-ink-muted);
+}
+
+/* ─── CTAs — texto oscuro sobre oro/verde ─── */
+.sv-main :is(
+  .mkt-cta-pub,
+  .mkt-search button,
+  .pub-submit,
+  .pub-btn--gold
+) {
+  color: #1a1612 !important;
+}
+
+/* ─── Skeleton / grids ─── */
+.sv-main .lf-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(26, 22, 18, 0.04) 25%,
+    rgba(26, 22, 18, 0.08) 50%,
+    rgba(26, 22, 18, 0.04) 75%
+  );
+  background-size: 200% 100%;
+}
+
+.sv-main .lf-listings-grid {
+  gap: 1rem;
+}
+
+/* ─── Auth (sign-in / sign-up) ─── */
+.sv-auth {
+  min-height: calc(100vh - var(--sv-chrome-top) - var(--sv-dock-h));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+}
+
+.sv-auth__card {
+  width: 100%;
+  max-width: 420px;
+}
+
+.sv-auth__notice {
+  text-align: center;
+  max-width: 420px;
+  padding: 2rem;
+  background: var(--page-surface);
+  border: 1px solid var(--page-line);
+  border-radius: 3px;
+  box-shadow: var(--page-shadow-lg);
+}
+
+.sv-auth__notice h1 {
+  font-family: var(--sv-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--page-ink);
+  margin: 0 0 0.75rem;
+}
+
+.sv-auth__notice p {
+  color: var(--page-ink-muted);
+  margin: 0;
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+
+/* ─── Chips / kickers en páginas ─── */
+.sv-main .sv-kicker {
+  color: var(--sv-oasis-deep);
+}
+
+.sv-main .sv-section-label span {
+  color: var(--page-ink-muted);
+}
+
+/* No aplicar tema claro a tarjetas con foto de la home */
+.sv-main .lf-home .lf-vis {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.sv-main .lf-home :is(.lf-portal__door, .lf-vault) {
+  background: transparent !important;
+}
+
+.sv-main .lf-home .lf-vault {
+  border: none !important;
+  box-shadow: none !important;
+}

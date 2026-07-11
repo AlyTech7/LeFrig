@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Lefrig",
+    "slug": "lefrig",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "lefrig",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1B5E4B"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lefrig.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1B5E4B"
+      },
+      "package": "com.lefrig.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#1B5E4B"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "autolinkingModuleResolution": true
+    }
+  }
+}
