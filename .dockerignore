@@ -1,0 +1,17 @@
+node_modules
+.git
+.github
+**/.next
+**/dist
+**/.turbo
+**/coverage
+**/*.log
+.env
+.env.*
+!.env.example
+apps/mobile
+apps/admin
+apps/e2e
+**/.expo
+**/android
+**/ios

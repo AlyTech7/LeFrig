@@ -1,0 +1,1074 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── User & Auth ───────────────────────────────────────────────────────────
+
+model User {
+  id                 String   @id @default(uuid()) @db.Uuid
+  clerkId            String?  @unique @map("clerk_id")
+  phone              String?  @unique
+  email              String?  @unique
+  displayName        String   @map("display_name")
+  avatarUrl          String?  @map("avatar_url")
+  roles              String[] @default(["citizen"])
+  campId             String?  @map("camp_id") @db.Uuid
+  dairaId            String?  @map("daira_id") @db.Uuid
+  preferredLanguage  String   @default("ar") @map("preferred_language")
+  verificationLevel  String   @default("unverified") @map("verification_level")
+  reputationScore    Float    @default(0) @map("reputation_score")
+  badges             String[] @default([])
+  profile            Json?
+  isActive           Boolean  @default(true) @map("is_active")
+  bannedAt           DateTime? @map("banned_at")
+  banReason          String?  @map("ban_reason")
+  suspendedUntil     DateTime? @map("suspended_until")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  camp               Camp?              @relation(fields: [campId], references: [id])
+  daira              Daira?             @relation(fields: [dairaId], references: [id])
+  refreshTokens      RefreshToken[]
+  otpCodes           OtpCode[]
+  listings           Listing[]
+  listingFavorites   ListingFavorite[]
+  listingReports     ListingReport[]
+  shops              Shop[]
+  ordersAsBuyer      Order[]            @relation("OrderBuyer")
+  ordersAsBeneficiary Order[]           @relation("OrderBeneficiary")
+  services           Service[]
+  transportRequests  TransportRequest[] @relation("TransportRequester")
+  transportAsDriver  TransportRequest[] @relation("TransportDriver")
+  driverProfile      DriverProfile?
+  jobs               Job[]
+  diasporaProfile    DiasporaProfile?
+  vouchers           Voucher[]
+  conversations      ConversationParticipant[]
+  messagesSent       Message[]
+  notifications      Notification[]
+  reviewsGiven       Review[]           @relation("ReviewAuthor")
+  reviewsReceived    Review[]           @relation("ReviewTarget")
+  userBadges         UserBadge[]
+  reportsFiled       Report[]           @relation("ReportReporter")
+  reportsTarget      Report[]           @relation("ReportTarget")
+  moderationLogs     ModerationLog[]
+  adminAccessLogs    AdminAccessLog[]
+  disputesOpened     Dispute[]          @relation("DisputeOpener")
+  disputesAgainst    Dispute[]          @relation("DisputeRespondent")
+  needRequests       NeedRequest[]
+  needOffers         NeedOffer[]
+  communityPosts     CommunityPost[]
+  cashAgreementsBuyer    CashAgreement[] @relation("CashBuyer")
+  cashAgreementsSeller   CashAgreement[] @relation("CashSeller")
+  cashConfirmations      CashConfirmation[]
+  creditAccountsAsDebtor CreditAccount[] @relation("CreditDebtor")
+  creditAccountsAsCreditor CreditAccount[] @relation("CreditCreditor")
+
+  @@index([campId])
+  @@index([dairaId])
+  @@index([phone])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tokenHash String   @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("refresh_tokens")
+}
+
+model OtpCode {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  phone     String
+  codeHash  String   @map("code_hash")
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([phone])
+  @@map("otp_codes")
+}
+
+// ─── Geography ─────────────────────────────────────────────────────────────
+
+model Camp {
+  id        String   @id @default(uuid()) @db.Uuid
+  slug      String   @unique
+  nameAr    String   @map("name_ar")
+  nameEs    String   @map("name_es")
+  nameEn    String   @map("name_en")
+  isTindouf Boolean  @default(false) @map("is_tindouf")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  dairas              Daira[]
+  users               User[]
+  neighborhoods       Neighborhood[]
+  marketAreas         MarketArea[]
+  pickupPoints        PickupPoint[]
+  routesOrigin        Route[]            @relation("RouteOrigin")
+  routesDestination   Route[]            @relation("RouteDestination")
+  listings            Listing[]
+  shops               Shop[]
+  services            ServiceCamp[]
+  transportOrigin     TransportRequest[] @relation("TransportOrigin")
+  transportDest       TransportRequest[] @relation("TransportDest")
+  jobs                Job[]
+  needRequests        NeedRequest[]
+  communityPosts      CommunityPost[]
+  frequentRoutesOrigin FrequentRoute[]   @relation("FrequentRouteOrigin")
+  frequentRoutesDest   FrequentRoute[]   @relation("FrequentRouteDest")
+
+  @@map("camps")
+}
+
+model Daira {
+  id        String   @id @default(uuid()) @db.Uuid
+  campId    String   @map("camp_id") @db.Uuid
+  slug      String
+  nameAr    String   @map("name_ar")
+  nameEs    String   @map("name_es")
+  nameEn    String   @map("name_en")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  camp          Camp           @relation(fields: [campId], references: [id], onDelete: Cascade)
+  users         User[]
+  neighborhoods Neighborhood[]
+  listings      Listing[]
+  shops         Shop[]
+
+  @@unique([campId, slug])
+  @@index([campId])
+  @@map("dairas")
+}
+
+model Neighborhood {
+  id        String   @id @default(uuid()) @db.Uuid
+  campId    String   @map("camp_id") @db.Uuid
+  dairaId   String?  @map("daira_id") @db.Uuid
+  nameAr    String   @map("name_ar")
+  nameEs    String   @map("name_es")
+  nameEn    String   @map("name_en")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  camp  Camp   @relation(fields: [campId], references: [id], onDelete: Cascade)
+  daira Daira? @relation(fields: [dairaId], references: [id], onDelete: SetNull)
+
+  @@index([campId])
+  @@map("neighborhoods")
+}
+
+model MarketArea {
+  id          String   @id @default(uuid()) @db.Uuid
+  campId      String   @map("camp_id") @db.Uuid
+  slug        String
+  nameAr      String   @map("name_ar")
+  nameEs      String   @map("name_es")
+  nameEn      String   @map("name_en")
+  description String?
+  latitude    Float?
+  longitude   Float?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  camp  Camp   @relation(fields: [campId], references: [id], onDelete: Cascade)
+  shops Shop[]
+
+  @@unique([campId, slug])
+  @@index([campId])
+  @@map("market_areas")
+}
+
+model PickupPoint {
+  id          String   @id @default(uuid()) @db.Uuid
+  campId      String   @map("camp_id") @db.Uuid
+  nameAr      String   @map("name_ar")
+  nameEs      String   @map("name_es")
+  nameEn      String   @map("name_en")
+  address     String?
+  latitude    Float?
+  longitude   Float?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  camp              Camp               @relation(fields: [campId], references: [id], onDelete: Cascade)
+  transportPickup   TransportRequest[] @relation("TransportPickup")
+  transportDropoff  TransportRequest[] @relation("TransportDropoff")
+
+  @@index([campId])
+  @@map("pickup_points")
+}
+
+model Route {
+  id                String   @id @default(uuid()) @db.Uuid
+  originCampId      String   @map("origin_camp_id") @db.Uuid
+  destinationCampId String   @map("destination_camp_id") @db.Uuid
+  nameAr            String   @map("name_ar")
+  nameEs            String   @map("name_es")
+  distanceKm        Float?   @map("distance_km")
+  estimatedHours    Float?   @map("estimated_hours")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  originCamp      Camp @relation("RouteOrigin", fields: [originCampId], references: [id])
+  destinationCamp Camp @relation("RouteDestination", fields: [destinationCampId], references: [id])
+
+  @@unique([originCampId, destinationCampId])
+  @@map("routes")
+}
+
+// ─── Categories & Listings ─────────────────────────────────────────────────
+
+model Category {
+  id        String   @id @default(uuid()) @db.Uuid
+  slug      String   @unique
+  nameAr    String   @map("name_ar")
+  nameEs    String   @map("name_es")
+  nameEn    String   @map("name_en")
+  icon      String?
+  type      String   @default("listing")
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  listings Listing[]
+  services Service[]
+
+  @@index([type])
+  @@map("categories")
+}
+
+model Listing {
+  id             String   @id @default(uuid()) @db.Uuid
+  sellerId       String   @map("seller_id") @db.Uuid
+  categoryId     String   @map("category_id") @db.Uuid
+  campId         String   @map("camp_id") @db.Uuid
+  dairaId        String?  @map("daira_id") @db.Uuid
+  title          String
+  description    String
+  price          Decimal  @db.Decimal(12, 2)
+  currency       String   @default("MRU")
+  status         String   @default("draft")
+  images         String[] @default([])
+  paymentMethods String[] @default(["cash"]) @map("payment_methods")
+  attributes     Json     @default("{}")
+  viewCount      Int      @default(0) @map("view_count")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  seller    User      @relation(fields: [sellerId], references: [id])
+  category  Category  @relation(fields: [categoryId], references: [id])
+  camp      Camp      @relation(fields: [campId], references: [id])
+  daira     Daira?    @relation(fields: [dairaId], references: [id])
+  favorites ListingFavorite[]
+  reports   ListingReport[]
+  cashAgreements CashAgreement[]
+  disputes  Dispute[]
+
+  @@index([sellerId])
+  @@index([categoryId])
+  @@index([campId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("listings")
+}
+
+model ListingFavorite {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  listingId String   @map("listing_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@map("listing_favorites")
+}
+
+model ListingReport {
+  id        String   @id @default(uuid()) @db.Uuid
+  listingId String   @map("listing_id") @db.Uuid
+  reporterId String  @map("reporter_id") @db.Uuid
+  reason    String
+  details   String?
+  status    String   @default("pending")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  listing  Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reporter User    @relation(fields: [reporterId], references: [id])
+
+  @@index([listingId])
+  @@map("listing_reports")
+}
+
+// ─── Cash Operations ─────────────────────────────────────────────────────────
+
+model CashAgreement {
+  id            String   @id @default(uuid()) @db.Uuid
+  operationCode String   @unique @map("operation_code")
+  listingId     String?  @map("listing_id") @db.Uuid
+  buyerId       String   @map("buyer_id") @db.Uuid
+  sellerId      String   @map("seller_id") @db.Uuid
+  amount        Decimal  @db.Decimal(12, 2)
+  currency      String   @default("MRU")
+  method        String   @default("cash")
+  status        String   @default("pending")
+  pin           String?
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  listing       Listing?          @relation(fields: [listingId], references: [id])
+  buyer         User              @relation("CashBuyer", fields: [buyerId], references: [id])
+  seller        User              @relation("CashSeller", fields: [sellerId], references: [id])
+  confirmations CashConfirmation[]
+  receipts      CashReceipt[]
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([operationCode])
+  @@map("cash_agreements")
+}
+
+model CashConfirmation {
+  id              String   @id @default(uuid()) @db.Uuid
+  agreementId     String   @map("agreement_id") @db.Uuid
+  confirmedById   String   @map("confirmed_by_id") @db.Uuid
+  role            String
+  pinVerified     Boolean  @default(false) @map("pin_verified")
+  confirmedAt     DateTime @default(now()) @map("confirmed_at")
+
+  agreement   CashAgreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  confirmedBy User          @relation(fields: [confirmedById], references: [id])
+
+  @@map("cash_confirmations")
+}
+
+model CashReceipt {
+  id          String   @id @default(uuid()) @db.Uuid
+  agreementId String   @map("agreement_id") @db.Uuid
+  receiptUrl  String?  @map("receipt_url")
+  amount      Decimal  @db.Decimal(12, 2)
+  issuedAt    DateTime @default(now()) @map("issued_at")
+
+  agreement CashAgreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+
+  @@map("cash_receipts")
+}
+
+model ManualPayment {
+  id            String   @id @default(uuid()) @db.Uuid
+  orderId       String?  @map("order_id") @db.Uuid
+  reference     String
+  amount        Decimal  @db.Decimal(12, 2)
+  currency      String   @default("MRU")
+  status        String   @default("pending_manual_confirmation")
+  proofUrl      String?  @map("proof_url")
+  confirmedAt   DateTime? @map("confirmed_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@index([reference])
+  @@map("manual_payments")
+}
+
+// ─── Credit / Ledger ─────────────────────────────────────────────────────────
+
+model CreditAccount {
+  id           String   @id @default(uuid()) @db.Uuid
+  debtorId     String   @map("debtor_id") @db.Uuid
+  creditorId   String   @map("creditor_id") @db.Uuid
+  shopId       String?  @map("shop_id") @db.Uuid
+  balance      Decimal  @default(0) @db.Decimal(12, 2)
+  currency     String   @default("MRU")
+  lastUpdated  DateTime @default(now()) @map("last_updated")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  debtor   User   @relation("CreditDebtor", fields: [debtorId], references: [id])
+  creditor User   @relation("CreditCreditor", fields: [creditorId], references: [id])
+  shop     Shop?  @relation(fields: [shopId], references: [id])
+  entries  CreditEntry[]
+  payments CreditPayment[]
+  agreements CreditAgreement[]
+
+  @@unique([debtorId, creditorId, shopId])
+  @@index([debtorId])
+  @@index([creditorId])
+  @@map("credit_accounts")
+}
+
+model CreditEntry {
+  id        String   @id @default(uuid()) @db.Uuid
+  accountId String   @map("account_id") @db.Uuid
+  type      String
+  amount    Decimal  @db.Decimal(12, 2)
+  balanceAfter Decimal @map("balance_after") @db.Decimal(12, 2)
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  account CreditAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("credit_entries")
+}
+
+model CreditPayment {
+  id        String   @id @default(uuid()) @db.Uuid
+  accountId String   @map("account_id") @db.Uuid
+  amount    Decimal  @db.Decimal(12, 2)
+  method    String   @default("cash")
+  notes     String?
+  paidAt    DateTime @default(now()) @map("paid_at")
+
+  account CreditAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("credit_payments")
+}
+
+model CreditAgreement {
+  id        String   @id @default(uuid()) @db.Uuid
+  accountId String   @map("account_id") @db.Uuid
+  amount    Decimal  @db.Decimal(12, 2)
+  terms     String?
+  status    String   @default("pending")
+  dueDate   DateTime? @map("due_date")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  account CreditAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("credit_agreements")
+}
+
+// ─── Services & Shops ────────────────────────────────────────────────────────
+
+model Service {
+  id          String   @id @default(uuid()) @db.Uuid
+  providerId  String   @map("provider_id") @db.Uuid
+  categoryId  String   @map("category_id") @db.Uuid
+  title       String
+  description String
+  priceFrom   Decimal? @map("price_from") @db.Decimal(12, 2)
+  priceTo     Decimal? @map("price_to") @db.Decimal(12, 2)
+  currency    String   @default("MRU")
+  isActive    Boolean  @default(true) @map("is_active")
+  images      String[] @default([])
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  provider User          @relation(fields: [providerId], references: [id])
+  category Category      @relation(fields: [categoryId], references: [id])
+  camps    ServiceCamp[]
+  reviews  Review[]
+
+  @@index([providerId])
+  @@index([categoryId])
+  @@map("services")
+}
+
+model ServiceCamp {
+  id        String @id @default(uuid()) @db.Uuid
+  serviceId String @map("service_id") @db.Uuid
+  campId    String @map("camp_id") @db.Uuid
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  camp    Camp    @relation(fields: [campId], references: [id], onDelete: Cascade)
+
+  @@unique([serviceId, campId])
+  @@map("service_camps")
+}
+
+model Shop {
+  id              String   @id @default(uuid()) @db.Uuid
+  ownerId         String   @map("owner_id") @db.Uuid
+  campId          String   @map("camp_id") @db.Uuid
+  dairaId         String?  @map("daira_id") @db.Uuid
+  marsaId         String?  @map("marsa_id") @db.Uuid
+  slug            String   @unique
+  name            String
+  description     String?
+  shopType        String   @default("individual") @map("shop_type")
+  phone           String
+  whatsapp        String?
+  acceptsCash     Boolean  @default(true) @map("accepts_cash")
+  acceptsFiado    Boolean  @default(false) @map("accepts_fiado")
+  acceptsVouchers Boolean  @default(false) @map("accepts_vouchers")
+  verified        Boolean  @default(false)
+  imageUrl        String?  @map("image_url")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  owner          User            @relation(fields: [ownerId], references: [id])
+  camp           Camp            @relation(fields: [campId], references: [id])
+  daira          Daira?          @relation(fields: [dairaId], references: [id])
+  marsa          MarketArea?     @relation(fields: [marsaId], references: [id])
+  products       ShopProduct[]
+  orders         Order[]
+  creditAccounts CreditAccount[]
+
+  @@index([campId])
+  @@index([ownerId])
+  @@map("shops")
+}
+
+model ShopProduct {
+  id          String   @id @default(uuid()) @db.Uuid
+  shopId      String   @map("shop_id") @db.Uuid
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(12, 2)
+  currency    String   @default("MRU")
+  stock       Int      @default(0)
+  imageUrl    String?  @map("image_url")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  shop       Shop        @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+
+  @@index([shopId])
+  @@map("shop_products")
+}
+
+// ─── Orders ──────────────────────────────────────────────────────────────────
+
+model Order {
+  id            String   @id @default(uuid()) @db.Uuid
+  buyerId       String   @map("buyer_id") @db.Uuid
+  shopId        String   @map("shop_id") @db.Uuid
+  beneficiaryId String?  @map("beneficiary_id") @db.Uuid
+  status        String   @default("pending")
+  paymentMethod String   @map("payment_method")
+  paymentStatus String   @default("pending") @map("payment_status")
+  totalAmount   Decimal  @map("total_amount") @db.Decimal(12, 2)
+  currency      String   @default("MRU")
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  buyer         User            @relation("OrderBuyer", fields: [buyerId], references: [id])
+  shop          Shop            @relation(fields: [shopId], references: [id])
+  beneficiary   User?           @relation("OrderBeneficiary", fields: [beneficiaryId], references: [id])
+  items         OrderItem[]
+  manualPayments ManualPayment[]
+  disputes      Dispute[]
+
+  @@index([buyerId])
+  @@index([shopId])
+  @@index([status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(uuid()) @db.Uuid
+  orderId   String  @map("order_id") @db.Uuid
+  productId String? @map("product_id") @db.Uuid
+  name      String
+  quantity  Int
+  unitPrice Decimal @map("unit_price") @db.Decimal(12, 2)
+  subtotal  Decimal @db.Decimal(12, 2)
+
+  order   Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product ShopProduct? @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+// ─── Transport ───────────────────────────────────────────────────────────────
+
+model TransportRequest {
+  id                 String    @id @default(uuid()) @db.Uuid
+  requesterId        String    @map("requester_id") @db.Uuid
+  driverId           String?   @map("driver_id") @db.Uuid
+  type               String
+  status             String    @default("requested")
+  originCampId       String?   @map("origin_camp_id") @db.Uuid
+  destinationCampId  String?   @map("destination_camp_id") @db.Uuid
+  originHubSlug      String?   @map("origin_hub_slug")
+  destinationHubSlug String?   @map("destination_hub_slug")
+  originLabel        String?   @map("origin_label")
+  destinationLabel   String?   @map("destination_label")
+  pickupPointId      String?   @map("pickup_point_id") @db.Uuid
+  dropoffPointId     String?   @map("dropoff_point_id") @db.Uuid
+  description        String?
+  priceEstimate      Decimal?  @map("price_estimate") @db.Decimal(12, 2)
+  seatsAvailable     Int?      @map("seats_available")
+  seatsRequested     Int?      @map("seats_requested")
+  isSharedRide       Boolean   @default(false) @map("is_shared_ride")
+  packageCapacity    String?   @map("package_capacity")
+  paymentMethod      String    @default("cash") @map("payment_method")
+  departureAt        DateTime? @map("departure_at")
+  contactPhone       String?   @map("contact_phone")
+  luggageNote        String?   @map("luggage_note")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  requester       User         @relation("TransportRequester", fields: [requesterId], references: [id])
+  driver          User?        @relation("TransportDriver", fields: [driverId], references: [id])
+  originCamp      Camp?        @relation("TransportOrigin", fields: [originCampId], references: [id])
+  destinationCamp Camp?        @relation("TransportDest", fields: [destinationCampId], references: [id])
+  pickupPoint     PickupPoint? @relation("TransportPickup", fields: [pickupPointId], references: [id])
+  dropoffPoint    PickupPoint? @relation("TransportDropoff", fields: [dropoffPointId], references: [id])
+  disputes        Dispute[]
+
+  @@index([requesterId])
+  @@index([driverId])
+  @@index([status])
+  @@index([originHubSlug, destinationHubSlug])
+  @@map("transport_requests")
+}
+
+model DriverProfile {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @unique @map("user_id") @db.Uuid
+  vehicleType     String?  @map("vehicle_type")
+  vehiclePlate    String?  @map("vehicle_plate")
+  licenseNumber   String?  @map("license_number")
+  seatsCapacity   Int      @default(4) @map("seats_capacity")
+  isVerified      Boolean  @default(false) @map("is_verified")
+  rating          Float    @default(0)
+  totalTrips      Int      @default(0) @map("total_trips")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  frequentRoutes FrequentRoute[]
+
+  @@map("driver_profiles")
+}
+
+model FrequentRoute {
+  id              String @id @default(uuid()) @db.Uuid
+  driverProfileId String @map("driver_profile_id") @db.Uuid
+  originCampId    String @map("origin_camp_id") @db.Uuid
+  destinationCampId String @map("destination_camp_id") @db.Uuid
+  frequency       String @default("weekly")
+
+  driverProfile   DriverProfile @relation(fields: [driverProfileId], references: [id], onDelete: Cascade)
+  originCamp      Camp          @relation("FrequentRouteOrigin", fields: [originCampId], references: [id])
+  destinationCamp Camp          @relation("FrequentRouteDest", fields: [destinationCampId], references: [id])
+
+  @@map("frequent_routes")
+}
+
+// ─── Jobs ────────────────────────────────────────────────────────────────────
+
+model Job {
+  id          String   @id @default(uuid()) @db.Uuid
+  posterId    String   @map("poster_id") @db.Uuid
+  campId      String   @map("camp_id") @db.Uuid
+  jobType     String   @map("job_type")
+  category    String
+  title       String
+  description String
+  salary      Decimal? @db.Decimal(12, 2)
+  currency    String   @default("MRU")
+  contactPhone String? @map("contact_phone")
+  isActive    Boolean  @default(true) @map("is_active")
+  expiresAt   DateTime? @map("expires_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  poster User @relation(fields: [posterId], references: [id])
+  camp   Camp @relation(fields: [campId], references: [id])
+
+  @@index([campId])
+  @@index([jobType])
+  @@map("jobs")
+}
+
+// ─── Diaspora ────────────────────────────────────────────────────────────────
+
+model DiasporaProfile {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @unique @map("user_id") @db.Uuid
+  country       String
+  city          String?
+  beneficiaryName String? @map("beneficiary_name")
+  beneficiaryPhone String? @map("beneficiary_phone")
+  preferredCampId String? @map("preferred_camp_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders DiasporaOrder[]
+
+  @@map("diaspora_profiles")
+}
+
+model DiasporaOrder {
+  id          String   @id @default(uuid()) @db.Uuid
+  profileId   String   @map("profile_id") @db.Uuid
+  orderType   String   @map("order_type")
+  description String
+  budget      Decimal? @db.Decimal(12, 2)
+  currency    String   @default("MRU")
+  status      String   @default("pending")
+  campId      String?  @map("camp_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  profile DiasporaProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@map("diaspora_orders")
+}
+
+// ─── Vouchers ────────────────────────────────────────────────────────────────
+
+model VoucherProgram {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String?
+  sponsor     String?
+  totalBudget Decimal? @map("total_budget") @db.Decimal(12, 2)
+  currency    String   @default("MRU")
+  startsAt    DateTime @map("starts_at")
+  endsAt      DateTime @map("ends_at")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  vouchers Voucher[]
+
+  @@map("voucher_programs")
+}
+
+model Voucher {
+  id          String   @id @default(uuid()) @db.Uuid
+  programId   String   @map("program_id") @db.Uuid
+  userId      String?  @map("user_id") @db.Uuid
+  code        String   @unique
+  balance     Decimal  @db.Decimal(12, 2)
+  currency    String   @default("MRU")
+  status      String   @default("active")
+  expiresAt   DateTime @map("expires_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  program      VoucherProgram       @relation(fields: [programId], references: [id])
+  user         User?                @relation(fields: [userId], references: [id])
+  transactions VoucherTransaction[]
+
+  @@index([userId])
+  @@index([code])
+  @@map("vouchers")
+}
+
+model VoucherTransaction {
+  id        String   @id @default(uuid()) @db.Uuid
+  voucherId String   @map("voucher_id") @db.Uuid
+  amount    Decimal  @db.Decimal(12, 2)
+  type      String
+  reference String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  voucher Voucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+
+  @@index([voucherId])
+  @@map("voucher_transactions")
+}
+
+// ─── Messaging ───────────────────────────────────────────────────────────────
+
+model Conversation {
+  id        String   @id @default(uuid()) @db.Uuid
+  type      String   @default("direct")
+  refId     String?  @map("ref_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@index([type, refId])
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  id             String   @id @default(uuid()) @db.Uuid
+  conversationId String   @map("conversation_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  joinedAt       DateTime @default(now()) @map("joined_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id             String   @id @default(uuid()) @db.Uuid
+  conversationId String   @map("conversation_id") @db.Uuid
+  senderId       String   @map("sender_id") @db.Uuid
+  content        String
+  isRead         Boolean  @default(false) @map("is_read")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@map("messages")
+}
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  type      String
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}
+
+// ─── Reviews & Badges ────────────────────────────────────────────────────────
+
+model Review {
+  id         String   @id @default(uuid()) @db.Uuid
+  authorId   String   @map("author_id") @db.Uuid
+  targetType String   @map("target_type")
+  targetId   String   @map("target_id") @db.Uuid
+  targetUserId String? @map("target_user_id") @db.Uuid
+  serviceId  String?  @map("service_id") @db.Uuid
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  author     User     @relation("ReviewAuthor", fields: [authorId], references: [id])
+  targetUser User?    @relation("ReviewTarget", fields: [targetUserId], references: [id])
+  service    Service? @relation(fields: [serviceId], references: [id])
+
+  @@index([targetType, targetId])
+  @@index([authorId])
+  @@map("reviews")
+}
+
+model UserBadge {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  badge     String
+  awardedAt DateTime @default(now()) @map("awarded_at")
+  reason    String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badge])
+  @@map("user_badges")
+}
+
+// ─── Moderation ──────────────────────────────────────────────────────────────
+
+model Report {
+  id         String   @id @default(uuid()) @db.Uuid
+  reporterId String   @map("reporter_id") @db.Uuid
+  targetType String   @map("target_type")
+  targetId   String   @map("target_id") @db.Uuid
+  targetUserId String? @map("target_user_id") @db.Uuid
+  reason     String
+  details    String?
+  status     String   @default("pending")
+  createdAt  DateTime @default(now()) @map("created_at")
+  reviewedAt DateTime? @map("reviewed_at")
+
+  reporter   User  @relation("ReportReporter", fields: [reporterId], references: [id])
+  targetUser User? @relation("ReportTarget", fields: [targetUserId], references: [id])
+
+  @@index([status])
+  @@index([targetType, targetId])
+  @@map("reports")
+}
+
+model ModerationLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  moderatorId String   @map("moderator_id") @db.Uuid
+  action      String
+  targetType  String   @map("target_type")
+  targetId    String   @map("target_id") @db.Uuid
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  moderator User @relation(fields: [moderatorId], references: [id])
+
+  @@index([moderatorId])
+  @@map("moderation_logs")
+}
+
+model AdminAccessLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  adminId   String   @map("admin_id") @db.Uuid
+  action    String
+  resource  String?
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  admin User @relation(fields: [adminId], references: [id])
+
+  @@index([adminId])
+  @@map("admin_access_logs")
+}
+
+// ─── Disputes ────────────────────────────────────────────────────────────────
+
+model Dispute {
+  id           String   @id @default(uuid()) @db.Uuid
+  openerId     String   @map("opener_id") @db.Uuid
+  respondentId String   @map("respondent_id") @db.Uuid
+  reason       String
+  description  String
+  status       String   @default("open")
+  listingId    String?  @map("listing_id") @db.Uuid
+  orderId      String?  @map("order_id") @db.Uuid
+  transportId  String?  @map("transport_id") @db.Uuid
+  resolution   String?
+  resolvedAt   DateTime? @map("resolved_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  opener     User              @relation("DisputeOpener", fields: [openerId], references: [id])
+  respondent User              @relation("DisputeRespondent", fields: [respondentId], references: [id])
+  listing    Listing?          @relation(fields: [listingId], references: [id])
+  order      Order?            @relation(fields: [orderId], references: [id])
+  transport  TransportRequest? @relation(fields: [transportId], references: [id])
+  evidence   DisputeEvidence[]
+
+  @@index([status])
+  @@index([openerId])
+  @@map("disputes")
+}
+
+model DisputeEvidence {
+  id        String   @id @default(uuid()) @db.Uuid
+  disputeId String   @map("dispute_id") @db.Uuid
+  type      String
+  url       String?
+  content   String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  dispute Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+
+  @@map("dispute_evidence")
+}
+
+// ─── Needs ───────────────────────────────────────────────────────────────────
+
+model NeedRequest {
+  id          String   @id @default(uuid()) @db.Uuid
+  requesterId String   @map("requester_id") @db.Uuid
+  campId      String   @map("camp_id") @db.Uuid
+  type        String
+  title       String
+  description String
+  category    String?
+  status      String   @default("open")
+  expiresAt   DateTime? @map("expires_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  requester User        @relation(fields: [requesterId], references: [id])
+  camp      Camp        @relation(fields: [campId], references: [id])
+  offers    NeedOffer[]
+
+  @@index([campId])
+  @@index([status])
+  @@map("need_requests")
+}
+
+model NeedOffer {
+  id            String   @id @default(uuid()) @db.Uuid
+  needRequestId String   @map("need_request_id") @db.Uuid
+  offererId     String   @map("offerer_id") @db.Uuid
+  message       String
+  priceEstimate Decimal? @map("price_estimate") @db.Decimal(12, 2)
+  status        String   @default("pending")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  needRequest NeedRequest @relation(fields: [needRequestId], references: [id], onDelete: Cascade)
+  offerer     User        @relation(fields: [offererId], references: [id])
+
+  @@index([needRequestId])
+  @@map("need_offers")
+}
+
+// ─── Community ───────────────────────────────────────────────────────────────
+
+model CommunityPost {
+  id        String   @id @default(uuid()) @db.Uuid
+  authorId  String   @map("author_id") @db.Uuid
+  campId    String   @map("camp_id") @db.Uuid
+  postType  String   @map("post_type")
+  title     String
+  content   String
+  images    String[] @default([])
+  isPinned  Boolean  @default(false) @map("is_pinned")
+  expiresAt DateTime? @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  author User @relation(fields: [authorId], references: [id])
+  camp   Camp @relation(fields: [campId], references: [id])
+
+  @@index([campId])
+  @@index([postType])
+  @@map("community_posts")
+}
+
+// ─── Escrow (mock/future) ────────────────────────────────────────────────────
+
+model EscrowTransaction {
+  id          String   @id @default(uuid()) @db.Uuid
+  reference   String   @unique
+  amount      Decimal  @db.Decimal(12, 2)
+  currency    String   @default("MRU")
+  status      String   @default("mock_pending")
+  buyerRef    String?  @map("buyer_ref")
+  sellerRef   String?  @map("seller_ref")
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("escrow_transactions")
+}
+
+// ─── Analytics ───────────────────────────────────────────────────────────────
+
+model AnalyticsEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  eventType String   @map("event_type")
+  category  String?
+  campId    String?  @map("camp_id") @db.Uuid
+  term      String?
+  value     Float?
+  count     Int      @default(1)
+  bucket    String
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([eventType, bucket])
+  @@index([campId])
+  @@index([category])
+  @@map("analytics_events")
+}

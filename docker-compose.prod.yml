@@ -1,0 +1,99 @@
+# Producción local: infra + API + Web
+# Uso: cp .env.example .env && docker compose -f docker-compose.prod.yml up --build
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: lefrig-postgres-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: lefrig
+      POSTGRES_PASSWORD: lefrig_dev
+      POSTGRES_DB: lefrig
+    volumes:
+      - lefrig_pgdata_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U lefrig -d lefrig']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: lefrig-redis-prod
+    restart: unless-stopped
+    volumes:
+      - lefrig_redis_prod:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.11
+    container_name: lefrig-meilisearch-prod
+    restart: unless-stopped
+    environment:
+      MEILI_ENV: production
+      MEILI_NO_ANALYTICS: 'true'
+      MEILI_MASTER_KEY: lefrig_meili_dev_key
+    volumes:
+      - lefrig_meili_prod:/meili_data
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:7700/health']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: lefrig-api-prod
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      API_PORT: 3001
+      DATABASE_URL: postgresql://lefrig:lefrig_dev@postgres:5432/lefrig?schema=public
+      REDIS_URL: redis://redis:6379
+      MEILISEARCH_HOST: http://meilisearch:7700
+      MEILISEARCH_API_KEY: lefrig_meili_dev_key
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-me-refresh-in-production}
+      AUTH_LEGACY_JWT: ${AUTH_LEGACY_JWT:-true}
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY:-}
+      CLERK_WEBHOOK_SECRET: ${CLERK_WEBHOOK_SECRET:-}
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:3001}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      ENABLE_SWAGGER: ${ENABLE_SWAGGER:-false}
+    ports:
+      - '3001:3001'
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3001
+    container_name: lefrig-web-prod
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_APP_NAME: Lefrig
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY:-}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-}
+    ports:
+      - '3000:3000'
+
+volumes:
+  lefrig_pgdata_prod:
+  lefrig_redis_prod:
+  lefrig_meili_prod:

@@ -1,0 +1,101 @@
+# Lefrig — Roadmap
+
+## Fase 0 — Fundación ✅ (actual)
+
+- [x] Monorepo Turborepo + pnpm
+- [x] Prisma schema completo (50+ modelos)
+- [x] Seed demo (campamentos, usuarios, tiendas, anuncios, etc.)
+- [x] API NestJS 24 módulos REST
+- [x] Auth OTP mock + JWT
+- [x] Design system `@lefrig/ui`
+- [x] Web pública premium
+- [x] Admin panel
+- [x] Mobile Expo con offline queue mock
+- [x] Docker Compose (PostgreSQL, Redis, Meilisearch)
+- [x] Documentación
+
+## Fase 1 — MVP Campamento piloto (4-6 semanas)
+
+### Infraestructura
+- [ ] Deploy staging (Railway/Fly.io + Neon/Supabase)
+- [x] Migraciones Prisma versionadas (`apps/api/prisma/migrations/`)
+- [x] S3/R2 storage real para imágenes (adapter en `storage.adapter.ts`)
+- [ ] Meilisearch indexación listings/shops
+- [ ] Redis cache + rate limiting
+- [x] CI GitHub Actions (build + migrate + lint web)
+- [x] Guía deploy Vercel (`docs/deploy-vercel.md`)
+
+### Auth & confianza
+- [ ] SMS OTP real (Twilio/MessageBird)
+- [ ] Verificación comunitaria (moderador local)
+- [ ] TrustScore v1 con reglas ponderadas
+- [ ] Insignias automáticas
+
+### Marketplace
+- [ ] Búsqueda Meilisearch con filtros
+- [ ] Compresión imágenes en upload
+- [ ] Notificaciones push FCM reales
+- [ ] Chat WebSocket básico
+
+### Cash-first
+- [ ] Flujo PIN end-to-end testado en campo
+- [ ] Recibo PDF/imagen compartible
+- [ ] Sync offline cola real en mobile
+
+### Libreta
+- [ ] UX libreta simplificada para comerciantes
+- [ ] Recibos fiado imprimibles
+- [ ] Disputa libreta con mediador
+
+## Fase 2 — Expansión multi-campamento (6-10 semanas)
+
+- [ ] Transporte: matching conductor-solicitud
+- [ ] Traer de Tindouf: flujo completo con tracking
+- [ ] Diáspora: integración pago manual verificado
+- [ ] Vouchers ONG: QR offline validation
+- [ ] Empleo: alertas por campamento
+- [ ] Necesidades: SmartMatching v1 (reglas, no ML)
+- [ ] Comunidad: moderación por campamento
+- [ ] Analytics dashboard para líderes comunitarios
+- [ ] i18n completo: árabe RTL, hassanía, español, francés
+
+## Fase 3 — IA & escala (10-16 semanas)
+
+- [ ] Publicar por voz (Whisper)
+- [ ] Traducción automática mensajes
+- [ ] Categorización y precio sugerido
+- [ ] Detección spam/estafa
+- [ ] Asistente publicación guiada
+- [ ] Inteligencia económica agregada v2
+- [ ] Cooperativas: perfiles grupales
+- [ ] Escrow mock → partner pagos
+
+## Fase 4 — Producción nacional saharaui
+
+- [ ] Todos los campamentos activos
+- [ ] Red transportistas verificados
+- [ ] Red tiendas verificadas por marsa
+- [ ] Programa vouchers multi-ONG
+- [ ] Diáspora: pasarela internacional (Wise/Stripe manual)
+- [ ] App stores (Google Play, App Store)
+- [ ] Modo ultra-ligero (< 1MB/sesión)
+- [ ] Capacitación digital comunitaria
+
+## Backlog técnico
+
+- [ ] E2E Playwright web + admin
+- [ ] Tests integración API por módulo
+- [ ] OpenAPI client generation para mobile
+- [ ] Feature flags
+- [ ] Observabilidad (Sentry, logs estructurados)
+- [ ] Backup automático DB
+- [ ] Auditoría GDPR/privacidad libretas
+
+## Criterios de paso de fase
+
+| Fase | Criterio |
+|------|----------|
+| 0 → 1 | Arranque local completo, UI premium, seed funcional |
+| 1 → 2 | 1 campamento piloto con 50+ usuarios activos |
+| 2 → 3 | 3+ campamentos, transporte operativo, diáspora activa |
+| 3 → 4 | IA útil en publicación, vouchers ONG en producción |

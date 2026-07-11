@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: lefrig-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: lefrig
+      POSTGRES_PASSWORD: lefrig_dev
+      POSTGRES_DB: lefrig
+    ports:
+      - "5433:5432"  # 5433 en host para evitar conflicto con PostgreSQL local
+    volumes:
+      - lefrig_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lefrig -d lefrig"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: lefrig-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - lefrig_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.11
+    container_name: lefrig-meilisearch
+    restart: unless-stopped
+    environment:
+      MEILI_ENV: development
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_MASTER_KEY: lefrig_meili_dev_key
+    ports:
+      - "7700:7700"
+    volumes:
+      - lefrig_meili:/meili_data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:7700/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  lefrig_pgdata:
+  lefrig_redis:
+  lefrig_meili:

@@ -1,0 +1,534 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  TRANSPORT_HUBS,
+  corridorsForScope,
+  getTransportHub,
+  hubScope,
+  hubsInScope,
+  hubsInZone,
+  zonesForScope,
+  pickLocalized,
+  type TransportHub,
+  type TransportHubZone,
+  type TransportRouteScope,
+} from '@lefrig/shared';
+import type { PaginatedResponse, TransportRequestSummary } from '@lefrig/shared';
+import { AppIcon } from '@/components/AppIcon';
+import { fetchApi, mapApiTransport, unwrapPaginated } from '@/lib/api';
+import { useAuthFetch } from '@/lib/auth-fetch';
+import { useLocale, useT } from '@/lib/locale';
+
+type DriverRow = {
+  id: string;
+  vehicleType: string | null;
+  seatsCapacity: number;
+  rating: number;
+  user: { displayName: string; phone: string | null };
+  frequentRoutes: { originCamp: { nameEs: string }; destinationCamp: { nameEs: string } }[];
+};
+
+type Field = 'origin' | 'dest' | null;
+
+const TRIP_MODE_IDS = ['shared_ride', 'person', 'package'] as const;
+
+const LOCAL_DEFAULT = { origin: 'rabouni', dest: 'nouakchott', originZone: 'wilaya' as TransportHubZone, destZone: 'mauritania' as TransportHubZone };
+const INTL_DEFAULT = { origin: 'madrid', dest: 'rabouni', originZone: 'espana' as TransportHubZone, destZone: 'wilaya' as TransportHubZone };
+
+function HubField({
+  label,
+  sub,
+  hub,
+  active,
+  onFocus,
+  query,
+  onQuery,
+  zone,
+  onZone,
+  onPick,
+  onClose,
+  scope,
+  locale,
+  t,
+}: {
+  label: string;
+  sub: string;
+  hub: string;
+  active: boolean;
+  onFocus: () => void;
+  query: string;
+  onQuery: (q: string) => void;
+  zone: TransportHubZone;
+  onZone: (z: TransportHubZone) => void;
+  onPick: (slug: string) => void;
+  onClose: () => void;
+  scope: TransportRouteScope;
+  locale: ReturnType<typeof useLocale>['locale'];
+  t: ReturnType<typeof useT>;
+}) {
+  const scopeZones = useMemo(() => zonesForScope(scope), [scope]);
+  const scopeHubs = useMemo(() => {
+    if (scope === 'international') return TRANSPORT_HUBS;
+    return hubsInScope(scope);
+  }, [scope]);
+  const h = TRANSPORT_HUBS.find((x) => x.slug === hub);
+  const list = useMemo(() => {
+    const base = hubsInZone(zone);
+    if (!query.trim()) return base;
+    const q = query.toLowerCase();
+    return scopeHubs
+      .filter(
+        (x) => x.nameEs.toLowerCase().includes(q) || x.nameAr.includes(q) || x.slug.includes(q),
+      )
+      .slice(0, 24);
+  }, [zone, query, scopeHubs]);
+
+  const hubName = (item: TransportHub) => pickLocalized(item, locale);
+
+  return (
+    <div className={`lx-field ${active ? 'lx-field--open' : ''}`}>
+      <button type="button" className="lx-field__trigger" onClick={onFocus}>
+        <span className="lx-field__kicker">{label}</span>
+        <span className="lx-field__value">
+          <span className="lx-field__flag">{h?.flag ?? 'ⵣ'}</span>
+          <strong>{h ? hubName(h) : t('transport.connect.pickHub')}</strong>
+        </span>
+        <span className="lx-field__sub">{sub}</span>
+      </button>
+      {active && (
+        <div className="lx-field__panel">
+          <input
+            className="lx-field__search"
+            placeholder={t('transport.connect.searchHub')}
+            value={query}
+            onChange={(e) => onQuery(e.target.value)}
+            autoFocus
+          />
+          <div className="lx-field__zones">
+            {scopeZones.map((z) => (
+              <button
+                key={z.id}
+                type="button"
+                className={zone === z.id ? 'lx-pill lx-pill--on' : 'lx-pill'}
+                onClick={() => onZone(z.id)}
+              >
+                {z.icon} {t(`transport.zones.${z.id}`)}
+              </button>
+            ))}
+          </div>
+          <ul className="lx-field__list">
+            {list.map((item: TransportHub) => (
+              <li key={item.slug}>
+                <button type="button" onClick={() => { onPick(item.slug); onClose(); }}>
+                  <span>{item.flag}</span>
+                  <strong>{hubName(item)}</strong>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function TransportConnect() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { authFetch, isSignedIn } = useAuthFetch();
+  const t = useT();
+  const { locale } = useLocale();
+
+  const initialScope: TransportRouteScope =
+    searchParams.get('scope') === 'international' ? 'international' : 'local';
+
+  const [routeScope, setRouteScope] = useState<TransportRouteScope>(initialScope);
+  const [originHub, setOriginHub] = useState(
+    initialScope === 'international' ? INTL_DEFAULT.origin : LOCAL_DEFAULT.origin,
+  );
+  const [destHub, setDestHub] = useState(
+    initialScope === 'international' ? INTL_DEFAULT.dest : LOCAL_DEFAULT.dest,
+  );
+  const [originZone, setOriginZone] = useState<TransportHubZone>(
+    initialScope === 'international' ? INTL_DEFAULT.originZone : LOCAL_DEFAULT.originZone,
+  );
+  const [destZone, setDestZone] = useState<TransportHubZone>(
+    initialScope === 'international' ? INTL_DEFAULT.destZone : LOCAL_DEFAULT.destZone,
+  );
+  const [activeField, setActiveField] = useState<Field>(null);
+  const [originQuery, setOriginQuery] = useState(searchParams.get('q') ?? '');
+  const [destQuery, setDestQuery] = useState('');
+
+  const [tripType, setTripType] = useState('shared_ride');
+  const [seats, setSeats] = useState(1);
+  const [departureDate, setDepartureDate] = useState('');
+  const [phone, setPhone] = useState('');
+  const [note, setNote] = useState('');
+
+  const [trips, setTrips] = useState<TransportRequestSummary[]>([]);
+  const [drivers, setDrivers] = useState<DriverRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState('');
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  const hubName = (slug: string) => {
+    const h = getTransportHub(slug);
+    if (!h) return slug;
+    return pickLocalized(h, locale);
+  };
+  const routeLabel = useMemo(
+    () => `${hubName(originHub)} → ${hubName(destHub)}`,
+    [originHub, destHub, locale],
+  );
+  const scopeCorridors = useMemo(() => corridorsForScope(routeScope), [routeScope]);
+
+  const applyScope = (scope: TransportRouteScope) => {
+    setRouteScope(scope);
+    const d = scope === 'local' ? LOCAL_DEFAULT : INTL_DEFAULT;
+    setOriginHub(d.origin);
+    setDestHub(d.dest);
+    setOriginZone(d.originZone);
+    setDestZone(d.destZone);
+    setOriginQuery('');
+    setDestQuery('');
+    setActiveField(null);
+  };
+
+  useEffect(() => {
+    if (!activeField) return;
+    const close = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setActiveField(null);
+      }
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [activeField]);
+
+  const loadMatches = useCallback(async () => {
+    setLoading(true);
+    try {
+      const q = `originHubSlug=${originHub}&destinationHubSlug=${destHub}&limit=20`;
+      const [tripRes, driverList] = await Promise.all([
+        fetchApi<PaginatedResponse<Record<string, unknown>>>(`/transport?${q}`),
+        fetchApi<DriverRow[]>(`/transport/drivers?${q}`).catch(() => [] as DriverRow[]),
+      ]);
+      setTrips(unwrapPaginated(tripRes).map((r) => mapApiTransport(r)));
+      setDrivers(driverList);
+    } catch {
+      setTrips([]);
+      setDrivers([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [originHub, destHub]);
+
+  useEffect(() => {
+    loadMatches();
+  }, [loadMatches]);
+
+  const swap = () => {
+    setOriginHub(destHub);
+    setDestHub(originHub);
+    setOriginZone(destZone);
+    setDestZone(originZone);
+  };
+
+  const pickCorridor = (o: string, d: string) => {
+    const ho = TRANSPORT_HUBS.find((h) => h.slug === o);
+    const hd = TRANSPORT_HUBS.find((h) => h.slug === d);
+    setOriginHub(o);
+    setDestHub(d);
+    if (ho) setOriginZone(ho.zone);
+    if (hd) setDestZone(hd.zone);
+  };
+
+  const publish = async () => {
+    if (!isSignedIn) {
+      router.push('/sign-in');
+      return;
+    }
+    if (originHub === destHub) {
+      setToast(t('transport.connect.errors.sameHub'));
+      return;
+    }
+    const origin = getTransportHub(originHub);
+    const dest = getTransportHub(destHub);
+    if (!origin || !dest) {
+      setToast(t('transport.connect.errors.invalidHub'));
+      return;
+    }
+    if (routeScope === 'local') {
+      if (hubScope(origin.zone) !== 'local' || hubScope(dest.zone) !== 'local') {
+        setToast(t('transport.connect.errors.localScope'));
+        return;
+      }
+    } else {
+      const hasIntl = origin.zone === 'espana' || origin.zone === 'francia' || dest.zone === 'espana' || dest.zone === 'francia';
+      if (!hasIntl) {
+        setToast(t('transport.connect.errors.intlScope'));
+        return;
+      }
+    }
+    setSubmitting(true);
+    setToast('');
+    try {
+      await authFetch('/auth/sync', { method: 'POST' });
+      await authFetch('/transport', {
+        method: 'POST',
+        body: JSON.stringify({
+          type: tripType,
+          originHubSlug: originHub,
+          destinationHubSlug: destHub,
+          seatsRequested: seats,
+          description: note.trim() || routeLabel,
+          contactPhone: phone.trim() || undefined,
+          departureAt: departureDate ? new Date(departureDate).toISOString() : undefined,
+        }),
+      });
+      setToast(t('transport.connect.errors.published'));
+      setNote('');
+      loadMatches();
+    } catch {
+      setToast(t('transport.connect.errors.signIn'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="lx" ref={rootRef}>
+      <header className="lx-intro">
+        <h1 className="lx-intro__ar">{t('transport.title')}</h1>
+        <p className="lx-intro__es">{t('transport.connect.tagline')}</p>
+        <div className="lx-route-pill" aria-live="polite">
+          <span className="lx-route-pill__dot" aria-hidden />
+          {routeLabel}
+        </div>
+        <div className="lx-scope" role="tablist" aria-label={t('transport.connect.scopeAria')}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={routeScope === 'local'}
+            className={routeScope === 'local' ? 'lx-scope__btn lx-scope__btn--on' : 'lx-scope__btn'}
+            onClick={() => applyScope('local')}
+          >
+            {t('transport.tabLocal')}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={routeScope === 'international'}
+            className={routeScope === 'international' ? 'lx-scope__btn lx-scope__btn--on' : 'lx-scope__btn'}
+            onClick={() => applyScope('international')}
+          >
+            {t('transport.international')}
+          </button>
+        </div>
+        <p className="lx-scope-hint">
+          {routeScope === 'local' ? t('transport.connect.scopeLocalHint') : t('transport.connect.scopeIntlHint')}
+        </p>
+      </header>
+
+      <div className="lx-layout">
+        <section className="lx-booking" aria-label={t('transport.connect.bookingAria')}>
+          <div className="lx-booking__head">
+            <h2>{t('transport.connect.planTrip')}</h2>
+            <Link href="/transport/register" className="lx-link-ghost">
+              {t('transport.connect.imDriver')}
+            </Link>
+          </div>
+
+          <div className="lx-route-box">
+            <HubField
+              label={t('transport.connect.origin')}
+              sub={t('transport.pickOriginTitle')}
+              hub={originHub}
+              active={activeField === 'origin'}
+              onFocus={() => setActiveField('origin')}
+              query={originQuery}
+              onQuery={setOriginQuery}
+              zone={originZone}
+              onZone={setOriginZone}
+              onPick={setOriginHub}
+              onClose={() => setActiveField(null)}
+              scope={routeScope}
+              locale={locale}
+              t={t}
+            />
+            <button type="button" className="lx-swap" onClick={swap} aria-label={t('transport.connect.swapAria')}>
+              <AppIcon name="repeat" size={18} color="var(--lx-gold)" />
+            </button>
+            <HubField
+              label={t('transport.connect.dest')}
+              sub={t('transport.pickDestTitle')}
+              hub={destHub}
+              active={activeField === 'dest'}
+              onFocus={() => setActiveField('dest')}
+              query={destQuery}
+              onQuery={setDestQuery}
+              zone={destZone}
+              onZone={setDestZone}
+              onPick={setDestHub}
+              onClose={() => setActiveField(null)}
+              scope={routeScope}
+              locale={locale}
+              t={t}
+            />
+          </div>
+
+          <p className="lx-section-title">
+            {routeScope === 'local' ? t('transport.connect.localCorridors') : t('transport.connect.intlCorridors')}
+          </p>
+          <div className="lx-corridors">
+            {scopeCorridors.map((c) => (
+              <button
+                key={c.labelEs}
+                type="button"
+                className={
+                  originHub === c.origin && destHub === c.destination ? 'lx-corridor lx-corridor--on' : 'lx-corridor'
+                }
+                onClick={() => pickCorridor(c.origin, c.destination)}
+              >
+                <span className="lx-corridor__line" />
+                <span className="lx-corridor__text">
+                  {hubName(c.origin)} → {hubName(c.destination)}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="lx-modes">
+            {TRIP_MODE_IDS.map((id) => (
+              <button
+                key={id}
+                type="button"
+                className={tripType === id ? 'lx-mode lx-mode--on' : 'lx-mode'}
+                onClick={() => setTripType(id)}
+              >
+                {t(`transport.connect.modes.${id}`)}
+              </button>
+            ))}
+          </div>
+
+          <div className="lx-inline-fields">
+            <label>
+              {t('transport.connect.seats')}
+              <input type="number" min={1} max={20} value={seats} onChange={(e) => setSeats(+e.target.value)} />
+            </label>
+            <label>
+              {t('transport.connect.date')}
+              <input type="date" value={departureDate} onChange={(e) => setDepartureDate(e.target.value)} />
+            </label>
+            <label className="lx-wide">
+              {t('transport.connect.phone')}
+              <input type="tel" placeholder={t('transport.connect.phonePlaceholder')} value={phone} onChange={(e) => setPhone(e.target.value)} />
+            </label>
+            <label className="lx-wide">
+              {t('transport.connect.note')}
+              <input type="text" placeholder={t('transport.connect.notePlaceholder')} value={note} onChange={(e) => setNote(e.target.value)} />
+            </label>
+          </div>
+
+          {toast && (
+            <p className="lx-toast" role="status">
+              {toast}
+            </p>
+          )}
+
+          <button type="button" className="lx-cta" onClick={publish} disabled={submitting}>
+            <span>{submitting ? t('transport.connect.publishing') : t('transport.connect.publishCta')}</span>
+            <AppIcon name="arrow-right" size={18} color="#1a1612" />
+          </button>
+          <p className="lx-disclaimer">{t('transport.connect.disclaimer')}</p>
+        </section>
+
+        <aside className="lx-live-panel" aria-label={t('transport.connect.liveAria')}>
+          <div className="lx-live-panel__top">
+            <div>
+              <h2>{t('transport.connect.liveTitle')}</h2>
+              <p className="lx-route-live">{routeLabel}</p>
+            </div>
+            <button type="button" className="lx-refresh" onClick={loadMatches} disabled={loading}>
+              {loading ? '···' : '↻'}
+            </button>
+          </div>
+
+          <div className="lx-live-counts">
+            <div className="lx-count">
+              <span className="lx-count__n">{drivers.length}</span>
+              <span className="lx-count__l">{t('transport.connect.drivers')}</span>
+            </div>
+            <div className="lx-count">
+              <span className="lx-count__n">{trips.length}</span>
+              <span className="lx-count__l">{t('transport.connect.requests')}</span>
+            </div>
+          </div>
+
+          {drivers.length > 0 && (
+            <div className="lx-stack">
+              <h3>{t('transport.connect.verifiedCorridor')}</h3>
+              {drivers.map((d) => (
+                <article key={d.id} className="lx-driver">
+                  <div className="lx-driver__ring">🚐</div>
+                  <div className="lx-driver__body">
+                    <div className="lx-driver__row">
+                      <strong>{d.user.displayName}</strong>
+                      <span className="lx-verified">✓</span>
+                    </div>
+                    <p>
+                      {d.vehicleType ?? t('transport.connect.vehicle')} · {t('transport.connect.seatsCount', { count: d.seatsCapacity })} · ★ {d.rating.toFixed(1)}
+                    </p>
+                    {d.frequentRoutes[0] && (
+                      <p className="lx-driver__route">
+                        {d.frequentRoutes[0].originCamp.nameEs} ↔ {d.frequentRoutes[0].destinationCamp.nameEs}
+                      </p>
+                    )}
+                    {d.user.phone && (
+                      <a href={`https://wa.me/${d.user.phone.replace(/\D/g, '')}`} className="lx-contact">
+                        {t('transport.connect.contact')}
+                      </a>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+
+          <div className="lx-stack">
+            <h3>{t('transport.connect.activeRequests')}</h3>
+            {loading ? (
+              <p className="lx-muted">{t('transport.connect.syncing')}</p>
+            ) : trips.length === 0 ? (
+              <div className="lx-empty">
+                <p>{t('transport.connect.firstOnRoute')}</p>
+                <small>{t('transport.connect.firstOnRouteSub')}</small>
+              </div>
+            ) : (
+              trips.map((trip) => (
+                <article key={trip.id} className="lx-trip">
+                  <div className="lx-trip__route">
+                    {trip.originCamp}
+                    <span className="lx-trip__arrow">→</span>
+                    {trip.destinationCamp}
+                  </div>
+                  <div className="lx-trip__foot">
+                    <span className="lx-status">
+                      {t(`transport.connect.status.${trip.status}` as 'transport.connect.status.requested') ?? trip.status}
+                    </span>
+                    {trip.seatsRequested ? <span>{t('transport.connect.seatOne', { count: trip.seatsRequested })}</span> : null}
+                    <Link href="/messages">{t('transport.connect.message')}</Link>
+                  </div>
+                </article>
+              ))
+            )}
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
