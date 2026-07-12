@@ -40,7 +40,6 @@ export async function createTestListing(
       category: 'other',
       campId: camp.id,
       paymentMethods: ['cash'],
-      images: ['https://picsum.photos/seed/e2e/400/300'],
     },
   });
   if (!res.ok()) {
