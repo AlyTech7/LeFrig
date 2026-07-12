@@ -2,9 +2,10 @@
 
 import { SignUp } from '@clerk/nextjs';
 import { clerkRedirectUrl } from '@/lib/site-url';
+import { isClerkEnabled } from '@/lib/clerk';
 
 export default function SignUpPage() {
-  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+  if (!isClerkEnabled) {
     return (
       <div className="sv-auth">
         <div className="sv-auth__notice">
