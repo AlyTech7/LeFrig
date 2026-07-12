@@ -19,6 +19,8 @@ RUN pnpm --filter @lefrig/api exec prisma generate
 RUN pnpm --filter @lefrig/api build
 # Bundle portable con deps de producción (pnpm symlinks no sobreviven bien a COPY parcial)
 RUN pnpm deploy --filter @lefrig/api --prod /prod/api
+# deploy reinstala deps sin el client generado — hay que generarlo en el bundle final
+RUN cd /prod/api && npx --yes prisma@6.19.3 generate
 
 FROM base AS runner
 WORKDIR /app
