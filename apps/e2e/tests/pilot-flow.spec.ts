@@ -11,7 +11,7 @@ test.describe('Flujo piloto', () => {
     await expect(page.locator('body')).toContainText(/LEFRIG|Lefrig/i);
 
     await page.goto('/sign-in');
-    await expect(page.locator('.sv-auth, .sv-auth__notice')).toBeVisible();
+    await expect(page.locator('.sv-auth').first()).toBeVisible();
     await expect(page.locator('body')).toContainText(/Configura Clerk|iniciar|sign|entrar|correo|teléfono/i);
 
     await page.goto('/marketplace/create');
