@@ -1,0 +1,53 @@
+# Render Blueprint — LeFrig API
+# https://render.com/docs/blueprint-spec
+#
+# 1. Conecta el repo GitHub en Render → New → Blueprint
+# 2. Completa las env vars marcadas como sync: false en el dashboard
+# 3. Añade DNS: api.lefrig.com → CNAME del servicio Render
+# 4. Redeploy Vercel web (NEXT_PUBLIC_API_URL=https://api.lefrig.com)
+
+services:
+  - type: web
+    name: lefrig-api
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: frankfurt
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_PORT
+        value: '3001'
+      - key: API_PUBLIC_URL
+        value: https://api.lefrig.com
+      - key: CORS_ORIGINS
+        value: https://www.lefrig.com,https://lefrig.com,https://lefrig.vercel.app
+      - key: ENABLE_SWAGGER
+        value: 'false'
+      - key: AUTH_LEGACY_JWT
+        value: 'false'
+      - key: MEILI_SYNC_ON_BOOT
+        value: 'false'
+      - key: DATABASE_URL
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: CLERK_WEBHOOK_SECRET
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: STORAGE_ENDPOINT
+        sync: false
+      - key: STORAGE_BUCKET
+        sync: false
+      - key: STORAGE_ACCESS_KEY
+        sync: false
+      - key: STORAGE_SECRET_KEY
+        sync: false
+      - key: STORAGE_PUBLIC_URL
+        sync: false

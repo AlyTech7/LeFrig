@@ -1,4 +1,5 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+export const API_URL = rawApiUrl || 'http://localhost:3001';
 
 export async function fetchApi<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
