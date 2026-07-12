@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MeilisearchAdapter } from '../../adapters/meilisearch.adapter';
+import { StorageAdapter } from '../../adapters/storage.adapter';
 import { paginate, skipTake } from '../../common/utils/pagination';
 import {
   createListingSchema,
@@ -19,6 +20,7 @@ export class ListingsService {
   constructor(
     private prisma: PrismaService,
     private meili: MeilisearchAdapter,
+    private storage: StorageAdapter,
   ) {}
 
   private async indexListing(listing: {
@@ -206,6 +208,10 @@ export class ListingsService {
       ? (validateListingAttributes(data.category, data.attributes ?? {}) as Prisma.InputJsonValue)
       : ({} as Prisma.InputJsonValue);
 
+    if (data.images?.length) {
+      this.storage.assertOwnedImageUrls(data.images, sellerId);
+    }
+
     return this.prisma.listing.create({
       data: {
         sellerId,
@@ -257,6 +263,13 @@ export class ListingsService {
         where: { slug: category, type: 'listing' },
       });
       if (cat) updateData.category = { connect: { id: cat.id } };
+    }
+
+    if (data.images !== undefined) {
+      this.storage.assertOwnedImageUrls(data.images, userId);
+      const previous = (listing.images as string[]) ?? [];
+      const removed = previous.filter((url) => !data.images!.includes(url));
+      if (removed.length) void this.storage.purgeUrls(removed);
     }
 
     return this.prisma.listing.update({

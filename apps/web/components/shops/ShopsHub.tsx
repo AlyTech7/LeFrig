@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { CampSummary, PaginatedResponse } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
+import { AppImage } from '@/lib/images';
 import {
   demoCamps,
   demoShops,
@@ -196,7 +197,7 @@ export function ShopsHub() {
           {filtered.map((shop) => (
             <Link key={shop.id} href={`/shops/${shop.id}`} className="shp-card">
               <div className="shp-card__media">
-                {shop.imageUrl ? <img src={shop.imageUrl} alt="" loading="lazy" /> : <span>🏪</span>}
+                {shop.imageUrl ? <AppImage src={shop.imageUrl} alt="" loading="lazy" /> : <span>🏪</span>}
                 {shop.verified && <span className="shp-card__verified">{t('shops.filterVerified')}</span>}
               </div>
               <div className="shp-card__body">

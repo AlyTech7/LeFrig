@@ -1,5 +1,6 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { ListingSummary } from '@lefrig/shared';
+import { resolveImageUrl } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
 import { API_URL } from '@/lib/api';
 import { useT } from '@/lib/locale';
@@ -12,9 +13,7 @@ type Props = {
 };
 
 function resolveImage(url?: string): string | undefined {
-  if (!url) return undefined;
-  if (url.startsWith('http')) return url;
-  return `${API_URL.replace(/\/$/, '')}${url.startsWith('/') ? url : `/${url}`}`;
+  return resolveImageUrl(url, API_URL) ?? undefined;
 }
 
 export function ListingCard({ item, onPress, grid }: Props) {

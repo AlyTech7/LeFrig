@@ -47,6 +47,33 @@ export async function uploadListingImage(
   throw new Error(lastError);
 }
 
+/** Sube varias imágenes en una sola petición (más rápido en móvil). */
+export async function uploadListingImagesBatch(
+  files: File[],
+  token: string | null,
+): Promise<UploadResult[]> {
+  if (!token) throw new Error('Inicia sesión para subir fotos');
+  if (!files.length) return [];
+
+  const formData = new FormData();
+  for (const file of files) {
+    formData.append('files', file, file.name);
+  }
+
+  const res = await fetch(`${API_URL}/uploads/images/batch`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(parseUploadError(res.status, body));
+  }
+
+  return res.json() as Promise<UploadResult[]>;
+}
+
 function uploadOnce(
   file: File,
   token: string,

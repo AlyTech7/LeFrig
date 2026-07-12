@@ -9,6 +9,7 @@ import {
   MAX_IMAGES,
   runPool,
   uploadListingImage,
+  uploadListingImagesBatch,
   validateImageFile,
 } from '@/lib/uploads';
 
@@ -166,6 +167,57 @@ export function ImageUploader({
       }));
 
       onChange((prev) => [...prev, ...newItems]);
+
+      const token = await getToken();
+      if (!token) {
+        onChange((prev) =>
+          prev.map((p) =>
+            newItems.some((n) => n.id === p.id)
+              ? { ...p, processing: false, uploading: false, error: t('uploader.signInToUpload') }
+              : p,
+          ),
+        );
+        return;
+      }
+
+      if (okFiles.length > 1) {
+        onChange((prev) =>
+          prev.map((p) =>
+            newItems.some((n) => n.id === p.id)
+              ? { ...p, processing: false, uploading: true, progress: 0 }
+              : p,
+          ),
+        );
+        try {
+          const results = await uploadListingImagesBatch(okFiles, token);
+          onChange((prev) =>
+            prev.map((p) => {
+              const idx = newItems.findIndex((n) => n.id === p.id);
+              if (idx < 0) return p;
+              const result = results[idx];
+              if (!result) return { ...p, uploading: false, error: t('uploader.uploadError') };
+              return {
+                ...p,
+                url: result.url,
+                uploading: false,
+                progress: 100,
+                error: undefined,
+                file: undefined,
+              };
+            }),
+          );
+        } catch (err) {
+          const message = err instanceof Error ? err.message : t('uploader.uploadError');
+          onChange((prev) =>
+            prev.map((p) =>
+              newItems.some((n) => n.id === p.id)
+                ? { ...p, uploading: false, error: message }
+                : p,
+            ),
+          );
+        }
+        return;
+      }
 
       await runPool(
         newItems.map((item, i) => ({ item, file: okFiles[i]! })),

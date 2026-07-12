@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { mkdir, writeFile, unlink } from 'fs/promises';
@@ -11,19 +11,26 @@ export interface UploadResult {
   size: number;
 }
 
+export type StorageMode = 's3' | 'local';
+
 @Injectable()
 export class StorageAdapter {
   private readonly logger = new Logger(StorageAdapter.name);
   private readonly uploadRoot: string;
   private readonly publicBaseUrl: string;
+  private readonly publicBasePath: string;
   private readonly s3Client: S3Client | null;
   private readonly s3Bucket: string | null;
+  private readonly mode: StorageMode;
 
   constructor(private config: ConfigService) {
     this.uploadRoot = this.config.get('UPLOAD_DIR', join(process.cwd(), 'uploads'));
     const apiBase = this.config.get('API_PUBLIC_URL', 'http://localhost:3001');
     const storagePublic = this.config.get('STORAGE_PUBLIC_URL');
     this.publicBaseUrl = (storagePublic ?? `${apiBase.replace(/\/$/, '')}/uploads`).replace(/\/$/, '');
+
+    const parsedBase = new URL(this.publicBaseUrl);
+    this.publicBasePath = parsedBase.pathname.replace(/\/$/, '');
 
     const endpoint = this.config.get<string>('STORAGE_ENDPOINT') ?? '';
     const accessKey = this.config.get<string>('STORAGE_ACCESS_KEY');
@@ -42,11 +49,34 @@ export class StorageAdapter {
         credentials: { accessKeyId: accessKey!, secretAccessKey: secretKey! },
         forcePathStyle: this.config.get('STORAGE_FORCE_PATH_STYLE', 'true') === 'true',
       });
-      this.logger.log(`Storage: S3-compatible (${endpoint})`);
+      this.mode = 's3';
+      this.logger.log(`Storage: S3-compatible (${endpoint}) → ${this.publicBaseUrl}`);
     } else {
       this.s3Client = null;
-      this.logger.log(`Storage: local filesystem (${this.uploadRoot})`);
+      this.mode = 'local';
+      this.logger.log(`Storage: local filesystem (${this.uploadRoot}) → ${this.publicBaseUrl}`);
+      if (this.config.get('NODE_ENV') === 'production') {
+        this.logger.warn(
+          'STORAGE: disco local en producción — las imágenes se pierden al redeploy. Configura STORAGE_* (R2/S3/Spaces).',
+        );
+      }
     }
+  }
+
+  getMode(): StorageMode {
+    return this.mode;
+  }
+
+  isCloudStorage(): boolean {
+    return this.mode === 's3';
+  }
+
+  isPersistent(): boolean {
+    return this.isCloudStorage();
+  }
+
+  getPublicBaseUrl(): string {
+    return this.publicBaseUrl;
   }
 
   async upload(key: string, buffer: Buffer, contentType: string): Promise<UploadResult> {
@@ -59,9 +89,10 @@ export class StorageAdapter {
           Key: fullKey,
           Body: buffer,
           ContentType: contentType,
+          CacheControl: 'public, max-age=31536000, immutable',
         }),
       );
-      const url = `${this.publicBaseUrl}/${fullKey.replace(/\\/g, '/')}`;
+      const url = this.buildPublicUrl(fullKey);
       this.logger.log(`Stored ${fullKey} in S3 (${contentType}, ${buffer.length} bytes)`);
       return { key: fullKey, url, size: buffer.length };
     }
@@ -69,7 +100,7 @@ export class StorageAdapter {
     const filePath = join(this.uploadRoot, fullKey);
     await mkdir(dirname(filePath), { recursive: true });
     await writeFile(filePath, buffer);
-    const url = `${this.publicBaseUrl}/${fullKey.replace(/\\/g, '/')}`;
+    const url = this.buildPublicUrl(fullKey);
     this.logger.log(`Stored ${fullKey} locally (${contentType}, ${buffer.length} bytes)`);
     return { key: fullKey, url, size: buffer.length };
   }
@@ -99,8 +130,57 @@ export class StorageAdapter {
     }
   }
 
-  getPublicUrl(key: string): string {
+  keyFromUrl(url: string): string | null {
+    try {
+      const parsed = new URL(url);
+      const base = new URL(this.publicBaseUrl);
+      if (parsed.origin !== base.origin) return null;
+
+      let path = parsed.pathname.replace(/^\//, '');
+      if (this.publicBasePath && path.startsWith(`${this.publicBasePath.replace(/^\//, '')}/`)) {
+        path = path.slice(this.publicBasePath.replace(/^\//, '').length + 1);
+      }
+      return path || null;
+    } catch {
+      return null;
+    }
+  }
+
+  isAllowedImageUrl(url: string, userId?: string): boolean {
+    const key = this.keyFromUrl(url);
+    if (!key) return false;
+    if (!key.startsWith('listings/')) return false;
+    if (userId && !key.startsWith(`listings/${userId}/`)) return false;
+    return /\.(jpe?g|png|webp|gif)$/i.test(key);
+  }
+
+  assertOwnedImageUrls(urls: string[], userId: string): void {
+    if (!urls.length) return;
+    for (const url of urls) {
+      if (!this.isAllowedImageUrl(url, userId)) {
+        throw new BadRequestException('URL de imagen no válida. Sube la foto desde LeFrig.');
+      }
+    }
+  }
+
+  assertOwnedImageUrl(url: string | undefined, userId: string): void {
+    if (!url) return;
+    this.assertOwnedImageUrls([url], userId);
+  }
+
+  async purgeUrls(urls: string[]): Promise<void> {
+    for (const url of urls) {
+      const key = this.keyFromUrl(url);
+      if (key) await this.delete(key);
+    }
+  }
+
+  buildPublicUrl(key: string): string {
     return `${this.publicBaseUrl}/${key.replace(/\\/g, '/')}`;
+  }
+
+  getPublicUrl(key: string): string {
+    return this.buildPublicUrl(key);
   }
 
   getUploadRoot(): string {

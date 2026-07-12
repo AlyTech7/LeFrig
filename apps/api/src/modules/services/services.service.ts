@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { StorageAdapter } from '../../adapters/storage.adapter';
 import { paginate, skipTake } from '../../common/utils/pagination';
 import { paginationSchema } from '@lefrig/shared';
 
 @Injectable()
 export class ServicesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private storage: StorageAdapter,
+  ) {}
 
   async findAll(query: unknown) {
     const { page, limit } = paginationSchema.parse(query);
@@ -63,6 +67,10 @@ export class ServicesService {
       where: { slug: `service-${data.categorySlug}` },
     });
     if (!category) throw new NotFoundException('Categoría no encontrada');
+
+    if (data.images?.length) {
+      this.storage.assertOwnedImageUrls(data.images, providerId);
+    }
 
     return this.prisma.service.create({
       data: {

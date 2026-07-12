@@ -20,6 +20,14 @@ El error `shared/src typescript:default` = autodetect del monorepo (mal).
 
 Debe quedar **un solo** `service` llamado `lefrig-api` con `dockerfile_path: apps/api/Dockerfile`.
 
+## Imágenes (obligatorio en prod)
+
+Sin `STORAGE_*` las fotos se guardan en disco efímero y **se pierden al redeploy**.
+
+Configura R2 o DO Spaces — guía completa: [`storage-setup.md`](./storage-setup.md).
+
+Secrets adicionales: `STORAGE_ENDPOINT`, `STORAGE_BUCKET`, `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY`, `STORAGE_PUBLIC_URL`.
+
 ## Health check
 
 ```
