@@ -40,7 +40,7 @@ services:
       - key: MEILI_SYNC_ON_BOOT
         value: 'false'
       - key: DATABASE_URL
-        scope: RUN_TIME
+        scope: RUN_AND_BUILD_TIME
         type: SECRET
       - key: CLERK_SECRET_KEY
         scope: RUN_TIME

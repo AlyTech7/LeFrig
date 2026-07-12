@@ -32,4 +32,4 @@ COPY --from=builder /prod/api ./
 
 EXPOSE 3001
 
-CMD ["sh", "-c", "prisma migrate deploy && node dist/main.js"]
+CMD ["sh", "-c", "if [ -z \"$DATABASE_URL\" ]; then echo 'ERROR: DATABASE_URL vacía — configúrala en DO (Run time) y redeploy'; exit 1; fi && prisma migrate deploy && node dist/main.js"]
