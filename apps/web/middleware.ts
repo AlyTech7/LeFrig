@@ -1,4 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { isClerkConfigured } from '@/lib/clerk-config';
 import { getClerkAuthorizedParties } from '@/lib/site-url';
 
 const isPublicRoute = createRouteMatcher([
@@ -20,14 +23,17 @@ const clerkOptions = {
   authorizedParties: getClerkAuthorizedParties(),
 };
 
-export default clerkMiddleware(async (auth, request) => {
-  // Sin Clerk completamente configurado, no bloquear (dev local)
-  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY) return;
-
+const protectedMiddleware = clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request)) {
     await auth.protect();
   }
 }, clerkOptions);
+
+function passthrough(_req: NextRequest) {
+  return NextResponse.next();
+}
+
+export default isClerkConfigured() ? protectedMiddleware : passthrough;
 
 export const config = {
   matcher: [

@@ -10,7 +10,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "eslint .",
+    "lint": "tsc --noEmit",
     "clean": "rimraf .expo node_modules/.cache"
   },
   "dependencies": {

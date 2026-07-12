@@ -3,7 +3,14 @@
 import { ClerkProvider } from '@clerk/nextjs';
 import { esES } from '@clerk/localizations';
 
-const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const rawKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() ?? '';
+const publishableKey =
+  rawKey &&
+  !/placeholder|_ci_/i.test(rawKey) &&
+  (rawKey.startsWith('pk_test_') || rawKey.startsWith('pk_live_')) &&
+  rawKey.replace(/^pk_(test|live)_/, '').length >= 20
+    ? rawKey
+    : '';
 
 const clerkAppearance = {
   variables: {
