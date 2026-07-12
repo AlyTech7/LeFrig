@@ -11,6 +11,7 @@ import {
   LISTING_CATEGORIES,
   SERVICE_CATEGORIES,
   formatAttributeHighlights,
+  resolveImageUrl,
   resolveMarketplaceSearch,
 } from '@lefrig/shared';
 
@@ -343,7 +344,7 @@ export function mapApiListing(raw: Record<string, unknown>): ListingSummary {
     status: String(raw.status),
     category: categorySlug,
     campId: String(raw.campId),
-    imageUrl: images?.[0],
+    imageUrl: resolveImageUrl(images?.[0], API_URL) ?? undefined,
     sellerName: seller?.displayName ?? 'Vendedor',
     createdAt: String(raw.createdAt ?? new Date().toISOString()),
     attributes: hasAttributes ? attributes : undefined,
@@ -377,7 +378,7 @@ export function mapApiShop(raw: Record<string, unknown>): ShopListItem {
     acceptsFiado: Boolean(raw.acceptsFiado),
     acceptsVouchers: Boolean(raw.acceptsVouchers),
     verified: Boolean(raw.verified ?? raw.isVerified),
-    imageUrl: raw.imageUrl ? String(raw.imageUrl) : undefined,
+    imageUrl: raw.imageUrl ? resolveImageUrl(String(raw.imageUrl), API_URL) ?? undefined : undefined,
     description: raw.description ? String(raw.description) : undefined,
     campName: camp?.nameEs,
     productCount: count?.products,
@@ -441,7 +442,7 @@ export function mapApiService(raw: Record<string, unknown>): ServiceItem {
     priceTo: raw.priceTo != null ? Number(raw.priceTo) : undefined,
     rating: Number(provider?.reputationScore ?? 4.5),
     description: raw.description ? String(raw.description) : undefined,
-    imageUrl: images?.[0],
+    imageUrl: resolveImageUrl(images?.[0], API_URL) ?? undefined,
   };
 }
 

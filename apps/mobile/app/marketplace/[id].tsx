@@ -11,7 +11,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { findDepartmentForSlug, formatAttributeDetails } from '@lefrig/shared';
+import { findDepartmentForSlug, formatAttributeDetails, resolveImageUrl } from '@lefrig/shared';
 import { demoListings, fetchWithMeta, mapApiListing, API_URL } from '@/lib/api';
 import { useAuthApi } from '@/lib/useAuthApi';
 import { ScreenHeader } from '@/components/ScreenHeader';
@@ -31,8 +31,7 @@ type ListingDetail = ListingSummary & {
 const { width: SCREEN_W } = Dimensions.get('window');
 
 function resolveImage(url: string): string {
-  if (url.startsWith('http')) return url;
-  return `${API_URL.replace(/\/$/, '')}${url.startsWith('/') ? url : `/${url}`}`;
+  return resolveImageUrl(url, API_URL) ?? url;
 }
 
 function parseListing(raw: Record<string, unknown>): ListingDetail {

@@ -30,7 +30,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: API_PUBLIC_URL
-        value: https://api.lefrig.com
+        value: https://whale-app-xpe4g.ondigitalocean.app
       - key: CORS_ORIGINS
         value: https://www.lefrig.com,https://lefrig.com,https://lefrig.vercel.app
       - key: ENABLE_SWAGGER
@@ -54,3 +54,24 @@ services:
       - key: JWT_REFRESH_SECRET
         scope: RUN_TIME
         type: SECRET
+      - key: STORAGE_ENDPOINT
+        scope: RUN_TIME
+        type: SECRET
+      - key: STORAGE_BUCKET
+        scope: RUN_TIME
+        type: SECRET
+      - key: STORAGE_ACCESS_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: STORAGE_SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: STORAGE_PUBLIC_URL
+        scope: RUN_TIME
+        type: SECRET
+      - key: STORAGE_REGION
+        value: fra1
+        scope: RUN_TIME
+      - key: STORAGE_FORCE_PATH_STYLE
+        value: 'false'
+        scope: RUN_TIME

@@ -7,6 +7,7 @@ import { Badge, Button, Card, CashPaymentBadge, colors } from '@lefrig/ui/client
 import type { ListingSummary } from '@lefrig/shared';
 import { formatAttributeDetails, localizedCampFromSummary } from '@lefrig/shared';
 import { PageBody, PageHero } from '@/components/PageHero';
+import { ListingGallery } from '@/components/marketplace/ListingGallery';
 import { ReportButton } from '@/components/ReportButton';
 import { ReviewsSection } from '@/components/ReviewsSection';
 import { useAuthFetch } from '@/lib/auth-fetch';
@@ -132,21 +133,11 @@ export default function ListingDetailPage() {
         ← {t('marketplace.backToMarket')}
       </Link>
       <div style={{ display: 'grid', gap: 32, marginTop: 24, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
-        <div
-          style={{
-            height: 320,
-            borderRadius: 20,
-            background: images?.[0]
-              ? `url(${images[0]}) center/cover`
-              : `linear-gradient(135deg, ${colors.sand[200]}, ${colors.sand[400]})`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '5rem',
-          }}
-        >
-          {!images?.[0] && (category?.icon ?? '📦')}
-        </div>
+        <ListingGallery
+          images={images}
+          fallbackIcon={category?.icon ?? '📦'}
+          height={320}
+        />
 
         <div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>

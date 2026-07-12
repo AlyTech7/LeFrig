@@ -1,5 +1,6 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { StorageAdapter } from '../../adapters/storage.adapter';
 import { paginate, skipTake } from '../../common/utils/pagination';
 import {
   createShopProductSchema,
@@ -10,7 +11,10 @@ import {
 
 @Injectable()
 export class ShopsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private storage: StorageAdapter,
+  ) {}
 
   private async assertShopOwner(shopId: string, userId: string) {
     const shop = await this.prisma.shop.findUnique({ where: { id: shopId } });
@@ -84,6 +88,7 @@ export class ShopsService {
 
   async create(ownerId: string, input: unknown) {
     const data = createShopSchema.parse(input);
+    this.storage.assertOwnedImageUrl(data.imageUrl, ownerId);
     const slug = data.name.toLowerCase().replace(/\s+/g, '-').slice(0, 50) + `-${Date.now().toString(36)}`;
 
     return this.prisma.shop.create({
@@ -116,6 +121,7 @@ export class ShopsService {
   async createProduct(shopId: string, userId: string, input: unknown) {
     await this.assertShopOwner(shopId, userId);
     const data = createShopProductSchema.parse(input);
+    this.storage.assertOwnedImageUrl(data.imageUrl, userId);
     return this.prisma.shopProduct.create({
       data: { shopId, ...data },
     });
@@ -126,6 +132,12 @@ export class ShopsService {
     const product = await this.prisma.shopProduct.findFirst({ where: { id: productId, shopId } });
     if (!product) throw new NotFoundException('Producto no encontrado');
     const data = updateShopProductSchema.parse(input);
+    if (data.imageUrl !== undefined) {
+      this.storage.assertOwnedImageUrl(data.imageUrl, userId);
+      if (product.imageUrl && product.imageUrl !== data.imageUrl) {
+        void this.storage.purgeUrls([product.imageUrl]);
+      }
+    }
     return this.prisma.shopProduct.update({ where: { id: productId }, data });
   }
 

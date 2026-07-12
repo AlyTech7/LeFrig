@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { StorageAdapter } from '../../adapters/storage.adapter';
 import { paginate, skipTake } from '../../common/utils/pagination';
 import { paginationSchema } from '@lefrig/shared';
 
 @Injectable()
 export class CommunityService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private storage: StorageAdapter,
+  ) {}
 
   async findAll(query: unknown) {
     const { page, limit } = paginationSchema.parse(query);
@@ -41,6 +45,9 @@ export class CommunityService {
     content: string;
     images?: string[];
   }) {
+    if (data.images?.length) {
+      this.storage.assertOwnedImageUrls(data.images, authorId);
+    }
     return this.prisma.communityPost.create({
       data: { authorId, ...data, images: data.images ?? [] },
       include: { camp: true },

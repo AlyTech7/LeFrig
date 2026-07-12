@@ -7,6 +7,7 @@ import { SERVICE_CATEGORIES, resolveServiceCategoryFromQuery } from '@lefrig/sha
 import type { CampSummary, PaginatedResponse } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
 import { demoCamps, demoServices, fetchWithMeta, mapApiService, type ServiceItem, unwrapPaginated } from '@/lib/api';
+import { AppImage } from '@/lib/images';
 import { useLocale, useT } from '@/lib/locale';
 import { localizedCampFromSummary, pickLocalized } from '@lefrig/shared';
 
@@ -197,7 +198,7 @@ export function ServicesHub() {
             <Link key={svc.id} href={`/services/${svc.id}`} className="svc-card">
               <div className="svc-card__media">
                 {svc.imageUrl ? (
-                  <img src={svc.imageUrl} alt="" loading="lazy" />
+                  <AppImage src={svc.imageUrl} alt="" loading="lazy" />
                 ) : (
                   <span aria-hidden>{svc.icon}</span>
                 )}

@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { LISTING_CATEGORIES, CAMPS, MARKETPLACE_DEPARTMENTS, getListingAttributeFilters, listingAttributeFilterSchema, type ListingAttributeFilterValues } from '@lefrig/shared';
+import { LISTING_CATEGORIES, CAMPS, MARKETPLACE_DEPARTMENTS, getListingAttributeFilters, listingAttributeFilterSchema, resolveImageUrl, type ListingAttributeFilterValues } from '@lefrig/shared';
 import type { ListingSummary } from '@lefrig/shared';
 import { API_URL, demoListingsPage, fetchWithMeta, mapListingsResponse } from '@/lib/api';
 import { accentColors, getAtlasVisual } from '@/lib/home-visuals';
@@ -26,9 +26,7 @@ import { AppIcon, type FeatherIconName } from '@/components/AppIcon';
 import { ListingCard } from '@/components/ListingCard';
 
 function resolveImage(url?: string): string | undefined {
-  if (!url) return undefined;
-  if (url.startsWith('http')) return url;
-  return `${API_URL.replace(/\/$/, '')}${url.startsWith('/') ? url : `/${url}`}`;
+  return resolveImageUrl(url, API_URL) ?? undefined;
 }
 
 /** Tintes rotativos para los círculos de categoría */

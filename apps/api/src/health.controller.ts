@@ -3,6 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { PrismaService } from './prisma/prisma.service';
 import { MeilisearchAdapter } from './adapters/meilisearch.adapter';
 import { RedisAdapter } from './adapters/redis.adapter';
+import { StorageAdapter } from './adapters/storage.adapter';
 
 @ApiTags('health')
 @Controller()
@@ -11,6 +12,7 @@ export class HealthController {
     private prisma: PrismaService,
     private meili: MeilisearchAdapter,
     private redis: RedisAdapter,
+    private storage: StorageAdapter,
   ) {}
 
   @Get('health')
@@ -23,9 +25,15 @@ export class HealthController {
       /* degraded */
     }
 
+    const storageMode = this.storage.getMode();
+    const storagePersistent = this.storage.isPersistent();
+
     return {
       status: db === 'connected' ? 'ok' : 'degraded',
       db,
+      storage: storageMode,
+      storagePersistent,
+      storagePublicUrl: this.storage.getPublicBaseUrl(),
       redis: this.redis.isConfigured() ? 'connected' : 'optional',
       meilisearch: this.meili.isConfigured() ? 'configured' : 'optional',
       timestamp: new Date().toISOString(),
