@@ -56,7 +56,7 @@ export function RegisterShopStudio() {
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const [phone, setPhone] = useState('+222');
   const [whatsapp, setWhatsapp] = useState('');
-  const [acceptsCash, setAcceptsCash] = useState(true);
+  const acceptsCash = true;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
