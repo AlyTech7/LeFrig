@@ -1,3 +1,4 @@
+import './instrument';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -5,6 +6,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { AppModule } from './app.module';
+import { isSwaggerEnabled } from './common/config/production-security';
 
 function parseCorsOrigins(raw: string | undefined): boolean | string[] {
   if (!raw || raw.trim() === '*') return true;
@@ -35,7 +37,7 @@ async function bootstrap() {
     }),
   );
 
-  const enableSwagger = config.get('ENABLE_SWAGGER', 'true') !== 'false';
+  const enableSwagger = isSwaggerEnabled(config);
   if (enableSwagger) {
     const swaggerConfig = new DocumentBuilder()
       .setTitle('LeFrig API')

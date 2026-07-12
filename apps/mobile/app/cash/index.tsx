@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,19 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import * as Clipboard from 'expo-clipboard';
 import { useT } from '@/lib/locale';
 import { useAuthApi } from '@/lib/useAuthApi';
+import {
+  loadPendingCashAgreement,
+  clearPendingCashAgreement,
+  type PendingCashAgreement,
+} from '@/lib/cash-session';
 import { theme, gradients } from '@/lib/theme';
 
 type CashAgreement = {
@@ -23,6 +30,14 @@ type CashAgreement = {
   status: string;
   listing?: { title: string };
   pin?: string;
+  hasReceipt?: boolean;
+  confirmationCount?: number;
+  myConfirmed?: boolean;
+};
+
+type ReceiptPayload = {
+  shareText: string;
+  operationCode: string;
 };
 
 export default function CashScreen() {
@@ -34,14 +49,29 @@ export default function CashScreen() {
   const [lookupCode, setLookupCode] = useState('');
   const [pin, setPin] = useState('');
   const [confirming, setConfirming] = useState(false);
-  const [banner, setBanner] = useState<CashAgreement | null>(null);
+  const [pending, setPending] = useState<PendingCashAgreement | null>(null);
+
+  const refresh = useCallback(async () => {
+    const list = await authFetch<CashAgreement[]>('/cash/my');
+    setAgreements(list);
+  }, [authFetch]);
 
   useEffect(() => {
-    authFetch<CashAgreement[]>('/cash/my')
-      .then(setAgreements)
-      .catch(() => setAgreements([]))
-      .finally(() => setLoading(false));
-  }, [authFetch]);
+    (async () => {
+      const stored = await loadPendingCashAgreement();
+      if (stored) {
+        setPending(stored);
+        setLookupCode(stored.operationCode);
+      }
+      try {
+        await refresh();
+      } catch {
+        setAgreements([]);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [refresh]);
 
   const confirm = async () => {
     if (!lookupCode.trim() || pin.length < 4) {
@@ -50,43 +80,64 @@ export default function CashScreen() {
     }
     setConfirming(true);
     try {
-      await authFetch('/cash/confirm', {
+      const res = await authFetch<{ fullyConfirmed?: boolean }>('/cash/confirm', {
         method: 'POST',
         body: JSON.stringify({ operationCode: lookupCode.trim().toUpperCase(), pin }),
       });
-      Alert.alert(t('common.success'), t('cash.success'));
+      Alert.alert(
+        t('common.success'),
+        res.fullyConfirmed ? t('cash.fullyConfirmed') : t('cash.success'),
+      );
       setPin('');
-      const updated = await authFetch<CashAgreement[]>('/cash/my');
-      setAgreements(updated);
+      await refresh();
+      if (res.fullyConfirmed) await clearPendingCashAgreement();
+      setPending(null);
     } catch {
-      Alert.alert(t('common.error'), t('auth.errors.wrongCode'));
+      Alert.alert(t('common.error'), t('cash.pinFail'));
     } finally {
       setConfirming(false);
     }
   };
 
-  const createFromMarketplace = async () => {
-    router.push('/marketplace');
+  const shareReceipt = async (code: string) => {
+    try {
+      const receipt = await authFetch<ReceiptPayload>(`/cash/receipt/${code}`);
+      await Clipboard.setStringAsync(receipt.shareText);
+      await Share.share({ message: receipt.shareText });
+      Alert.alert(t('common.success'), t('cash.receiptCopied'));
+    } catch {
+      Alert.alert(t('common.error'), t('cash.notFound'));
+    }
   };
+
+  const banner = pending ?? agreements.find((a) => a.pin && a.status === 'agreed');
+  const bannerTitle = banner && 'listingTitle' in banner ? banner.listingTitle : undefined;
+  const bannerListingName =
+    bannerTitle ?? (banner && 'listing' in banner ? banner.listing?.title : undefined);
 
   return (
     <View style={styles.root}>
       <LinearGradient colors={[...gradients.gold]} style={styles.header}>
         <SafeAreaView edges={['top']}>
           <Text style={styles.title}>{t('cash.title')}</Text>
-          <Text style={styles.sub}>{t('payment.cash')}</Text>
+          <Text style={styles.sub}>{t('cash.subtitle')}</Text>
         </SafeAreaView>
       </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {banner?.pin && (
+        {banner?.pin ? (
           <View style={styles.banner}>
             <Text style={styles.bannerTitle}>{banner.operationCode}</Text>
+            {bannerListingName ? (
+              <Text style={styles.bannerListing}>{bannerListingName}</Text>
+            ) : null}
             <Text style={styles.bannerPin}>PIN: {banner.pin}</Text>
+            <Text style={styles.bannerHint}>{t('cash.sellerPinHint')}</Text>
           </View>
-        )}
+        ) : null}
 
         <Text style={styles.section}>{t('cash.confirmDelivery')}</Text>
+        <Text style={styles.hint}>{t('cash.buyerPinHint')}</Text>
         <TextInput
           style={styles.input}
           value={lookupCode}
@@ -103,33 +154,40 @@ export default function CashScreen() {
           placeholderTextColor={theme.textDarkMuted}
           keyboardType="number-pad"
           maxLength={4}
+          secureTextEntry
         />
         <Pressable style={[styles.cta, confirming && styles.ctaDisabled]} onPress={confirm} disabled={confirming}>
-          {confirming ? <ActivityIndicator color={theme.obsidian} /> : <Text style={styles.ctaText}>{t('cash.confirmPin')}</Text>}
+          {confirming ? (
+            <ActivityIndicator color={theme.obsidian} />
+          ) : (
+            <Text style={styles.ctaText}>{t('cash.confirmPin')}</Text>
+          )}
         </Pressable>
 
-        <Text style={styles.section}>{t('orders.title')}</Text>
+        <Text style={styles.section}>{t('cash.myOps')}</Text>
         {loading ? (
           <ActivityIndicator color={theme.gold} />
         ) : agreements.length === 0 ? (
-          <Pressable onPress={createFromMarketplace}>
-            <Text style={styles.empty}>{t('cash.noAgreements')}</Text>
+          <Pressable onPress={() => router.push('/marketplace')}>
+            <Text style={styles.empty}>{t('cash.emptyOps')}</Text>
           </Pressable>
         ) : (
           agreements.map((a) => (
             <Pressable
               key={a.id}
               style={styles.card}
-              onPress={() => {
-                setLookupCode(a.operationCode);
-                if (a.pin) setBanner(a);
-              }}
+              onPress={() => setLookupCode(a.operationCode)}
             >
               <Text style={styles.code}>{a.operationCode}</Text>
-              <Text style={styles.cardTitle}>{a.listing?.title ?? t('cash.title')}</Text>
+              <Text style={styles.cardTitle}>{a.listing?.title ?? t('cash.cashOp')}</Text>
               <Text style={styles.amount}>
                 {Number(a.amount).toLocaleString()} {t('common.currency')} · {a.status}
               </Text>
+              {a.status === 'confirmed' && a.hasReceipt ? (
+                <Pressable style={styles.receiptBtn} onPress={() => shareReceipt(a.operationCode)}>
+                  <Text style={styles.receiptBtnText}>{t('cash.shareReceipt')}</Text>
+                </Pressable>
+              ) : null}
             </Pressable>
           ))
         )}
@@ -142,7 +200,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.cream },
   header: { paddingBottom: 20 },
   title: { fontSize: 28, fontWeight: '800', color: theme.text, paddingHorizontal: 20, paddingTop: 8 },
-  sub: { fontSize: 14, color: 'rgba(255,255,255,0.8)', paddingHorizontal: 20, marginTop: 4 },
+  sub: { fontSize: 14, color: 'rgba(255,255,255,0.85)', paddingHorizontal: 20, marginTop: 4 },
   content: { padding: 20, paddingBottom: 120 },
   banner: {
     padding: 16,
@@ -152,9 +210,12 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(232,184,109,0.35)',
     marginBottom: 20,
   },
-  bannerTitle: { fontWeight: '700', color: theme.textDark },
-  bannerPin: { fontSize: 22, fontWeight: '800', color: theme.emeraldDeep, marginTop: 8 },
-  section: { fontSize: 16, fontWeight: '800', color: theme.textDark, marginBottom: 12, marginTop: 8 },
+  bannerTitle: { fontWeight: '700', color: theme.textDark, fontFamily: 'monospace' },
+  bannerListing: { marginTop: 6, color: theme.textDarkMuted, fontSize: 14 },
+  bannerPin: { fontSize: 28, fontWeight: '800', color: theme.emeraldDeep, marginTop: 8, letterSpacing: 4 },
+  bannerHint: { marginTop: 8, fontSize: 13, color: theme.textDarkMuted, lineHeight: 18 },
+  section: { fontSize: 16, fontWeight: '800', color: theme.textDark, marginBottom: 8, marginTop: 8 },
+  hint: { fontSize: 13, color: theme.textDarkMuted, marginBottom: 12, lineHeight: 18 },
   input: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -188,4 +249,13 @@ const styles = StyleSheet.create({
   code: { fontFamily: 'monospace', fontWeight: '700', color: theme.gold },
   cardTitle: { fontSize: 15, fontWeight: '600', color: theme.textDark, marginTop: 4 },
   amount: { fontSize: 14, color: theme.emeraldDeep, fontWeight: '700', marginTop: 4 },
+  receiptBtn: {
+    marginTop: 10,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(45,138,98,0.12)',
+  },
+  receiptBtnText: { color: theme.emeraldDeep, fontWeight: '700', fontSize: 13 },
 });

@@ -16,9 +16,14 @@ export class CashController {
     return this.cashService.findByUser(user.sub);
   }
 
+  @Get('receipt/:code')
+  getReceipt(@CurrentUser() user: { sub: string }, @Param('code') code: string) {
+    return this.cashService.getReceipt(code.trim().toUpperCase(), user.sub);
+  }
+
   @Get(':code')
-  findByCode(@Param('code') code: string) {
-    return this.cashService.findByCode(code);
+  findByCode(@CurrentUser() user: { sub: string }, @Param('code') code: string) {
+    return this.cashService.findByCode(code.trim().toUpperCase(), user.sub);
   }
 
   @Post('agreements')

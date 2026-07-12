@@ -8,6 +8,7 @@ import {
   Req,
   UnauthorizedException,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
@@ -19,6 +20,7 @@ import { AuthGuard } from '../../common/guards/auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUserPayload } from './clerk.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { isLegacyAuthEnabled } from '../../common/config/production-security';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -114,17 +116,20 @@ export class AuthController {
   /** @deprecated Usar Clerk — OTP mock solo dev */
   @Post('otp/request')
   requestOtp(@Body() body: unknown) {
+    if (!isLegacyAuthEnabled(this.config)) throw new NotFoundException();
     return this.authService.requestOtp(body);
   }
 
   /** @deprecated Usar Clerk — OTP mock solo dev */
   @Post('otp/verify')
   verifyOtp(@Body() body: unknown) {
+    if (!isLegacyAuthEnabled(this.config)) throw new NotFoundException();
     return this.authService.verifyOtp(body);
   }
 
   @Post('refresh')
   refresh(@Body('refreshToken') refreshToken: string) {
+    if (!isLegacyAuthEnabled(this.config)) throw new NotFoundException();
     return this.authService.refresh(refreshToken);
   }
 

@@ -10,6 +10,7 @@ import { PageBody, PageHero } from '@/components/PageHero';
 import { ListingGallery } from '@/components/marketplace/ListingGallery';
 import { ReportButton } from '@/components/ReportButton';
 import { ReviewsSection } from '@/components/ReviewsSection';
+import { SellerTrustBadge } from '@/components/SellerTrustBadge';
 import { useAuthFetch } from '@/lib/auth-fetch';
 import { useLocale, useT } from '@/lib/locale';
 import { demoListings, fetchWithFallback, mapApiListing } from '@/lib/api';
@@ -184,9 +185,13 @@ export default function ListingDetailPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
               <div>
                 <p style={{ margin: '0 0 4px', fontWeight: 600 }}>{seller?.displayName ?? summary.sellerName}</p>
-                <p style={{ margin: 0, fontSize: '0.875rem', color: colors.gray[500] }}>
-                  {t('marketplaceExtra.reputationLabel')} {seller?.reputationScore ?? 4.5} ★
-                </p>
+                {seller?.id && seller.id !== 'demo' ? (
+                  <SellerTrustBadge userId={seller.id} compact />
+                ) : (
+                  <p style={{ margin: 0, fontSize: '0.875rem', color: colors.gray[500] }}>
+                    {t('marketplaceExtra.reputationLabel')} {seller?.reputationScore ?? 4.5} ★
+                  </p>
+                )}
               </div>
               {seller?.id && seller.id !== 'demo' ? (
                 <ReportButton targetType="user" targetId={seller.id} targetUserId={seller.id} label={t('marketplace.reportSeller')} compact />

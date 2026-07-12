@@ -39,6 +39,12 @@ services:
         value: 'false'
       - key: MEILI_SYNC_ON_BOOT
         value: 'false'
+      - key: SENTRY_DSN
+        scope: RUN_TIME
+        type: SECRET
+      - key: SENTRY_ENVIRONMENT
+        value: production
+        scope: RUN_TIME
       - key: DATABASE_URL
         scope: RUN_AND_BUILD_TIME
         type: SECRET

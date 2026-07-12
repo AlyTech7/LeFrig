@@ -1,3 +1,5 @@
+const { withSentryConfig } = require('@sentry/nextjs');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ['@lefrig/ui', '@lefrig/shared'],
@@ -13,8 +15,17 @@ const nextConfig = {
       { protocol: 'http', hostname: 'localhost', port: '3001', pathname: '/uploads/**' },
     ],
   },
-  // Solo para imagen Docker — Vercel no necesita standalone
   ...(process.env.DOCKER_BUILD === 'true' ? { output: 'standalone' } : {}),
 };
 
-module.exports = nextConfig;
+const sentryOptions = {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT ?? 'lefrig-web',
+  silent: true,
+  dryRun: !process.env.SENTRY_AUTH_TOKEN,
+  disableLogger: true,
+};
+
+module.exports = process.env.NEXT_PUBLIC_SENTRY_DSN
+  ? withSentryConfig(nextConfig, sentryOptions)
+  : nextConfig;

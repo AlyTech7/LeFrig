@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { ClerkService, type AuthUserPayload } from '../../modules/auth/clerk.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { JwtPayload } from '@lefrig/shared';
+import { isLegacyAuthEnabled } from '../config/production-security';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -58,7 +59,7 @@ export class AuthGuard implements CanActivate {
     }
 
     // 2. Legacy JWT interno (dev / seed / migración)
-    if (this.config.get('AUTH_LEGACY_JWT', 'true') === 'true') {
+    if (isLegacyAuthEnabled(this.config)) {
       try {
         const payload = this.jwt.verify<JwtPayload>(token, {
           secret: this.config.get('JWT_SECRET', 'change-me'),

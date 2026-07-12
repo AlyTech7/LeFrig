@@ -1,5 +1,6 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { PrismaService } from './prisma/prisma.service';
 import { MeilisearchAdapter } from './adapters/meilisearch.adapter';
 import { RedisAdapter } from './adapters/redis.adapter';
@@ -16,7 +17,7 @@ export class HealthController {
   ) {}
 
   @Get('health')
-  async health() {
+  async health(@Res({ passthrough: true }) res: Response) {
     let db: 'connected' | 'disconnected' = 'disconnected';
     try {
       await this.prisma.$queryRaw`SELECT 1`;
@@ -27,9 +28,14 @@ export class HealthController {
 
     const storageMode = this.storage.getMode();
     const storagePersistent = this.storage.isPersistent();
+    const ok = db === 'connected';
+
+    if (!ok) {
+      res.status(503);
+    }
 
     return {
-      status: db === 'connected' ? 'ok' : 'degraded',
+      status: ok ? 'ok' : 'degraded',
       db,
       storage: storageMode,
       storagePersistent,

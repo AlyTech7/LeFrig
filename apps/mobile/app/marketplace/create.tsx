@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,9 @@ import {
 } from '@lefrig/shared';
 import { enqueueOfflineAction } from '@/lib/offline';
 import { useAuthApi } from '@/lib/useAuthApi';
+import { prepareListingPhoto } from '@/lib/image-prep';
+import { uploadListingImageFromUri } from '@/lib/uploads';
+import { ListingPhotoPicker, type PhotoSlot } from '@/components/ListingPhotoPicker';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { AppIcon } from '@/components/AppIcon';
 import { pickLabel, pickName } from '@/lib/bilingual';
@@ -30,13 +33,14 @@ export default function CreateListingScreen() {
   const router = useRouter();
   const t = useT();
   const { locale } = useLocale();
-  const { authFetch } = useAuthApi();
+  const { authFetch, syncUser, getAccessToken } = useAuthApi();
   const [step, setStep] = useState<1 | 2>(1);
   const [category, setCategory] = useState('other');
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
   const [attributes, setAttributes] = useState<Record<string, string>>({});
+  const [photos, setPhotos] = useState<PhotoSlot[]>([]);
   const [recording, setRecording] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [pulse] = useState(new Animated.Value(1));
@@ -63,6 +67,28 @@ export default function CreateListingScreen() {
     return out;
   };
 
+  const uploadPhoto = useCallback(
+    async (slot: PhotoSlot) => {
+      try {
+        await syncUser();
+        const token = await getAccessToken();
+        if (!token) throw new Error('auth');
+        const prepared = await prepareListingPhoto(slot.localUri);
+        const result = await uploadListingImageFromUri(prepared.uri, token, `photo-${slot.id}.jpg`);
+        setPhotos((prev) =>
+          prev.map((p) =>
+            p.id === slot.id ? { ...p, remoteUrl: result.url, uploading: false, error: undefined } : p,
+          ),
+        );
+      } catch {
+        setPhotos((prev) =>
+          prev.map((p) => (p.id === slot.id ? { ...p, uploading: false, error: t('publish.uploadError') } : p)),
+        );
+      }
+    },
+    [getAccessToken, syncUser, t],
+  );
+
   const toggleVoice = () => {
     setRecording(!recording);
     if (!recording) {
@@ -83,9 +109,20 @@ export default function CreateListingScreen() {
     }
   };
 
+  const imageUrls = photos.filter((p) => p.remoteUrl).map((p) => p.remoteUrl!);
+  const photosUploading = photos.some((p) => p.uploading);
+
   const publish = async () => {
     if (!title.trim()) {
       Alert.alert(t('marketplace.listingTitle'), t('publish.completeRequired'));
+      return;
+    }
+    if (imageUrls.length === 0) {
+      Alert.alert(t('common.error'), t('publish.photosRequired'));
+      return;
+    }
+    if (photosUploading) {
+      Alert.alert(t('common.error'), t('publish.photosUploading'));
       return;
     }
     if (hasStructured && !areRequiredAttributesFilled(category, parsedAttributes())) {
@@ -94,6 +131,7 @@ export default function CreateListingScreen() {
     }
     setPublishing(true);
     try {
+      await syncUser();
       const camps = await authFetch<{ id: string }[]>('/camps');
       const campId = camps[0]?.id;
       if (!campId) throw new Error('no_camp');
@@ -110,6 +148,7 @@ export default function CreateListingScreen() {
           category,
           campId,
           paymentMethods: ['cash'],
+          images: imageUrls,
           attributes: hasStructured ? parsedAttributes() : undefined,
         }),
       });
@@ -133,7 +172,7 @@ export default function CreateListingScreen() {
     <View style={styles.root}>
       <ScreenHeader
         title={t('publish.title')}
-        subtitle={step === 1 ? t('publish.stepCategory') : t('publish.stepDetails')}
+        subtitle={step === 1 ? t('publish.stepCategory') : t('publish.stepPhotos')}
         backLabel={t('nav.marketplace')}
       />
       <SafeAreaView edges={['bottom']} style={styles.safe}>
@@ -171,6 +210,13 @@ export default function CreateListingScreen() {
               </View>
             ) : null}
 
+            <ListingPhotoPicker
+              photos={photos}
+              onChange={setPhotos}
+              onUpload={uploadPhoto}
+              disabled={publishing}
+            />
+
             <Pressable onPress={toggleVoice} style={styles.voiceWrap}>
               <Animated.View style={[styles.micBtn, recording && { transform: [{ scale: pulse }] }]}>
                 <AppIcon name="mic" size={28} color={theme.pearl} />
@@ -196,10 +242,7 @@ export default function CreateListingScreen() {
                           {field.options.map((opt) => (
                             <Pressable
                               key={opt.value}
-                              style={[
-                                styles.optChip,
-                                attributes[field.key] === opt.value && styles.optChipOn,
-                              ]}
+                              style={[styles.optChip, attributes[field.key] === opt.value && styles.optChipOn]}
                               onPress={() => setAttr(field.key, opt.value)}
                             >
                               <Text
@@ -253,9 +296,9 @@ export default function CreateListingScreen() {
             />
 
             <Pressable
-              style={[styles.publishBtn, publishing && styles.publishDisabled]}
+              style={[styles.publishBtn, (publishing || photosUploading) && styles.publishDisabled]}
               onPress={publish}
-              disabled={publishing}
+              disabled={publishing || photosUploading}
             >
               {publishing ? (
                 <ActivityIndicator color={theme.pearl} />

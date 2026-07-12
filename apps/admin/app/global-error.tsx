@@ -17,8 +17,8 @@ export default function GlobalError({
   return (
     <html lang="es">
       <body>
-        <h2>Algo salió mal</h2>
-        <p>El equipo ha sido notificado. Prueba de nuevo en unos minutos.</p>
+        <h2>Error en el panel admin</h2>
+        <p>El equipo ha sido notificado.</p>
         <button type="button" onClick={() => reset()}>
           Reintentar
         </button>
