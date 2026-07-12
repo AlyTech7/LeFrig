@@ -10,6 +10,10 @@ async function hashOtp(code: string) {
 }
 
 async function main() {
+  const profile = process.env.SEED_PROFILE ?? 'default';
+  if (profile === 'staging') {
+    console.log('🧪 SEED_PROFILE=staging — datos ficticios para entorno pre-producción');
+  }
   console.log('🌱 Seeding LeFrig database...');
 
   // Camps

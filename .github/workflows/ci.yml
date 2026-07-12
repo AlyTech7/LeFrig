@@ -7,6 +7,21 @@ on:
     branches: [main, master]
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build shared (lint dependency)
+        run: pnpm --filter @lefrig/shared build
+      - name: Lint monorepo
+        run: pnpm lint
+
   api:
     runs-on: ubuntu-latest
     services:
@@ -81,3 +96,63 @@ jobs:
           NEXT_PUBLIC_API_URL: http://localhost:3001
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
           CLERK_SECRET_KEY: sk_test_ci_placeholder
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: [api, build-web]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: lefrig
+          POSTGRES_PASSWORD: lefrig
+          POSTGRES_DB: lefrig
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://lefrig:lefrig@localhost:5432/lefrig
+      JWT_SECRET: ci-test-secret-min-32-characters-long
+      JWT_REFRESH_SECRET: ci-test-refresh-secret-min-32-chars
+      AUTH_LEGACY_JWT: 'true'
+      ENABLE_SWAGGER: 'true'
+      OTP_MOCK_CODE: '123456'
+      PORT: '3001'
+      API_URL: http://localhost:3001
+      WEB_URL: http://localhost:3000
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
+      CLERK_SECRET_KEY: sk_test_ci_placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build shared package
+        run: pnpm --filter @lefrig/shared build
+      - name: Generate Prisma client
+        run: pnpm --filter @lefrig/api exec prisma generate
+      - name: Migrate and seed database
+        run: |
+          pnpm --filter @lefrig/api exec prisma migrate deploy
+          pnpm --filter @lefrig/api db:seed
+      - name: Build API and web
+        run: |
+          pnpm --filter @lefrig/api build
+          pnpm turbo run build --filter=@lefrig/web
+      - name: Install Playwright browsers
+        run: pnpm --filter @lefrig/e2e exec playwright install chromium --with-deps
+      - name: Start API and web
+        run: |
+          pnpm --filter @lefrig/api start &
+          pnpm --filter @lefrig/web start &
+          npx --yes wait-on@8.0.1 -t 120000 http://localhost:3001/health http://localhost:3000
+      - name: E2E smoke + pilot flow
+        run: pnpm test:e2e

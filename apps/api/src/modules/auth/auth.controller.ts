@@ -21,6 +21,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUserPayload } from './clerk.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { isLegacyAuthEnabled } from '../../common/config/production-security';
+import { RateLimit } from '../../common/decorators/rate-limit.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -115,6 +116,7 @@ export class AuthController {
 
   /** @deprecated Usar Clerk — OTP mock solo dev */
   @Post('otp/request')
+  @RateLimit({ limit: 8, windowSec: 3600, keyPrefix: 'auth:otp:request' })
   requestOtp(@Body() body: unknown) {
     if (!isLegacyAuthEnabled(this.config)) throw new NotFoundException();
     return this.authService.requestOtp(body);
@@ -122,6 +124,7 @@ export class AuthController {
 
   /** @deprecated Usar Clerk — OTP mock solo dev */
   @Post('otp/verify')
+  @RateLimit({ limit: 20, windowSec: 600, keyPrefix: 'auth:otp:verify' })
   verifyOtp(@Body() body: unknown) {
     if (!isLegacyAuthEnabled(this.config)) throw new NotFoundException();
     return this.authService.verifyOtp(body);
