@@ -18,9 +18,9 @@ test.describe('LeFrig smoke', () => {
     await expect(page.locator('body')).toContainText(/mercado|Marketplace|anuncio/i);
   });
 
-  test('Diáspora wizard visible', async ({ page }) => {
-    await page.goto('/diaspora');
-    await expect(page.locator('body')).toContainText(/Diáspora|diáspora/i);
+  test('Comunidad página accesible', async ({ page }) => {
+    await page.goto('/community');
+    await expect(page.locator('body')).toContainText(/Comunidad|community|forum/i);
   });
 
   test('Transporte página carga', async ({ page }) => {

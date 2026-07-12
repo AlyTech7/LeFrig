@@ -29,8 +29,6 @@ const navGroups = [
       { href: '/needs', label: 'Necesidades', icon: '◇', badgeKey: null },
       { href: '/community', label: 'Comunidad', icon: '◉', badgeKey: null },
       { href: '/drivers', label: 'Conductores', icon: '⬡', badgeKey: null },
-      { href: '/diaspora', label: 'Diáspora', icon: '◉', badgeKey: null },
-      { href: '/vouchers', label: 'Vouchers', icon: '◆', badgeKey: null },
     ],
   },
   {

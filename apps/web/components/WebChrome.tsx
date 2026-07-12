@@ -18,9 +18,7 @@ function useNavItems() {
     { href: '/camps', label: t('nav.camps') },
     { href: '/locations', label: t('nav.map') },
     { href: '/needs', label: t('nav.needs') },
-    { href: '/vouchers', label: t('nav.vouchers') },
     { href: '/community', label: t('nav.community') },
-    { href: '/diaspora', label: t('nav.diaspora') },
   ];
 }
 
@@ -107,7 +105,6 @@ export function WebFooter() {
             <Link href="/cash" style={{ color: 'var(--lf-gold)', textDecoration: 'none', fontWeight: 600 }}>{t('nav.cash')}</Link>
             <Link href="/orders" style={{ color: 'var(--lf-gold)', textDecoration: 'none', fontWeight: 600 }}>{t('nav.orders')}</Link>
             <Link href="/disputes" style={{ color: 'var(--lf-gold)', textDecoration: 'none', fontWeight: 600 }}>{t('nav.disputes')}</Link>
-            <Link href="/ledger" style={{ color: 'var(--lf-gold)', textDecoration: 'none', fontWeight: 600 }}>{t('nav.ledger')}</Link>
             <Link href="/messages" style={{ color: 'var(--lf-gold)', textDecoration: 'none', fontWeight: 600 }}>{t('nav.messages')}</Link>
           </div>
           <div>{t('chrome.trustLine')}</div>

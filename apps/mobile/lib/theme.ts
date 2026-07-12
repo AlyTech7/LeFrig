@@ -73,7 +73,6 @@ export const gradients = {
   buy: ['#1f6b4a', '#2d8a62'] as const,
   sell: ['#9a3412', '#c45c3a'] as const,
   transport: ['#0c4a6e', '#38bdf8'] as const,
-  diaspora: ['#581c87', '#a855f7'] as const,
   services: ['#134e4a', '#2dd4bf'] as const,
   jobs: ['#365314', '#84cc16'] as const,
 };
@@ -84,7 +83,6 @@ export const actionStyles: Record<string, { gradient: readonly [string, string];
   services: { gradient: gradients.services, icon: 'zap' },
   transport: { gradient: gradients.transport, icon: 'truck' },
   jobs: { gradient: gradients.jobs, icon: 'briefcase' },
-  diaspora: { gradient: ['#581c87', '#c084fc'] as const, icon: 'globe' },
 };
 
 export const CURATED_ITEMS = [
@@ -99,16 +97,14 @@ export const CURATED_ITEMS = [
 
 export const TRUST_PILLS: { labelKey: string }[] = [
   { labelKey: 'trust.cash' },
-  { labelKey: 'trust.fiado' },
-  { labelKey: 'trust.vouchers' },
   { labelKey: 'trust.community' },
 ];
 
 export const QUICK_LINKS: { icon: FeatherIconName; labelKey: string; href: string }[] = [
-  { icon: 'book-open', labelKey: 'nav.ledger', href: '/ledger' },
-  { icon: 'tag', labelKey: 'nav.vouchers', href: '/vouchers' },
   { icon: 'package', labelKey: 'nav.orders', href: '/orders' },
   { icon: 'heart', labelKey: 'nav.favorites', href: '/favorites' },
   { icon: 'users', labelKey: 'nav.community', href: '/community' },
-  { icon: 'globe', labelKey: 'nav.diaspora', href: '/diaspora' },
+  { icon: 'message-circle', labelKey: 'nav.messages', href: '/messages' },
+  { icon: 'bell', labelKey: 'nav.notifications', href: '/notifications' },
+  { icon: 'dollar-sign', labelKey: 'profile.links.cashPin', href: '/cash' },
 ];

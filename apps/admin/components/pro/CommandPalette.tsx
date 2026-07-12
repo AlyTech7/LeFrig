@@ -13,7 +13,6 @@ const routes = [
   { href: '/shops', label: 'Tiendas', icon: '◫', group: 'Plataforma' },
   { href: '/orders', label: 'Pedidos', icon: '◧', group: 'Plataforma' },
   { href: '/transport', label: 'Transporte', icon: '⬢', group: 'Plataforma' },
-  { href: '/vouchers', label: 'Vouchers', icon: '◆', group: 'Plataforma' },
   { href: '/moderation', label: 'Moderación', icon: '⬡', group: 'Seguridad' },
   { href: '/disputes', label: 'Disputas', icon: '⚖', group: 'Seguridad' },
   { href: '/settings', label: 'Configuración', icon: '⚙', group: 'Sistema' },

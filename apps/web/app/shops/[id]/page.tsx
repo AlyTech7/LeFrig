@@ -182,8 +182,6 @@ export default function ShopDetailPage() {
               </p>
               <div className="shp-card__tags">
                 {shop.acceptsCash !== false && <span className="shp-tag shp-tag--cash">{t('shops.tagCash')}</span>}
-                {shop.acceptsFiado && <span className="shp-tag shp-tag--fiado">{t('shops.tagFiado')}</span>}
-                {shop.acceptsVouchers && <span className="shp-tag shp-tag--voucher">{t('shops.tagVoucher')}</span>}
               </div>
             </div>
           </div>

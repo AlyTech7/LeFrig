@@ -130,10 +130,6 @@ export default function OrdersPage() {
               {t('orders.emptyPrefix')}{' '}
               <Link href="/shops" style={{ color: 'var(--lf-gold)', fontWeight: 600 }}>
                 {t('orders.exploreShops')}
-              </Link>{' '}
-              {t('common.or')}{' '}
-              <Link href="/diaspora" style={{ color: 'var(--lf-gold)', fontWeight: 600 }}>
-                {t('orders.sendDiaspora')}
               </Link>
               .
             </p>
@@ -303,9 +299,6 @@ export default function OrdersPage() {
         <p style={{ marginTop: 32, textAlign: 'center', display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link href="/disputes" style={{ color: 'var(--lf-gold)', fontWeight: 600 }}>
             {t('orders.myDisputesLink')}
-          </Link>
-          <Link href="/ledger" style={{ color: 'var(--lf-gold)', fontWeight: 600 }}>
-            {t('orders.ledgerLink')}
           </Link>
         </p>
       </div>

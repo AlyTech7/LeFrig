@@ -34,8 +34,6 @@ const LINK_GROUPS: LinkGroup[] = [
       { labelKey: 'nav.messages', route: '/messages', icon: 'message-circle' },
       { labelKey: 'nav.notifications', route: '/notifications', icon: 'bell' },
       { labelKey: 'profile.links.cashPin', route: '/cash', icon: 'dollar-sign' },
-      { labelKey: 'nav.ledger', route: '/ledger', icon: 'book-open' },
-      { labelKey: 'nav.vouchers', route: '/vouchers', icon: 'tag' },
       { labelKey: 'nav.disputes', route: '/disputes', icon: 'shield' },
     ],
   },
@@ -43,7 +41,6 @@ const LINK_GROUPS: LinkGroup[] = [
     titleKey: 'profile.groups.community',
     items: [
       { labelKey: 'profile.links.forum', route: '/community', icon: 'users' },
-      { labelKey: 'nav.diaspora', route: '/diaspora', icon: 'globe' },
       { labelKey: 'nav.needs', route: '/needs', icon: 'help-circle' },
       { labelKey: 'profile.links.map', route: '/locations', icon: 'navigation' },
       { labelKey: 'footer.legalCenter', route: '/legal', icon: 'file-text' },

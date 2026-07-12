@@ -14,7 +14,6 @@ const PUBLIC_ROOTS = new Set([
   'camps',
   'locations',
   'community',
-  'diaspora',
   'needs',
   'profile',
   'messages',
