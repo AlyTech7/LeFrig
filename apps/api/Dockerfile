@@ -17,22 +17,17 @@ COPY apps/api ./apps/api
 RUN pnpm --filter @lefrig/shared build
 RUN pnpm --filter @lefrig/api exec prisma generate
 RUN pnpm --filter @lefrig/api build
+# Bundle portable con deps de producción (pnpm symlinks no sobreviven bien a COPY parcial)
+RUN pnpm deploy --filter @lefrig/api --prod /prod/api
 
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-# Prisma CLI fijado a v6 (evita npx → v7 y .bin roto con pnpm en Docker)
+# Prisma CLI v6 fijado (evita npx → v7)
 RUN npm install -g prisma@6.19.3
 
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
-COPY --from=builder /app/packages/shared ./packages/shared
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
-COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
+COPY --from=builder /prod/api ./
 
-WORKDIR /app/apps/api
 EXPOSE 3001
 
 CMD ["sh", "-c", "prisma migrate deploy && node dist/main.js"]
