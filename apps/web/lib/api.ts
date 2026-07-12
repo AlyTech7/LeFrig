@@ -14,7 +14,8 @@ import {
   resolveMarketplaceSearch,
 } from '@lefrig/shared';
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+export const API_URL = rawApiUrl || 'http://localhost:3001';
 
 /** Datos demo solo en dev o si se fuerza explícitamente (staging) */
 export const ALLOW_DEMO_FALLBACK =
