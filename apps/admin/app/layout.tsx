@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   description: 'Panel de administración Lefrig',
 };
 
+/** Panel autenticado — no pre-render estático en build */
+export const dynamic = 'force-dynamic';
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
