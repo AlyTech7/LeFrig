@@ -1,5 +1,7 @@
 import { Global, Module } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
@@ -38,6 +40,7 @@ import { HealthController } from './health.controller';
 @Global()
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     AuthModule,
@@ -68,7 +71,14 @@ import { HealthController } from './health.controller';
     UploadsModule,
     SearchModule,
   ],
-  providers: [StorageAdapter, FcmAdapter, MeilisearchAdapter, RedisAdapter, ManualPaymentAdapter],
+  providers: [
+    { provide: APP_FILTER, useClass: SentryGlobalFilter },
+    StorageAdapter,
+    FcmAdapter,
+    MeilisearchAdapter,
+    RedisAdapter,
+    ManualPaymentAdapter,
+  ],
   controllers: [HealthController],
   exports: [StorageAdapter, FcmAdapter, MeilisearchAdapter, RedisAdapter, ManualPaymentAdapter],
 })

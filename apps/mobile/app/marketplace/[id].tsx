@@ -16,7 +16,8 @@ import { demoListings, fetchWithMeta, mapApiListing, API_URL } from '@/lib/api';
 import { useAuthApi } from '@/lib/useAuthApi';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { AppIcon } from '@/components/AppIcon';
-import { ReportButton } from '@/components/ReportButton';
+import { savePendingCashAgreement } from '@/lib/cash-session';
+import { SellerTrustBadge } from '@/components/SellerTrustBadge';
 import { pickName } from '@/lib/bilingual';
 import { useLocale, useT } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
@@ -104,7 +105,13 @@ export default function ListingDetailScreen() {
     setCreatingCash(true);
     try {
       await syncUser();
-      const agreement = await authFetch<{ operationCode: string; pin: string }>('/cash/agreements', {
+      const agreement = await authFetch<{
+        id: string;
+        operationCode: string;
+        pin: string;
+        amount: number | string;
+        listing?: { title: string };
+      }>('/cash/agreements', {
         method: 'POST',
         body: JSON.stringify({
           listingId: id,
@@ -113,11 +120,17 @@ export default function ListingDetailScreen() {
           method: 'cash',
         }),
       });
-      Alert.alert(
-        t('common.success'),
-        t('marketplaceExtra.agreementCreated'),
-        [{ text: t('nav.cash'), onPress: () => router.push('/cash') }],
-      );
+      await savePendingCashAgreement({
+        id: agreement.id,
+        operationCode: agreement.operationCode,
+        pin: agreement.pin,
+        amount: agreement.amount,
+        listingTitle: listing.title,
+        createdAt: new Date().toISOString(),
+      });
+      Alert.alert(t('cash.agreementCreated'), `${agreement.operationCode}\nPIN: ${agreement.pin}`, [
+        { text: t('nav.cash'), onPress: () => router.push('/cash') },
+      ]);
     } catch {
       Alert.alert(t('common.error'), t('marketplace.publishError'));
     } finally {
@@ -204,6 +217,8 @@ export default function ListingDetailScreen() {
             </View>
           ) : null}
         </View>
+
+        {listing.sellerId ? <SellerTrustBadge userId={listing.sellerId} /> : null}
 
         {attributeRows.length > 0 ? (
           <View style={styles.attrGrid}>

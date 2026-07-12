@@ -1,3 +1,5 @@
+const { withSentryConfig } = require('@sentry/nextjs');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ['@lefrig/ui', '@lefrig/shared'],
@@ -15,4 +17,14 @@ const nextConfig = {
   ...(process.env.DOCKER_BUILD === 'true' ? { output: 'standalone' } : {}),
 };
 
-module.exports = nextConfig;
+const sentryOptions = {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT ?? 'lefrig-admin',
+  silent: true,
+  dryRun: !process.env.SENTRY_AUTH_TOKEN,
+  disableLogger: true,
+};
+
+module.exports = process.env.NEXT_PUBLIC_SENTRY_DSN
+  ? withSentryConfig(nextConfig, sentryOptions)
+  : nextConfig;

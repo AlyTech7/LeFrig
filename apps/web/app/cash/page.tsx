@@ -16,6 +16,7 @@ type CashAgreement = {
   pin?: string;
   createdAt: string;
   listing?: { title: string };
+  hasReceipt?: boolean;
 };
 
 type LookupResult = {
@@ -23,9 +24,11 @@ type LookupResult = {
   amount: number | string;
   status: string;
   hasPin: boolean;
+  pin?: string;
   buyer?: { displayName: string };
   seller?: { displayName: string };
   listing?: { title: string };
+  receipt?: { id: string } | null;
 };
 
 export default function CashPage() {
@@ -84,11 +87,11 @@ export default function CashPage() {
     setConfirming(true);
     setMessage('');
     try {
-      await authFetch('/cash/confirm', {
+      const res = await authFetch<{ fullyConfirmed?: boolean }>('/cash/confirm', {
         method: 'POST',
         body: JSON.stringify({ operationCode: lookup.operationCode, pin }),
       });
-      setMessage(t('cash.pinOk'));
+      setMessage(res.fullyConfirmed ? t('cash.fullyConfirmed') : t('cash.pinOk'));
       setPin('');
       const updated = await authFetch<CashAgreement[]>('/cash/my');
       setAgreements(updated);
@@ -98,6 +101,16 @@ export default function CashPage() {
       setMessage(t('cash.pinFail'));
     } finally {
       setConfirming(false);
+    }
+  };
+
+  const shareReceipt = async (code: string) => {
+    try {
+      const receipt = await authFetch<{ shareText: string }>(`/cash/receipt/${code}`);
+      await navigator.clipboard.writeText(receipt.shareText);
+      setMessage(t('cash.receiptCopied'));
+    } catch {
+      setMessage(t('cash.notFound'));
     }
   };
 
@@ -147,6 +160,11 @@ export default function CashPage() {
               <p style={{ margin: '0 0 12px', color: 'var(--lf-emerald)', fontWeight: 800 }}>
                 {Number(lookup.amount).toLocaleString()} MRU · {lookup.status}
               </p>
+              {lookup.status === 'confirmed' && lookup.receipt && (
+                <Button variant="secondary" onClick={() => shareReceipt(lookup.operationCode)}>
+                  {t('cash.shareReceipt')}
+                </Button>
+              )}
               {lookup.status !== 'confirmed' && lookup.hasPin && (
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
                   <Input label={t('cash.pinPlaceholder')} value={pin} onChange={(e) => setPin(e.target.value)} maxLength={4} />
@@ -176,26 +194,40 @@ export default function CashPage() {
         ) : (
           <div style={{ display: 'grid', gap: 12 }}>
             {agreements.map((a) => (
-              <button
+              <div
                 key={a.id}
-                type="button"
-                onClick={() => loadLookup(a.operationCode)}
                 style={{
-                  textAlign: 'left',
                   padding: 18,
                   borderRadius: 16,
                   border: '1px solid rgba(255,255,255,0.06)',
                   background: 'var(--lf-surface)',
-                  color: 'inherit',
-                  cursor: 'pointer',
                 }}
               >
-                <div style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--lf-gold)' }}>{a.operationCode}</div>
-                <div style={{ marginTop: 4 }}>{a.listing?.title ?? t('cash.cashOp')}</div>
-                <div style={{ color: 'var(--lf-emerald)', fontWeight: 700, marginTop: 6 }}>
-                  {Number(a.amount).toLocaleString()} MRU · {a.status}
-                </div>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => loadLookup(a.operationCode)}
+                  style={{
+                    textAlign: 'left',
+                    border: 'none',
+                    background: 'transparent',
+                    color: 'inherit',
+                    cursor: 'pointer',
+                    width: '100%',
+                    padding: 0,
+                  }}
+                >
+                  <div style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--lf-gold)' }}>{a.operationCode}</div>
+                  <div style={{ marginTop: 4 }}>{a.listing?.title ?? t('cash.cashOp')}</div>
+                  <div style={{ color: 'var(--lf-emerald)', fontWeight: 700, marginTop: 6 }}>
+                    {Number(a.amount).toLocaleString()} MRU · {a.status}
+                  </div>
+                </button>
+                {a.status === 'confirmed' && a.hasReceipt ? (
+                  <Button variant="secondary" style={{ marginTop: 10 }} onClick={() => shareReceipt(a.operationCode)}>
+                    {t('cash.shareReceipt')}
+                  </Button>
+                ) : null}
+              </div>
             ))}
           </div>
         )}
