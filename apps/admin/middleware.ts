@@ -1,7 +1,7 @@
 import { clerkClient, clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
-const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/unauthorized']);
+const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/unauthorized', '/robots.txt']);
 
 function rolesFromClaims(sessionClaims: Record<string, unknown> | null | undefined): string[] {
   if (!sessionClaims) return [];
