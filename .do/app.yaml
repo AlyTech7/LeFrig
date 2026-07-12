@@ -32,7 +32,7 @@ services:
       - key: API_PUBLIC_URL
         value: https://whale-app-xpe4g.ondigitalocean.app
       - key: CORS_ORIGINS
-        value: https://www.lefrig.com,https://lefrig.com,https://lefrig.vercel.app
+        value: https://www.lefrig.com,https://lefrig.com,https://lefrig.vercel.app,https://admin.lefrig.com,https://lefrig-admin.vercel.app
       - key: ENABLE_SWAGGER
         value: 'false'
       - key: AUTH_LEGACY_JWT
