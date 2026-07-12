@@ -3,9 +3,11 @@ import { test, expect } from '@playwright/test';
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001';
 
 test.describe('LeFrig smoke', () => {
-  test('API expone documentación Swagger', async ({ request }) => {
-    const res = await request.get(`${apiUrl}/docs`);
+  test('API health responde ok', async ({ request }) => {
+    const res = await request.get(`${apiUrl}/health`);
     expect(res.status()).toBeLessThan(500);
+    const body = await res.json();
+    expect(body.db).toBe('connected');
   });
 
   test('Home web carga con marca Lefrig', async ({ page }) => {

@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { createHash, randomBytes } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
-import { RedisAdapter } from '../../adapters/redis.adapter';
+import { RateLimitService } from '../../common/rate-limit/rate-limit.service';
 import { requestOtpSchema, verifyOtpSchema } from '@lefrig/shared';
 import type { JwtPayload } from '@lefrig/shared';
 
@@ -14,13 +14,13 @@ export class AuthService {
     private prisma: PrismaService,
     private jwt: JwtService,
     private config: ConfigService,
-    private redis: RedisAdapter,
+    private rateLimit: RateLimitService,
   ) {}
 
   async requestOtp(input: unknown) {
     const { phone } = requestOtpSchema.parse(input);
 
-    const attempts = await this.redis.incr(`otp:req:${phone}`, 3600);
+    const attempts = await this.rateLimit.increment(`otp:req:${phone}`, 3600);
     if (attempts > 8) {
       throw new HttpException('Demasiados intentos de OTP. Inténtalo más tarde.', HttpStatus.TOO_MANY_REQUESTS);
     }

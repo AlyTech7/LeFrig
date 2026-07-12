@@ -36,12 +36,14 @@ import { RedisAdapter } from './adapters/redis.adapter';
 import { ManualPaymentAdapter } from './adapters/payment.adapter';
 import { SearchModule } from './search/search.module';
 import { HealthController } from './health.controller';
+import { RateLimitModule } from './common/rate-limit/rate-limit.module';
 
 @Global()
 @Module({
   imports: [
     SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
+    RateLimitModule,
     PrismaModule,
     AuthModule,
     UsersModule,

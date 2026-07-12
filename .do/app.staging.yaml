@@ -1,19 +1,15 @@
-# DigitalOcean App Platform — solo API NestJS (Docker)
-# Docs: https://docs.digitalocean.com/products/app-platform/reference/app-spec/
-#
-# En DO: Settings → App Spec → pegar o conectar repo con este archivo.
-# Secrets (DATABASE_URL, CLERK_*, JWT_*) se configuran en el panel, no aquí.
+# DigitalOcean App Platform — API staging (pre-producción)
+# Crear app separada en DO; no compartir DATABASE_URL con producción.
 
-name: lefrig-api
+name: lefrig-api-staging
 region: fra
 
 services:
-  - name: lefrig-api
+  - name: lefrig-api-staging
     github:
       repo: AlyTech7/LeFrig
       branch: master
       deploy_on_push: true
-    # Monorepo: raíz del repo (Dockerfile copia packages + apps/api)
     source_dir: /
     dockerfile_path: apps/api/Dockerfile
     http_port: 8080
@@ -29,24 +25,25 @@ services:
     envs:
       - key: NODE_ENV
         value: production
+      - key: SENTRY_ENVIRONMENT
+        value: staging
       - key: API_PUBLIC_URL
-        value: https://whale-app-xpe4g.ondigitalocean.app
+        value: https://api-staging.lefrig.com
       - key: CORS_ORIGINS
-        value: https://www.lefrig.com,https://lefrig.com,https://lefrig.vercel.app,https://admin.lefrig.com,https://lefrig-admin.vercel.app
+        value: https://staging.lefrig.com,https://lefrig-staging.vercel.app,http://localhost:3000
       - key: ENABLE_SWAGGER
-        value: 'false'
+        value: 'true'
       - key: AUTH_LEGACY_JWT
-        value: 'false'
+        value: 'true'
+      - key: OTP_MOCK_CODE
+        value: '123456'
       - key: MEILI_SYNC_ON_BOOT
         value: 'false'
-      - key: SENTRY_DSN
-        scope: RUN_TIME
-        type: SECRET
-      - key: SENTRY_ENVIRONMENT
-        value: production
-        scope: RUN_TIME
       - key: DATABASE_URL
         scope: RUN_AND_BUILD_TIME
+        type: SECRET
+      - key: REDIS_URL
+        scope: RUN_TIME
         type: SECRET
       - key: CLERK_SECRET_KEY
         scope: RUN_TIME
@@ -58,6 +55,9 @@ services:
         scope: RUN_TIME
         type: SECRET
       - key: JWT_REFRESH_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: SENTRY_DSN
         scope: RUN_TIME
         type: SECRET
       - key: STORAGE_ENDPOINT
@@ -78,12 +78,6 @@ services:
       - key: STORAGE_REGION
         value: fra1
         scope: RUN_TIME
-      - key: STORAGE_FORCE_PATH_STYLE
-        value: 'false'
-        scope: RUN_TIME
-      - key: REDIS_URL
-        scope: RUN_TIME
-        type: SECRET
       - key: MEILISEARCH_HOST
         scope: RUN_TIME
         type: SECRET

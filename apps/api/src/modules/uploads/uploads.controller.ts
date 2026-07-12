@@ -12,6 +12,7 @@ import { memoryStorage } from 'multer';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { UploadsService } from './uploads.service';
+import { RateLimit } from '../../common/decorators/rate-limit.decorator';
 
 const storage = memoryStorage();
 
@@ -21,6 +22,7 @@ export class UploadsController {
   constructor(private uploadsService: UploadsService) {}
 
   @Post('images')
+  @RateLimit({ limit: 30, windowSec: 60, keyPrefix: 'uploads:images' })
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
@@ -36,6 +38,7 @@ export class UploadsController {
   }
 
   @Post('images/batch')
+  @RateLimit({ limit: 15, windowSec: 60, keyPrefix: 'uploads:batch' })
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
