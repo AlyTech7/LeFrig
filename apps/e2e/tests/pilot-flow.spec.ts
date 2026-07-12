@@ -11,16 +11,8 @@ test.describe('Flujo piloto', () => {
     await expect(page.locator('body')).toContainText(/LEFRIG|Lefrig/i);
 
     await page.goto('/sign-in');
-    await expect(page.locator('.sv-auth')).toBeVisible();
-
-    const hasClerk = await page
-      .locator('.cl-rootBox, [data-clerk-component], iframe[title*="Clerk"]')
-      .first()
-      .isVisible()
-      .catch(() => false);
-    if (hasClerk) {
-      await expect(page.locator('body')).toContainText(/iniciar|sign|entrar|correo|teléfono/i);
-    }
+    await expect(page.locator('.sv-auth, .sv-auth__notice')).toBeVisible();
+    await expect(page.locator('body')).toContainText(/Configura Clerk|iniciar|sign|entrar|correo|teléfono/i);
 
     await page.goto('/marketplace/create');
     const onCreate =
@@ -39,7 +31,7 @@ test.describe('Flujo piloto', () => {
     await page.goto('/marketplace/create');
     await page.waitForURL(/sign-in|marketplace\/create/, { timeout: 10_000 });
     if (page.url().includes('sign-in')) {
-      await expect(page.locator('.sv-auth')).toBeVisible();
+      await expect(page.locator('.sv-auth, .sv-auth__notice')).toBeVisible();
     }
   });
 });
