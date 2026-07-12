@@ -48,8 +48,8 @@ async function bootstrap() {
     SwaggerModule.setup('docs', app, document);
   }
 
-  const port = config.get<number>('API_PORT', 3001);
-  await app.listen(port);
+  const port = Number(config.get('PORT') ?? config.get('API_PORT', 3001));
+  await app.listen(port, '0.0.0.0');
   console.log(`🚀 LeFrig API running on http://localhost:${port}`);
   if (enableSwagger) {
     console.log(`📚 Swagger docs at http://localhost:${port}/docs`);
