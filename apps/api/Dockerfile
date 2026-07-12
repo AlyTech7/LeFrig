@@ -21,6 +21,8 @@ RUN pnpm --filter @lefrig/api build
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+# Prisma CLI fijado a v6 (evita npx → v7 y .bin roto con pnpm en Docker)
+RUN npm install -g prisma@6.19.3
 
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
@@ -33,4 +35,4 @@ COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
 WORKDIR /app/apps/api
 EXPOSE 3001
 
-CMD ["sh", "-c", "/app/node_modules/.bin/prisma migrate deploy && node dist/main.js"]
+CMD ["sh", "-c", "prisma migrate deploy && node dist/main.js"]
