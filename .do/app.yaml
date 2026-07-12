@@ -1,0 +1,56 @@
+# DigitalOcean App Platform — solo API NestJS (Docker)
+# Docs: https://docs.digitalocean.com/products/app-platform/reference/app-spec/
+#
+# En DO: Settings → App Spec → pegar o conectar repo con este archivo.
+# Secrets (DATABASE_URL, CLERK_*, JWT_*) se configuran en el panel, no aquí.
+
+name: lefrig-api
+region: fra
+
+services:
+  - name: lefrig-api
+    github:
+      repo: AlyTech7/LeFrig
+      branch: master
+      deploy_on_push: true
+    # Monorepo: raíz del repo (Dockerfile copia packages + apps/api)
+    source_dir: /
+    dockerfile_path: apps/api/Dockerfile
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 60
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 5
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: API_PUBLIC_URL
+        value: https://api.lefrig.com
+      - key: CORS_ORIGINS
+        value: https://www.lefrig.com,https://lefrig.com,https://lefrig.vercel.app
+      - key: ENABLE_SWAGGER
+        value: 'false'
+      - key: AUTH_LEGACY_JWT
+        value: 'false'
+      - key: MEILI_SYNC_ON_BOOT
+        value: 'false'
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        type: SECRET
+      - key: CLERK_SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: CLERK_WEBHOOK_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: JWT_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: JWT_REFRESH_SECRET
+        scope: RUN_TIME
+        type: SECRET
