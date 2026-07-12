@@ -15,7 +15,7 @@ import {
 import { useLocale, useT } from '@/lib/locale';
 import { localizedCampFromSummary } from '@lefrig/shared';
 
-type PayFilter = 'all' | 'cash' | 'fiado' | 'vouchers' | 'verified';
+type PayFilter = 'all' | 'cash' | 'verified';
 
 const SHOP_TYPE_KEYS: Record<string, string> = {
   individual: 'shops.typeIndividual',
@@ -32,8 +32,6 @@ function campEmoji(slug: string) {
 function paymentTags(shop: ShopListItem, t: ReturnType<typeof useT>) {
   const tags: { key: string; label: string; cls: string }[] = [];
   if (shop.acceptsCash) tags.push({ key: 'cash', label: t('shops.tagCash'), cls: 'shp-tag--cash' });
-  if (shop.acceptsFiado) tags.push({ key: 'fiado', label: t('shops.tagFiado'), cls: 'shp-tag--fiado' });
-  if (shop.acceptsVouchers) tags.push({ key: 'voucher', label: t('shops.tagVoucher'), cls: 'shp-tag--voucher' });
   return tags;
 }
 
@@ -92,8 +90,6 @@ export function ShopsHub() {
       );
     }
     if (payFilter === 'cash') list = list.filter((s) => s.acceptsCash);
-    if (payFilter === 'fiado') list = list.filter((s) => s.acceptsFiado);
-    if (payFilter === 'vouchers') list = list.filter((s) => s.acceptsVouchers);
     if (payFilter === 'verified') list = list.filter((s) => s.verified);
     return list;
   }, [shops, query, payFilter]);
@@ -162,8 +158,6 @@ export function ShopsHub() {
             [
               ['all', 'shops.filterAll'],
               ['cash', 'shops.tagCash'],
-              ['fiado', 'shops.tagFiado'],
-              ['vouchers', 'shops.tagVoucher'],
               ['verified', 'shops.filterVerified'],
             ] as const
           ).map(([id, labelKey]) => (

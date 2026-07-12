@@ -23,7 +23,6 @@ const EXPLORE: FooterLink[] = [
   { href: '/jobs', labelKey: 'nav.jobs' },
   { href: '/camps', labelKey: 'nav.camps' },
   { href: '/locations', labelKey: 'nav.map' },
-  { href: '/diaspora', labelKey: 'nav.diaspora' },
 ];
 
 const PUBLISH: FooterLink[] = [
@@ -39,9 +38,7 @@ const ACCOUNT: FooterLink[] = [
   { href: '/orders', labelKey: 'nav.orders' },
   { href: '/favorites', labelKey: 'nav.favorites' },
   { href: '/notifications', labelKey: 'nav.notifications' },
-  { href: '/ledger', labelKey: 'nav.ledger' },
   { href: '/cash', labelKey: 'common.cash' },
-  { href: '/vouchers', labelKey: 'nav.vouchers' },
   { href: '/disputes', labelKey: 'nav.disputes' },
 ];
 
@@ -61,8 +58,6 @@ const COLUMNS: FooterColumn[] = [
 
 const TRUST_PILLS = [
   { icon: 'dollar-sign' as const, labelKey: 'trust.cash' },
-  { icon: 'book-open' as const, labelKey: 'trust.fiado' },
-  { icon: 'ticket' as const, labelKey: 'trust.vouchers' },
   { icon: 'shield' as const, labelKey: 'footer.trust' },
   { icon: 'wifi-off' as const, labelKey: 'footer.offlineFirst' },
 ];
@@ -203,13 +198,6 @@ export function SovereignFooter() {
             <div>
               <strong>{t('footer.stripMediation')}</strong>
               <span>{t('footer.stripMediationDesc')}</span>
-            </div>
-          </div>
-          <div className="sv-foot-strip__item">
-            <AppIcon name="globe" size={20} color="var(--sv-dune)" />
-            <div>
-              <strong>{t('footer.stripDiaspora')}</strong>
-              <span>{t('footer.stripDiasporaDesc')}</span>
             </div>
           </div>
         </div>

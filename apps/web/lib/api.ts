@@ -211,7 +211,7 @@ export const demoShops: ShopListItem[] = [
     verified: true,
     shopType: 'cooperative',
     productCount: 48,
-    description: 'Abarrotes, aceite, arroz y productos de primera necesidad. Fiado con libreta.',
+    description: 'Abarrotes, aceite, arroz y productos de primera necesidad. Pago en efectivo.',
   },
   {
     id: 'shop-2',

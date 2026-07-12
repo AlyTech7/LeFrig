@@ -5,11 +5,10 @@ import { useLocale, useT } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
 
 type Props = {
-  onDiaspora: () => void;
   onCommunity: () => void;
 };
 
-export function HomeCommunityBanner({ onDiaspora, onCommunity }: Props) {
+export function HomeCommunityBanner({ onCommunity }: Props) {
   const t = useT();
   const { dir } = useLocale();
 
@@ -25,13 +24,9 @@ export function HomeCommunityBanner({ onDiaspora, onCommunity }: Props) {
       <Text style={styles.title}>{t('home.communityBannerTitle')}</Text>
       <Text style={styles.sub}>{t('home.communityBannerSub')}</Text>
       <View style={styles.actions}>
-        <Pressable style={styles.btnPrimary} onPress={onDiaspora}>
-          <AppIcon name="globe" size={16} color={theme.oasisDeep} />
-          <Text style={styles.btnPrimaryText}>{t('nav.diaspora')}</Text>
-        </Pressable>
-        <Pressable style={styles.btnGhost} onPress={onCommunity}>
-          <AppIcon name="users" size={16} color={theme.pearl} />
-          <Text style={styles.btnGhostText}>{t('home.forum')}</Text>
+        <Pressable style={styles.btnPrimary} onPress={onCommunity}>
+          <AppIcon name="users" size={16} color={theme.oasisDeep} />
+          <Text style={styles.btnPrimaryText}>{t('home.forum')}</Text>
         </Pressable>
       </View>
     </LinearGradient>

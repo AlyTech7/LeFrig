@@ -57,8 +57,6 @@ export function RegisterShopStudio() {
   const [phone, setPhone] = useState('+222');
   const [whatsapp, setWhatsapp] = useState('');
   const [acceptsCash, setAcceptsCash] = useState(true);
-  const [acceptsFiado, setAcceptsFiado] = useState(false);
-  const [acceptsVouchers, setAcceptsVouchers] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -93,7 +91,7 @@ export function RegisterShopStudio() {
     }
     if (step === 3) {
       const p = phone.trim();
-      return p.length >= 8 && (acceptsCash || acceptsFiado || acceptsVouchers);
+      return p.length >= 8 && acceptsCash;
     }
     return true;
   }, [
@@ -107,23 +105,7 @@ export function RegisterShopStudio() {
     hasUploadErrors,
     phone,
     acceptsCash,
-    acceptsFiado,
-    acceptsVouchers,
   ]);
-
-  const togglePayment = (key: 'cash' | 'fiado' | 'vouchers') => {
-    const next = {
-      cash: acceptsCash,
-      fiado: acceptsFiado,
-      vouchers: acceptsVouchers,
-    };
-    next[key] = !next[key];
-    const count = (next.cash ? 1 : 0) + (next.fiado ? 1 : 0) + (next.vouchers ? 1 : 0);
-    if (count === 0) return;
-    setAcceptsCash(next.cash);
-    setAcceptsFiado(next.fiado);
-    setAcceptsVouchers(next.vouchers);
-  };
 
   const publish = async () => {
     if (!isSignedIn) {
@@ -147,9 +129,9 @@ export function RegisterShopStudio() {
           whatsapp: whatsapp.trim() || undefined,
           campId,
           shopType,
-          acceptsCash,
-          acceptsFiado,
-          acceptsVouchers,
+          acceptsCash: true,
+          acceptsFiado: false,
+          acceptsVouchers: false,
           imageUrl: imageUrls[0],
         }),
       });
@@ -278,29 +260,9 @@ export function RegisterShopStudio() {
               <h2>{t('shops.studio.paymentsContact')}</h2>
               <p className="pub-hint">{t('shops.studio.paymentsHint')}</p>
               <div className="pub-payments">
-                <button
-                  type="button"
-                  className={acceptsCash ? 'pub-pay pub-pay--on' : 'pub-pay'}
-                  onClick={() => togglePayment('cash')}
-                >
+                <button type="button" className="pub-pay pub-pay--on" disabled>
                   <strong>{t('shops.tagCash')}</strong>
                   <small>{t('shops.studio.cashDesc')}</small>
-                </button>
-                <button
-                  type="button"
-                  className={acceptsFiado ? 'pub-pay pub-pay--on' : 'pub-pay'}
-                  onClick={() => togglePayment('fiado')}
-                >
-                  <strong>{t('shops.tagFiado')}</strong>
-                  <small>{t('shops.studio.fiadoDesc')}</small>
-                </button>
-                <button
-                  type="button"
-                  className={acceptsVouchers ? 'pub-pay pub-pay--on' : 'pub-pay'}
-                  onClick={() => togglePayment('vouchers')}
-                >
-                  <strong>{t('shops.tagVoucher')}</strong>
-                  <small>{t('shops.studio.voucherDesc')}</small>
                 </button>
               </div>
               <label className="pub-field">
@@ -345,15 +307,7 @@ export function RegisterShopStudio() {
                 </div>
                 <div>
                   <dt>{t('shops.studio.reviewPayments')}</dt>
-                  <dd>
-                    {[
-                      acceptsCash && t('common.cash'),
-                      acceptsFiado && t('common.fiado'),
-                      acceptsVouchers && t('nav.vouchers'),
-                    ]
-                      .filter(Boolean)
-                      .join(', ')}
-                  </dd>
+                  <dd>{t('common.cash')}</dd>
                 </div>
                 <div>
                   <dt>{t('shops.studio.reviewContact')}</dt>
@@ -419,11 +373,7 @@ export function RegisterShopStudio() {
                 style={coverPreview ? { backgroundImage: `url(${coverPreview})` } : undefined}
               >
                 {!coverPreview && <span>{typeInfo?.icon ?? '🏪'}</span>}
-                <span className="pub-card__badge">
-                  {acceptsCash && '💵'}
-                  {acceptsFiado && ' 📒'}
-                  {acceptsVouchers && ' 🎫'}
-                </span>
+                <span className="pub-card__badge">{acceptsCash && '💵'}</span>
               </div>
               <div className="pub-card__body">
                 <h3>{name.trim() || t('shops.studio.previewName')}</h3>
@@ -441,7 +391,7 @@ export function RegisterShopStudio() {
             <li className={description.length >= 10 ? 'done' : ''}>{t('shops.studio.checklistDesc')}</li>
             <li className={imageUrls.length >= 1 ? 'done' : ''}>{t('shops.studio.checklistPhoto')}</li>
             <li className={phone.trim().length >= 8 ? 'done' : ''}>{t('shops.studio.checklistPhone')}</li>
-            <li className={acceptsCash || acceptsFiado || acceptsVouchers ? 'done' : ''}>{t('shops.studio.checklistPayment')}</li>
+            <li className={acceptsCash ? 'done' : ''}>{t('shops.studio.checklistPayment')}</li>
           </ul>
         </aside>
       </div>

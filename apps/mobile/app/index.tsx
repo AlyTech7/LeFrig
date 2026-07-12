@@ -202,10 +202,7 @@ export default function HomeScreen() {
 
           {/* ── Comunidad ── */}
           <View style={styles.spacer} />
-          <HomeCommunityBanner
-            onDiaspora={() => router.push('/diaspora')}
-            onCommunity={() => router.push('/community')}
-          />
+          <HomeCommunityBanner onCommunity={() => router.push('/community')} />
 
           {/* ── Acceso rápido ── */}
           <SectionHeader

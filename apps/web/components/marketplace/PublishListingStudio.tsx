@@ -22,7 +22,7 @@ import { useLocale, useT } from '@/lib/locale';
 import { localizedCampFromSummary, pickLocalized } from '@lefrig/shared';
 
 type Step = 1 | 2 | 3 | 4;
-type PayMethod = 'cash' | 'cash_on_delivery' | 'fiado';
+type PayMethod = 'cash' | 'cash_on_delivery';
 type Condition = 'new' | 'like_new' | 'used' | 'for_parts';
 
 const STEPS: { n: Step; labelKey: string }[] = [
@@ -42,7 +42,6 @@ const CONDITIONS: { id: Condition; labelKey: string }[] = [
 const PAYMENTS: { id: PayMethod; labelKey: string; descKey: string }[] = [
   { id: 'cash', labelKey: 'common.cash', descKey: 'publish.paymentCashDesc' },
   { id: 'cash_on_delivery', labelKey: 'payment.cashOnDelivery', descKey: 'publish.paymentCodDesc' },
-  { id: 'fiado', labelKey: 'common.fiado', descKey: 'publish.paymentFiadoDesc' },
 ];
 
 const TIP_KEYS: Record<Step, string> = {

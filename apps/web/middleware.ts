@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { getClerkAuthorizedParties } from '@/lib/site-url';
 
 const isPublicRoute = createRouteMatcher([
   '/',
@@ -10,12 +11,14 @@ const isPublicRoute = createRouteMatcher([
   '/transport(.*)',
   '/camps(.*)',
   '/locations(.*)',
-  '/diaspora(.*)',
   '/needs(.*)',
-  '/vouchers(.*)',
   '/community(.*)',
   '/jobs(.*)',
 ]);
+
+const clerkOptions = {
+  authorizedParties: getClerkAuthorizedParties(),
+};
 
 export default clerkMiddleware(async (auth, request) => {
   // Sin Clerk completamente configurado, no bloquear (dev local)
@@ -24,7 +27,7 @@ export default clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request)) {
     await auth.protect();
   }
-});
+}, clerkOptions);
 
 export const config = {
   matcher: [

@@ -1,6 +1,7 @@
 'use client';
 
 import { SignUp } from '@clerk/nextjs';
+import { clerkRedirectUrl } from '@/lib/site-url';
 
 export default function SignUpPage() {
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
@@ -28,8 +29,8 @@ export default function SignUpPage() {
           }}
           routing="path"
           path="/sign-up"
-          signInUrl="/sign-in"
-          forceRedirectUrl="/marketplace"
+          signInUrl={clerkRedirectUrl('/sign-in')}
+          forceRedirectUrl={clerkRedirectUrl('/marketplace')}
         />
       </div>
     </div>

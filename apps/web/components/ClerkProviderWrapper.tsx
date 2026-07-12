@@ -4,6 +4,7 @@ import { ClerkProvider, useAuth } from '@clerk/nextjs';
 import { esES, frFR, enUS } from '@clerk/localizations';
 import { useEffect } from 'react';
 import { CLERK_PUBLISHABLE_KEY, isClerkEnabled } from '@/lib/clerk';
+import { clerkRedirectUrl } from '@/lib/site-url';
 import { SyncPreferredLanguage } from '@/components/SyncPreferredLanguage';
 import { useLocale } from '@/lib/locale';
 import type { Locale } from '@lefrig/shared';
@@ -77,10 +78,10 @@ function ClerkProviderInner({ children }: { children: React.ReactNode }) {
       localization={localization}
       appearance={clerkAppearance}
       publishableKey={CLERK_PUBLISHABLE_KEY}
-      signInUrl={process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL ?? '/sign-in'}
-      signUpUrl={process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL ?? '/sign-up'}
-      afterSignInUrl={process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL ?? '/marketplace'}
-      afterSignUpUrl={process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL ?? '/marketplace'}
+      signInUrl={process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL ?? clerkRedirectUrl('/sign-in')}
+      signUpUrl={process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL ?? clerkRedirectUrl('/sign-up')}
+      afterSignInUrl={process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL ?? clerkRedirectUrl('/marketplace')}
+      afterSignUpUrl={process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL ?? clerkRedirectUrl('/marketplace')}
     >
       <ClerkSessionSync />
       <SyncPreferredLanguage />

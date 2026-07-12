@@ -201,11 +201,6 @@ export default function CashPage() {
           </div>
         )}
 
-        <p style={{ marginTop: 32, textAlign: 'center' }}>
-          <Link href="/ledger" style={{ color: 'var(--lf-gold)', fontWeight: 600 }}>
-            {t('cash.fiadoLink')}
-          </Link>
-        </p>
       </PageBody>
     </>
   );
