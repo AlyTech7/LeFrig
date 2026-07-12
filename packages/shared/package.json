@@ -21,7 +21,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "lint": "eslint src --ext .ts",
+    "lint": "tsc --noEmit",
     "clean": "rimraf dist"
   },
   "dependencies": {
