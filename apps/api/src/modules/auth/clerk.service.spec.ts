@@ -14,7 +14,7 @@ function mockClerkUser(overrides: Partial<ClerkUser> = {}): ClerkUser {
     primaryEmailAddressId: 'email_1',
     primaryPhoneNumberId: 'phone_1',
     emailAddresses: [{ id: 'email_1', emailAddress: 'fatima@example.com' }],
-    phoneNumbers: [{ id: 'phone_1', phoneNumber: '+22212345678' }],
+    phoneNumbers: [{ id: 'phone_1', phoneNumber: '+213555123456' }],
     publicMetadata: { roles: ['citizen'], campId: 'camp-1' },
     ...overrides,
   } as ClerkUser;
@@ -32,7 +32,7 @@ describe('ClerkService', () => {
         upsert: vi.fn().mockResolvedValue({
           id: 'uuid-local-1',
           clerkId: 'user_clerk_abc',
-          phone: '+22212345678',
+          phone: '+213555123456',
           email: 'fatima@example.com',
           roles: ['citizen'],
           campId: 'camp-1',

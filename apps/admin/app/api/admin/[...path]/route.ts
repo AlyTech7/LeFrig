@@ -1,0 +1,63 @@
+import { auth } from '@clerk/nextjs/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { API_URL } from '@/lib/api';
+
+async function proxyRequest(req: NextRequest, pathSegments: string[]) {
+  const { getToken } = await auth();
+  const token = await getToken();
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const path = `/${pathSegments.join('/')}`;
+  const target = `${API_URL}${path}${req.nextUrl.search}`;
+
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+  };
+
+  const contentType = req.headers.get('content-type');
+  if (contentType) headers['Content-Type'] = contentType;
+
+  const res = await fetch(target, {
+    method: req.method,
+    headers,
+    body: req.method !== 'GET' && req.method !== 'HEAD' ? await req.text() : undefined,
+    cache: 'no-store',
+  });
+
+  const body = await res.text();
+  return new NextResponse(body, {
+    status: res.status,
+    headers: {
+      'Content-Type': res.headers.get('content-type') ?? 'application/json',
+    },
+  });
+}
+
+type RouteContext = { params: Promise<{ path: string[] }> };
+
+export async function GET(req: NextRequest, ctx: RouteContext) {
+  const { path } = await ctx.params;
+  return proxyRequest(req, path);
+}
+
+export async function POST(req: NextRequest, ctx: RouteContext) {
+  const { path } = await ctx.params;
+  return proxyRequest(req, path);
+}
+
+export async function PATCH(req: NextRequest, ctx: RouteContext) {
+  const { path } = await ctx.params;
+  return proxyRequest(req, path);
+}
+
+export async function PUT(req: NextRequest, ctx: RouteContext) {
+  const { path } = await ctx.params;
+  return proxyRequest(req, path);
+}
+
+export async function DELETE(req: NextRequest, ctx: RouteContext) {
+  const { path } = await ctx.params;
+  return proxyRequest(req, path);
+}

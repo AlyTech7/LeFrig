@@ -1,6 +1,6 @@
 import type { APIRequestContext } from '@playwright/test';
 
-const DEFAULT_PHONE = '+22211111111';
+const DEFAULT_PHONE = '+213555111111';
 const DEFAULT_OTP = '123456';
 
 export async function legacyLogin(
@@ -36,7 +36,7 @@ export async function createTestListing(
       title,
       description: 'Anuncio de prueba E2E — producto ficticio para CI.',
       price: 2500,
-      currency: 'MRU',
+      currency: 'DZD',
       category: 'other',
       campId: camp.id,
       paymentMethods: ['cash'],

@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { LISTING_CATEGORIES } from '@lefrig/shared';
+import { LISTING_CATEGORIES, DEFAULT_CURRENCY, type CurrencyCode } from '@lefrig/shared';
 import {
   getListingAttributeSchema,
   categoryHasStructuredAttributes,
@@ -23,6 +23,7 @@ import { useAuthApi } from '@/lib/useAuthApi';
 import { prepareListingPhoto } from '@/lib/image-prep';
 import { uploadListingImageFromUri } from '@/lib/uploads';
 import { ListingPhotoPicker, type PhotoSlot } from '@/components/ListingPhotoPicker';
+import { CurrencySelect } from '@/components/CurrencySelect';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { AppIcon } from '@/components/AppIcon';
 import { pickLabel, pickName } from '@/lib/bilingual';
@@ -38,6 +39,7 @@ export default function CreateListingScreen() {
   const [category, setCategory] = useState('other');
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
+  const [currency, setCurrency] = useState<CurrencyCode>(DEFAULT_CURRENCY);
   const [description, setDescription] = useState('');
   const [attributes, setAttributes] = useState<Record<string, string>>({});
   const [photos, setPhotos] = useState<PhotoSlot[]>([]);
@@ -144,7 +146,7 @@ export default function CreateListingScreen() {
             description.trim() ||
             (hasStructured ? title.trim() : `${title.trim()}. Publicado desde Lefrig móvil. Pago en efectivo al recibir.`),
           price: Number(price) > 0 ? Number(price) : 100,
-          currency: 'MRU',
+          currency,
           category,
           campId,
           paymentMethods: ['cash'],
@@ -286,6 +288,7 @@ export default function CreateListingScreen() {
               value={price}
               onChangeText={setPrice}
             />
+            <CurrencySelect value={currency} onChange={setCurrency} locale={locale} label={t('publish.currencyLabel')} />
             <TextInput
               style={[styles.input, styles.textArea]}
               placeholder={hasStructured ? t('publish.extraNotes') : t('publish.description')}

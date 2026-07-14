@@ -154,7 +154,7 @@ export class CashService {
     const shareText = [
       'ⵣ Lefrig — Recibo efectivo',
       `Código: ${agreement.operationCode}`,
-      `Importe: ${amount.toLocaleString()} MRU`,
+      `Importe: ${amount.toLocaleString()} ${agreement.currency}`,
       agreement.listing?.title ? `Artículo: ${agreement.listing.title}` : null,
       `Comprador: ${agreement.buyer.displayName}`,
       `Vendedor: ${agreement.seller.displayName}`,

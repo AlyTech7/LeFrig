@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { DEFAULT_CURRENCY } from '@lefrig/shared';
 
 export interface TranscribeResult {
   text: string;
@@ -106,7 +107,7 @@ export class AiService {
 
     return {
       suggestedPrice: suggested,
-      currency: 'MRU',
+      currency: DEFAULT_CURRENCY,
       range: { min: Math.round(suggested * 0.8), max: Math.round(suggested * 1.2) },
       basedOnSamples: 42,
     };

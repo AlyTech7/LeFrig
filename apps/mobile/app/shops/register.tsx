@@ -14,6 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import type { CampSummary } from '@lefrig/shared';
+import { DEFAULT_PHONE_COUNTRY } from '@lefrig/shared';
+import { PhoneField } from '@/components/PhoneField';
 import { AppIcon } from '@/components/AppIcon';
 import { pickName } from '@/lib/bilingual';
 import { useLocale, useT } from '@/lib/locale';
@@ -31,7 +33,7 @@ export default function RegisterShopScreen() {
   const [form, setForm] = useState({
     name: '',
     description: '',
-    phone: '+222',
+    phone: DEFAULT_PHONE_COUNTRY.dial,
     campId: '',
     acceptsCash: true,
     acceptsFiado: false,
@@ -98,7 +100,12 @@ export default function RegisterShopScreen() {
         <TextInput style={styles.input} value={form.name} onChangeText={(name) => setForm({ ...form, name })} placeholder="Marsa Al-Khair" placeholderTextColor={theme.textDarkMuted} />
 
         <Text style={styles.label}>{t('auth.phonePlaceholder')}</Text>
-        <TextInput style={styles.input} value={form.phone} onChangeText={(phone) => setForm({ ...form, phone })} keyboardType="phone-pad" placeholder="+222..." placeholderTextColor={theme.textDarkMuted} />
+        <PhoneField
+          label={t('shops.studio.phone')}
+          value={form.phone}
+          onChange={(phone) => setForm({ ...form, phone })}
+          locale={locale}
+        />
 
         <Text style={styles.label}>{t('shops.register.description')} ({t('common.optional')})</Text>
         <TextInput style={[styles.input, styles.textArea]} value={form.description} onChangeText={(description) => setForm({ ...form, description })} multiline placeholderTextColor={theme.textDarkMuted} />

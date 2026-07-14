@@ -60,6 +60,7 @@ export class ServicesService {
     description: string;
     priceFrom?: number;
     priceTo?: number;
+    currency?: string;
     campIds: string[];
     images?: string[];
   }) {
@@ -80,6 +81,7 @@ export class ServicesService {
         description: data.description,
         priceFrom: data.priceFrom,
         priceTo: data.priceTo,
+        currency: data.currency,
         images: data.images ?? [],
         camps: { create: data.campIds.map((campId) => ({ campId })) },
       },

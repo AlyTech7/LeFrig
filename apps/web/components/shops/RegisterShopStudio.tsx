@@ -9,7 +9,8 @@ import { ImageUploader, type PhotoItem } from '@/components/marketplace/ImageUpl
 import { demoCamps, fetchWithMeta } from '@/lib/api';
 import { useAuthFetch } from '@/lib/auth-fetch';
 import { useLocale, useT } from '@/lib/locale';
-import { localizedCampFromSummary } from '@lefrig/shared';
+import { localizedCampFromSummary, DEFAULT_PHONE_COUNTRY } from '@lefrig/shared';
+import { PhoneField } from '@lefrig/ui/client';
 
 type Step = 1 | 2 | 3 | 4;
 type ShopType = 'individual' | 'cooperative' | 'association' | 'workshop';
@@ -54,7 +55,7 @@ export function RegisterShopStudio() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
-  const [phone, setPhone] = useState('+222');
+  const [phone, setPhone] = useState<string>(DEFAULT_PHONE_COUNTRY.dial);
   const [whatsapp, setWhatsapp] = useState('');
   const acceptsCash = true;
 
@@ -265,24 +266,18 @@ export function RegisterShopStudio() {
                   <small>{t('shops.studio.cashDesc')}</small>
                 </button>
               </div>
-              <label className="pub-field">
-                <span>{t('shops.studio.phone')}</span>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+222 XX XX XX XX"
-                />
-              </label>
-              <label className="pub-field">
-                <span>{t('shops.studio.whatsappOptional')}</span>
-                <input
-                  type="tel"
-                  value={whatsapp}
-                  onChange={(e) => setWhatsapp(e.target.value)}
-                  placeholder={t('shops.studio.whatsappPlaceholder')}
-                />
-              </label>
+              <PhoneField
+                label={t('shops.studio.phone')}
+                value={phone}
+                onChange={setPhone}
+                locale={locale}
+              />
+              <PhoneField
+                label={t('shops.studio.whatsappOptional')}
+                value={whatsapp || DEFAULT_PHONE_COUNTRY.dial}
+                onChange={setWhatsapp}
+                locale={locale}
+              />
             </>
           )}
 

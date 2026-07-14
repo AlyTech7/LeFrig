@@ -46,7 +46,8 @@ export const HOME_ACTIONS = [
 ] as const;
 
 export * from './transport.js';
-export const CURRENCY = 'MRU';
+export * from './locale.js';
+export { DEFAULT_CURRENCY as CURRENCY } from './locale.js';
 export const DEFAULT_LOCALE = 'es';
 
 export const PAYMENT_LABELS = {

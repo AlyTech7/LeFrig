@@ -11,6 +11,8 @@ import {
   areRequiredAttributesFilled,
   formatAttributeDetails,
   suggestListingTitle,
+  DEFAULT_CURRENCY,
+  type CurrencyCode,
 } from '@lefrig/shared';
 import type { CampSummary } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
@@ -20,6 +22,7 @@ import { demoCamps, fetchWithMeta } from '@/lib/api';
 import { useAuthFetch } from '@/lib/auth-fetch';
 import { useLocale, useT } from '@/lib/locale';
 import { localizedCampFromSummary, pickLocalized } from '@lefrig/shared';
+import { CurrencySelect } from '@lefrig/ui/client';
 
 type Step = 1 | 2 | 3 | 4;
 type PayMethod = 'cash' | 'cash_on_delivery';
@@ -72,6 +75,7 @@ export function PublishListingStudio() {
   const [condition, setCondition] = useState<Condition>('used');
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const [price, setPrice] = useState('');
+  const [currency, setCurrency] = useState<CurrencyCode>(DEFAULT_CURRENCY);
   const [negotiable, setNegotiable] = useState(true);
   const [payments, setPayments] = useState<PayMethod[]>(['cash']);
   const [contactNote, setContactNote] = useState('');
@@ -158,7 +162,7 @@ export function PublishListingStudio() {
           title: title.trim(),
           description: fullDescription,
           price: priceNum,
-          currency: 'MRU',
+          currency,
           category,
           campId,
           images: imageUrls.length ? imageUrls : undefined,
@@ -338,9 +342,14 @@ export function PublishListingStudio() {
                     min={1}
                     placeholder="12500"
                   />
-                  <span className="pub-currency">{t('common.currency')}</span>
                 </div>
               </label>
+              <CurrencySelect
+                value={currency}
+                onChange={setCurrency}
+                locale={locale}
+                label={t('publish.currencyLabel')}
+              />
               <label className="pub-check">
                 <input type="checkbox" checked={negotiable} onChange={(e) => setNegotiable(e.target.checked)} />
                 <span>{t('marketplace.negotiable')}</span>
@@ -404,7 +413,7 @@ export function PublishListingStudio() {
                 <div>
                   <dt>{t('publish.reviewPrice')}</dt>
                   <dd>
-                    {priceNum.toLocaleString('es-ES')} {t('common.currency')}{' '}
+                    {priceNum.toLocaleString('es-ES')} {currency}{' '}
                     {negotiable && `(${t('publish.negotiableShort')})`}
                   </dd>
                 </div>
@@ -487,8 +496,8 @@ export function PublishListingStudio() {
                 <h3>{title.trim() || t('publish.previewTitle')}</h3>
                 <p className="pub-card__price">
                   {priceNum > 0
-                    ? `${priceNum.toLocaleString('es-ES')} ${t('common.currency')}`
-                    : `— ${t('common.currency')}`}
+                    ? `${priceNum.toLocaleString('es-ES')} ${currency}`
+                    : `— ${currency}`}
                   {negotiable && priceNum > 0 && <em>{t('publish.negotiableShort')}</em>}
                 </p>
                 <p className="pub-card__meta">

@@ -2,7 +2,7 @@
 
 import { useSignIn } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type Step = 'credentials' | 'verify';
 
@@ -45,6 +45,16 @@ export function AdminCustomSignIn() {
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
+  const [clerkSlow, setClerkSlow] = useState(false);
+
+  useEffect(() => {
+    if (isLoaded) {
+      setClerkSlow(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setClerkSlow(true), 8000);
+    return () => window.clearTimeout(timer);
+  }, [isLoaded]);
 
   const finishSignIn = async (sessionId: string | null) => {
     if (!sessionId) {
@@ -176,6 +186,33 @@ export function AdminCustomSignIn() {
         </div>
       ) : null}
 
+      {!isLoaded && !clerkSlow ? (
+        <p style={{ margin: '0 0 16px', color: 'rgba(248,250,249,0.55)', fontSize: 14 }}>
+          Cargando autenticación…
+        </p>
+      ) : null}
+
+      {clerkSlow && !isLoaded ? (
+        <div
+          style={{
+            marginBottom: 16,
+            padding: '10px 12px',
+            borderRadius: 8,
+            background: 'rgba(245,158,11,0.12)',
+            color: '#fcd34d',
+            fontSize: 13,
+            lineHeight: 1.5,
+          }}
+        >
+          Clerk no responde. Prueba sin VPN, desactiva bloqueadores de anuncios y recarga. Si persiste,
+          abre{' '}
+          <a href="https://clerk.lefrig.com" style={{ color: '#fde68a' }}>
+            clerk.lefrig.com
+          </a>{' '}
+          en otra pestaña.
+        </div>
+      ) : null}
+
       {step === 'credentials' ? (
         <form onSubmit={onSubmitCredentials}>
           <div style={{ marginBottom: 16 }}>
@@ -223,7 +260,7 @@ export function AdminCustomSignIn() {
               opacity: loading ? 0.7 : 1,
             }}
           >
-            {loading ? 'Entrando…' : 'Entrar'}
+            {loading ? 'Entrando…' : !isLoaded ? 'Esperando Clerk…' : 'Entrar'}
           </button>
         </form>
       ) : (

@@ -165,10 +165,10 @@ async function main() {
   // Users
   const users = {
     admin: await prisma.user.upsert({
-      where: { phone: '+22212345678' },
+      where: { phone: '+213555123456' },
       update: {},
       create: {
-        phone: '+22212345678',
+        phone: '+213555123456',
         displayName: 'Admin LeFrig',
         roles: ['admin', 'moderator'],
         campId: campBySlug.aaiun.id,
@@ -179,10 +179,10 @@ async function main() {
       },
     }),
     seller: await prisma.user.upsert({
-      where: { phone: '+22211111111' },
+      where: { phone: '+213555111111' },
       update: {},
       create: {
-        phone: '+22211111111',
+        phone: '+213555111111',
         displayName: 'Ahmed Vendedor',
         roles: ['citizen', 'seller'],
         campId: campBySlug.aaiun.id,
@@ -193,10 +193,10 @@ async function main() {
       },
     }),
     shopOwner: await prisma.user.upsert({
-      where: { phone: '+22222222222' },
+      where: { phone: '+213555222222' },
       update: {},
       create: {
-        phone: '+22222222222',
+        phone: '+213555222222',
         displayName: 'Fatima Tienda',
         roles: ['citizen', 'shop_owner'],
         campId: campBySlug.smara.id,
@@ -207,10 +207,10 @@ async function main() {
       },
     }),
     driver: await prisma.user.upsert({
-      where: { phone: '+22233333333' },
+      where: { phone: '+213555333333' },
       update: {},
       create: {
-        phone: '+22233333333',
+        phone: '+213555333333',
         displayName: 'Mohamed Conductor',
         roles: ['citizen', 'driver'],
         campId: campBySlug.rabouni.id,
@@ -233,10 +233,10 @@ async function main() {
       },
     }),
     ngo: await prisma.user.upsert({
-      where: { phone: '+22244444444' },
+      where: { phone: '+213555444444' },
       update: {},
       create: {
-        phone: '+22244444444',
+        phone: '+213555444444',
         displayName: 'ONG Solidaridad',
         roles: ['citizen', 'ngo'],
         campId: campBySlug.tindouf.id,
@@ -291,7 +291,7 @@ async function main() {
       country: 'España',
       city: 'Madrid',
       beneficiaryName: 'Familia Saharaui',
-      beneficiaryPhone: '+22255555555',
+      beneficiaryPhone: '+213555555555',
       preferredCampId: campBySlug.rabouni.id,
     },
   });
@@ -309,7 +309,7 @@ async function main() {
       name: 'Tienda Fatima',
       description: 'Abarrotes y productos básicos',
       shopType: 'individual',
-      phone: '+22222222222',
+      phone: '+213555222222',
       acceptsCash: true,
       acceptsFiado: true,
       acceptsVouchers: true,

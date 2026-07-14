@@ -1,6 +1,5 @@
 'use client';
 
-import { UserButton } from '@clerk/nextjs';
 import { usePathname } from 'next/navigation';
 import { useCommandPalette } from './pro/CommandPalette';
 import { LiveClock } from './pro/LiveClock';
@@ -82,14 +81,26 @@ export function AdminHeader() {
           />
         </button>
 
-        <UserButton
-          afterSignOutUrl="/sign-in"
-          appearance={{
-            elements: {
-              avatarBox: { width: 40, height: 40 },
-            },
+        <a
+          href="/api/sign-out"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 40,
+            height: 40,
+            borderRadius: 12,
+            border: '1px solid var(--adm-border)',
+            background: 'var(--adm-surface-2)',
+            color: 'var(--adm-muted)',
+            fontSize: '0.72rem',
+            fontWeight: 700,
+            textDecoration: 'none',
           }}
-        />
+          title="Cerrar sesión"
+        >
+          ⎋
+        </a>
       </div>
     </header>
   );

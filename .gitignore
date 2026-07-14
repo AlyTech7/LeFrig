@@ -42,3 +42,4 @@ apps/mobile/ios/
 # Misc
 *.tsbuildinfo
 .vercel
+.env*

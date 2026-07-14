@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatMoney } from '@lefrig/shared';
 import { Card } from './Card';
 import { Badge } from './Badge';
 import { colors } from '../tokens';
@@ -45,7 +46,7 @@ export function TransportCard({
         <Badge variant={status === 'completed' ? 'success' : 'info'} size="sm">{status}</Badge>
       </div>
       <div style={{ display: 'flex', gap: '16px', fontSize: '0.875rem', color: colors.gray[600] }}>
-        {priceEstimate != null && <span>~{priceEstimate.toLocaleString()} MRU</span>}
+        {priceEstimate != null && <span>{formatMoney(priceEstimate, 'DZD')}</span>}
         {seatsAvailable != null && <span>💺 {seatsAvailable} plazas</span>}
       </div>
     </Card>
