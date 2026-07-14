@@ -512,7 +512,7 @@ export default function MarketplaceScreen() {
                         style={[styles.sheetChipText, pendingCategory === cat.slug && styles.sheetChipTextOn]}
                       >
                         {cat.icon} {pickName(locale, cat)}
-                      </Text>
+            </Text>
                     </Pressable>
                   ))}
                 </View>

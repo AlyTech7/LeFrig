@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { SERVICE_CATEGORIES } from '@lefrig/shared';
+import { SERVICE_CATEGORIES, DEFAULT_CURRENCY, type CurrencyCode } from '@lefrig/shared';
 import type { CampSummary } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
 import { ImageUploader, type PhotoItem } from '@/components/marketplace/ImageUploader';
@@ -11,6 +11,7 @@ import { demoCamps, fetchWithMeta } from '@/lib/api';
 import { useAuthFetch } from '@/lib/auth-fetch';
 import { useLocale, useT } from '@/lib/locale';
 import { localizedCampFromSummary, pickLocalized } from '@lefrig/shared';
+import { CurrencySelect } from '@lefrig/ui/client';
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -49,6 +50,7 @@ export function PublishServiceStudio() {
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const [priceFrom, setPriceFrom] = useState('');
   const [priceTo, setPriceTo] = useState('');
+  const [currency, setCurrency] = useState<CurrencyCode>(DEFAULT_CURRENCY);
   const [contactNote, setContactNote] = useState('');
 
   const [loading, setLoading] = useState(false);
@@ -137,6 +139,7 @@ export function PublishServiceStudio() {
           description: fullDescription,
           priceFrom: priceFromNum,
           priceTo: priceTo ? priceToNum : undefined,
+          currency,
           campIds,
           images: imageUrls.length ? imageUrls : undefined,
         }),
@@ -277,7 +280,6 @@ export function PublishServiceStudio() {
                     min={1}
                     placeholder="500"
                   />
-                  <span className="pub-currency">MRU</span>
                 </div>
               </label>
               <label className="pub-field pub-field--price">
@@ -290,9 +292,14 @@ export function PublishServiceStudio() {
                     min={1}
                     placeholder="2000"
                   />
-                  <span className="pub-currency">MRU</span>
                 </div>
               </label>
+              <CurrencySelect
+                value={currency}
+                onChange={setCurrency}
+                locale={locale}
+                label={t('publish.currencyLabel')}
+              />
               <label className="pub-field">
                 <span>{t('services.studio.contactOptional')}</span>
                 <input
@@ -398,7 +405,7 @@ export function PublishServiceStudio() {
               <div className="pub-card__body">
                 <h3>{title.trim() || (cat ? pickLocalized(cat, locale) : t('services.studio.previewService'))}</h3>
                 <p className="pub-card__price">
-                  {priceFromNum > 0 ? t('services.studio.priceFromTo', { from: priceFromNum.toLocaleString() }) : '— MRU'}
+                  {priceFromNum > 0 ? t('services.studio.priceFromTo', { from: priceFromNum.toLocaleString() }) : `— ${currency}`}
                 </p>
                 <p className="pub-card__meta">
                   {cat ? pickLocalized(cat, locale) : t('services.studio.tradeFallback')} · {selectedCamps.map((c) => localizedCampFromSummary(c, locale)).join(', ') || t('publish.campFallback')}

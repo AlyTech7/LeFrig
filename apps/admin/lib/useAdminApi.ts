@@ -1,30 +1,22 @@
 'use client';
 
-import { useAuth } from '@clerk/nextjs';
 import { useCallback } from 'react';
-import { API_URL } from './api';
 
+/** Llama al proxy interno; el token Clerk se añade en servidor (sin clerk-js en el navegador). */
 export function useAdminApi() {
-  const { getToken, isSignedIn } = useAuth();
-
-  const request = useCallback(
-    async <T,>(path: string, init?: RequestInit): Promise<T> => {
-      const headers: Record<string, string> = {
+  const request = useCallback(async <T,>(path: string, init?: RequestInit): Promise<T> => {
+    const normalized = path.startsWith('/') ? path : `/${path}`;
+    const res = await fetch(`/api/admin${normalized}`, {
+      ...init,
+      headers: {
         'Content-Type': 'application/json',
         ...(init?.headers as Record<string, string>),
-      };
+      },
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
+    return res.json() as Promise<T>;
+  }, []);
 
-      if (isSignedIn) {
-        const token = await getToken();
-        if (token) headers.Authorization = `Bearer ${token}`;
-      }
-
-      const res = await fetch(`${API_URL}${path}`, { ...init, headers, cache: 'no-store' });
-      if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
-      return res.json() as Promise<T>;
-    },
-    [getToken, isSignedIn],
-  );
-
-  return { request, isSignedIn };
+  return { request };
 }

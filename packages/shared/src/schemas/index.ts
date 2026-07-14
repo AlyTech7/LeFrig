@@ -5,8 +5,14 @@ import {
   validateListingAttributes,
   listingAttributeFilterSchema,
 } from '../listing-attributes.js';
+import { CURRENCY_CODES, DEFAULT_CURRENCY } from '../constants/locale.js';
+import { isValidPhoneE164 } from '../phone.js';
 
-export const phoneSchema = z.string().regex(/^\+?[0-9]{8,15}$/, 'Teléfono inválido');
+export const currencySchema = z.enum(CURRENCY_CODES).default(DEFAULT_CURRENCY);
+
+export const phoneSchema = z
+  .string()
+  .refine((v) => isValidPhoneE164(v), 'Teléfono inválido (formato internacional +213…)');
 
 export const requestOtpSchema = z.object({
   phone: phoneSchema,
@@ -21,7 +27,7 @@ const listingBodySchema = z.object({
   title: z.string().min(3).max(120),
   description: z.string().max(2000),
   price: z.number().positive(),
-  currency: z.string().default('MRU'),
+  currency: currencySchema,
   category: z.string(),
   campId: z.string().uuid(),
   dairaId: z.string().uuid().optional(),
@@ -83,7 +89,7 @@ export const createShopProductSchema = z.object({
   name: z.string().min(2).max(120),
   description: z.string().max(1000).optional(),
   price: z.number().positive(),
-  currency: z.string().default('MRU'),
+  currency: currencySchema,
   stock: z.coerce.number().int().min(0).default(0),
   imageUrl: z.string().url().optional(),
 });

@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import '@lefrig/ui/styles.css';
 import './globals.css';
-import { AdminClerkProvider } from '@/components/AdminClerkProvider';
 import { AdminShell } from '@/components/AdminShell';
 
 export const metadata: Metadata = {
@@ -16,9 +15,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <html lang="es">
       <body>
-        <AdminClerkProvider>
-          <AdminShell>{children}</AdminShell>
-        </AdminClerkProvider>
+        <AdminShell>{children}</AdminShell>
       </body>
     </html>
   );

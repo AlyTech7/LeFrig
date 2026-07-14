@@ -31,6 +31,7 @@ export class ServicesController {
       description: string;
       priceFrom?: number;
       priceTo?: number;
+      currency?: string;
       campIds: string[];
       images?: string[];
     },

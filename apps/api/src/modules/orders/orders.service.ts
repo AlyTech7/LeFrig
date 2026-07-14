@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { createOrderSchema, paginationSchema } from '@lefrig/shared';
+import { createOrderSchema, paginationSchema, DEFAULT_CURRENCY } from '@lefrig/shared';
 import { paginate, skipTake } from '../../common/utils/pagination';
 import { ManualPaymentAdapter } from '../../adapters/payment.adapter';
 
@@ -79,7 +79,7 @@ export class OrdersService {
       await this.paymentAdapter.initiate({
         orderId: order.id,
         amount: Number(totalAmount),
-        currency: 'MRU',
+        currency: DEFAULT_CURRENCY,
         reference: ref,
       });
       await this.prisma.manualPayment.create({

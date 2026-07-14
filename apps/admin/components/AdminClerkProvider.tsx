@@ -2,15 +2,8 @@
 
 import { ClerkProvider } from '@clerk/nextjs';
 import { esES } from '@clerk/localizations';
-
-const rawKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() ?? '';
-const publishableKey =
-  rawKey &&
-  !/placeholder|_ci_/i.test(rawKey) &&
-  (rawKey.startsWith('pk_test_') || rawKey.startsWith('pk_live_')) &&
-  rawKey.replace(/^pk_(test|live)_/, '').length >= 20
-    ? rawKey
-    : '';
+import { CLERK_PUBLISHABLE_KEY, isClerkEnabled } from '@/lib/clerk';
+import { adminRedirectUrl, readEnv } from '@/lib/site-url';
 
 const clerkAppearance = {
   variables: {
@@ -38,11 +31,18 @@ const clerkAppearance = {
 };
 
 export function AdminClerkProvider({ children }: { children: React.ReactNode }) {
-  if (!publishableKey) {
+  if (!isClerkEnabled || !CLERK_PUBLISHABLE_KEY) {
     return <>{children}</>;
   }
   return (
-    <ClerkProvider localization={esES} publishableKey={publishableKey} appearance={clerkAppearance}>
+    <ClerkProvider
+      localization={esES}
+      publishableKey={CLERK_PUBLISHABLE_KEY}
+      appearance={clerkAppearance}
+      signInUrl={readEnv('NEXT_PUBLIC_CLERK_SIGN_IN_URL') ?? adminRedirectUrl('/sign-in')}
+      afterSignInUrl={readEnv('NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL') ?? adminRedirectUrl('/')}
+      afterSignOutUrl={adminRedirectUrl('/sign-in')}
+    >
       {children}
     </ClerkProvider>
   );

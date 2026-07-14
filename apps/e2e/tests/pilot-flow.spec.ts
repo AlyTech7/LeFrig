@@ -31,7 +31,7 @@ test.describe('Flujo piloto', () => {
     await page.goto('/marketplace/create');
     await page.waitForURL(/sign-in|marketplace\/create/, { timeout: 10_000 });
     if (page.url().includes('sign-in')) {
-      await expect(page.locator('.sv-auth, .sv-auth__notice')).toBeVisible();
+      await expect(page.locator('.sv-auth').first()).toBeVisible();
     }
   });
 });
