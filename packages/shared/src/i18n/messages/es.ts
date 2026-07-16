@@ -173,6 +173,7 @@ const es = {
   atlas: {
     allRooms: 'Todas las salas',
     seeAllRooms: 'Explorar las 10 salas del Atlas',
+    swipeRooms: 'Desliza · 10 salas del mercado',
     vaultOptions: '{{count}} opciones',
     vaultEnter: 'Entrar a la sala',
     vaultExploreServices: 'Explorar servicios',

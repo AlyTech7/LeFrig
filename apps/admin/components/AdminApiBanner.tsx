@@ -12,7 +12,7 @@ export function AdminApiBanner({ usingDemo }: { usingDemo: boolean }) {
       <div style={{ flex: 1 }}>
         <strong style={{ display: 'block', marginBottom: 4 }}>Datos demo — API no disponible</strong>
         <span style={{ color: 'var(--adm-muted)', fontSize: '0.875rem' }}>
-          Inicia la API en :3001 y asegúrate de tener rol admin en Clerk para ver datos reales.
+          No se pudo conectar con la API de producción. Comprueba tu sesión admin o vuelve a iniciar sesión.
         </span>
       </div>
     </div>

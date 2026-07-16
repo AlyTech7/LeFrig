@@ -1,5 +1,10 @@
-const rawApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
-export const API_URL = rawApiUrl || 'http://localhost:3001';
+import { readEnv } from './site-url';
+
+const API_PRODUCTION_ORIGIN = 'https://whale-app-xpe4g.ondigitalocean.app';
+
+export const API_URL =
+  readEnv('NEXT_PUBLIC_API_URL') ??
+  (process.env.NODE_ENV === 'production' ? API_PRODUCTION_ORIGIN : 'http://localhost:3001');
 
 export async function fetchApi<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
