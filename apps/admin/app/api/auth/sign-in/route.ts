@@ -11,6 +11,14 @@ function rolesFromUser(user: { publicMetadata?: unknown }): string[] {
   return meta?.roles ?? [];
 }
 
+function signInErrorRedirect(req: NextRequest, message: string): NextResponse {
+  const url = new URL('/sign-in', req.url);
+  url.searchParams.set('error', message);
+  const redirectUrl = req.nextUrl.searchParams.get('redirect_url');
+  if (redirectUrl) url.searchParams.set('redirect_url', redirectUrl);
+  return NextResponse.redirect(url, 303);
+}
+
 export async function POST(req: NextRequest) {
   let email = '';
   let password = '';
@@ -27,15 +35,26 @@ export async function POST(req: NextRequest) {
   }
 
   if (!email || !password) {
-    return NextResponse.json({ error: 'Email y contraseña requeridos' }, { status: 400 });
+    return signInErrorRedirect(req, 'Email y contraseña requeridos');
   }
 
   try {
     const client = await clerkClient();
-    const { data: users } = await client.users.getUserList({ emailAddress: [email], limit: 1 });
+    const normalizedEmail = email.toLowerCase();
+    const { data: users } = await client.users.getUserList({
+      emailAddress: [normalizedEmail],
+      limit: 1,
+    });
     const user = users[0];
     if (!user) {
-      return NextResponse.json({ error: 'Credenciales incorrectas' }, { status: 401 });
+      return signInErrorRedirect(req, 'Credenciales incorrectas');
+    }
+
+    if (!user.passwordEnabled) {
+      return signInErrorRedirect(
+        req,
+        'Tu cuenta no tiene contraseña. Configúrala en Clerk Dashboard → Users.',
+      );
     }
 
     await client.users.verifyPassword({ userId: user.id, password });
@@ -57,7 +76,13 @@ export async function POST(req: NextRequest) {
       maxAge: 60 * 60 * 24 * 7,
     });
     return res;
-  } catch {
-    return NextResponse.json({ error: 'Credenciales incorrectas' }, { status: 401 });
+  } catch (err: unknown) {
+    const clerkErr = err as { errors?: { code?: string; message?: string }[] };
+    const code = clerkErr.errors?.[0]?.code;
+    if (code === 'incorrect_password') {
+      return signInErrorRedirect(req, 'Contraseña incorrecta');
+    }
+    console.error('[admin/auth/sign-in]', err);
+    return signInErrorRedirect(req, 'No se pudo iniciar sesión. Inténtalo de nuevo.');
   }
 }
