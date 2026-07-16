@@ -82,27 +82,57 @@ export class ClerkService {
       phone ||
       'Usuario Lefrig';
 
-    const user = await this.prisma.user.upsert({
+    const userData = {
+      email: email ?? null,
+      phone: phone ?? null,
+      displayName,
+      avatarUrl: clerkUser.imageUrl,
+      roles,
+      campId: meta?.campId ?? null,
+      verificationLevel: phone ? 'phone' : email ? 'community' : 'unverified',
+    };
+
+    const existingByClerk = await this.prisma.user.findUnique({
       where: { clerkId: clerkUser.id },
-      create: {
-        clerkId: clerkUser.id,
-        email: email ?? null,
-        phone: phone ?? null,
-        displayName,
-        avatarUrl: clerkUser.imageUrl,
-        roles,
-        campId: meta?.campId ?? null,
-        verificationLevel: phone ? 'phone' : email ? 'community' : 'unverified',
-      },
-      update: {
-        email: email ?? undefined,
-        phone: phone ?? undefined,
-        displayName,
-        avatarUrl: clerkUser.imageUrl,
-        roles,
-        campId: meta?.campId ?? undefined,
-      },
     });
+
+    let user;
+    if (existingByClerk) {
+      user = await this.prisma.user.update({
+        where: { id: existingByClerk.id },
+        data: {
+          email: userData.email ?? undefined,
+          phone: userData.phone ?? undefined,
+          displayName: userData.displayName,
+          avatarUrl: userData.avatarUrl,
+          roles: userData.roles,
+          campId: userData.campId ?? undefined,
+        },
+      });
+    } else if (email) {
+      const existingByEmail = await this.prisma.user.findUnique({ where: { email } });
+      if (existingByEmail) {
+        user = await this.prisma.user.update({
+          where: { id: existingByEmail.id },
+          data: {
+            clerkId: clerkUser.id,
+            phone: userData.phone ?? undefined,
+            displayName: userData.displayName,
+            avatarUrl: userData.avatarUrl,
+            roles: userData.roles,
+            campId: userData.campId ?? undefined,
+          },
+        });
+      } else {
+        user = await this.prisma.user.create({
+          data: { clerkId: clerkUser.id, ...userData },
+        });
+      }
+    } else {
+      user = await this.prisma.user.create({
+        data: { clerkId: clerkUser.id, ...userData },
+      });
+    }
 
     return {
       sub: user.id,
