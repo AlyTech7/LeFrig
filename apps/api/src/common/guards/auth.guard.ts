@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { ClerkService, type AuthUserPayload } from '../../modules/auth/clerk.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { JwtPayload } from '@lefrig/shared';
@@ -52,13 +53,17 @@ export class AuthGuard implements CanActivate {
   }
 
   private async resolveUser(token: string): Promise<AuthUserPayload> {
-    // 1. Clerk JWT (producción)
+    // 1. Token interno del panel admin (login server-side sin clerk-js)
+    const adminPanelUser = await this.resolveAdminPanelToken(token);
+    if (adminPanelUser) return adminPanelUser;
+
+    // 2. Clerk JWT (producción)
     const clerkResult = await this.clerk.verifyClerkToken(token);
     if (clerkResult) {
       return this.clerk.syncUserFromClerk(clerkResult.clerkUserId);
     }
 
-    // 2. Legacy JWT interno (dev / seed / migración)
+    // 3. Legacy JWT interno (dev / seed / migración)
     if (isLegacyAuthEnabled(this.config)) {
       try {
         const payload = this.jwt.verify<JwtPayload>(token, {
@@ -76,6 +81,37 @@ export class AuthGuard implements CanActivate {
     }
 
     throw new UnauthorizedException('Token inválido o expirado');
+  }
+
+  /** Valida token HMAC emitido por apps/admin tras verifyPassword server-side. */
+  private async resolveAdminPanelToken(token: string): Promise<AuthUserPayload | null> {
+    const secretKey = this.config.get<string>('CLERK_SECRET_KEY');
+    if (!secretKey) return null;
+
+    const [body, sig] = token.split('.');
+    if (!body || !sig) return null;
+
+    const expected = createHmac('sha256', secretKey).update(body).digest('base64url');
+    try {
+      if (sig.length !== expected.length || !timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
+        return null;
+      }
+    } catch {
+      return null;
+    }
+
+    let payload: Record<string, unknown>;
+    try {
+      payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8')) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+
+    if (payload.purpose !== 'admin_panel') return null;
+    if (typeof payload.exp !== 'number' || payload.exp < Date.now()) return null;
+    if (typeof payload.clerkUserId !== 'string') return null;
+
+    return this.clerk.syncUserFromClerk(payload.clerkUserId);
   }
 }
 

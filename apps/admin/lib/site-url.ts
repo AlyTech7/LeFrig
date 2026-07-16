@@ -4,6 +4,8 @@ export function readEnv(name: string): string | undefined {
   return value || undefined;
 }
 
+const ADMIN_PRODUCTION_ORIGIN = 'https://admin.lefrig.com';
+
 export function getAdminOrigin(): string | undefined {
   const explicit = readEnv('NEXT_PUBLIC_SITE_URL');
   if (explicit) return explicit.replace(/\/$/, '');
@@ -11,6 +13,8 @@ export function getAdminOrigin(): string | undefined {
   // Solo disponible en build/servidor; en cliente hace falta NEXT_PUBLIC_SITE_URL.
   const vercel = readEnv('VERCEL_URL');
   if (vercel) return `https://${vercel.replace(/\/$/, '')}`;
+
+  if (process.env.NODE_ENV === 'production') return ADMIN_PRODUCTION_ORIGIN;
 
   return undefined;
 }

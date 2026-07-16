@@ -3,7 +3,7 @@
 import { ClerkProvider } from '@clerk/nextjs';
 import { esES } from '@clerk/localizations';
 import { CLERK_PUBLISHABLE_KEY, isClerkEnabled } from '@/lib/clerk';
-import { adminRedirectUrl, readEnv } from '@/lib/site-url';
+import { adminRedirectUrl } from '@/lib/site-url';
 
 const clerkAppearance = {
   variables: {
@@ -39,8 +39,8 @@ export function AdminClerkProvider({ children }: { children: React.ReactNode }) 
       localization={esES}
       publishableKey={CLERK_PUBLISHABLE_KEY}
       appearance={clerkAppearance}
-      signInUrl={readEnv('NEXT_PUBLIC_CLERK_SIGN_IN_URL') ?? adminRedirectUrl('/sign-in')}
-      afterSignInUrl={readEnv('NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL') ?? adminRedirectUrl('/')}
+      signInUrl={adminRedirectUrl('/sign-in')}
+      afterSignInUrl={adminRedirectUrl('/')}
       afterSignOutUrl={adminRedirectUrl('/sign-in')}
     >
       {children}
