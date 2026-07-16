@@ -1,10 +1,25 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { API_URL } from '@/lib/api';
+import {
+  ADMIN_SESSION_COOKIE,
+  createAdminApiToken,
+  verifyAdminSessionToken,
+} from '@/lib/admin-session';
+
+async function resolveBearerToken(req: NextRequest): Promise<string | null> {
+  const { getToken } = await auth();
+  const clerkToken = await getToken();
+  if (clerkToken) return clerkToken;
+
+  const adminSession = await verifyAdminSessionToken(req.cookies.get(ADMIN_SESSION_COOKIE)?.value);
+  if (!adminSession) return null;
+
+  return await createAdminApiToken(adminSession.clerkUserId);
+}
 
 async function proxyRequest(req: NextRequest, pathSegments: string[]) {
-  const { getToken } = await auth();
-  const token = await getToken();
+  const token = await resolveBearerToken(req);
   if (!token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
