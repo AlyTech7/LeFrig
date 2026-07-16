@@ -23,13 +23,20 @@ function mockClerkUser(overrides: Partial<ClerkUser> = {}): ClerkUser {
 describe('ClerkService', () => {
   let service: ClerkService;
   let prisma: {
-    user: { upsert: ReturnType<typeof vi.fn>; updateMany: ReturnType<typeof vi.fn> };
+    user: {
+      findUnique: ReturnType<typeof vi.fn>;
+      update: ReturnType<typeof vi.fn>;
+      create: ReturnType<typeof vi.fn>;
+      updateMany: ReturnType<typeof vi.fn>;
+    };
   };
 
   beforeEach(() => {
     prisma = {
       user: {
-        upsert: vi.fn().mockResolvedValue({
+        findUnique: vi.fn().mockResolvedValue(null),
+        update: vi.fn(),
+        create: vi.fn().mockResolvedValue({
           id: 'uuid-local-1',
           clerkId: 'user_clerk_abc',
           phone: '+213555123456',
@@ -54,10 +61,13 @@ describe('ClerkService', () => {
   it('upsertFromClerkUser crea payload con roles de publicMetadata', async () => {
     const result = await service.upsertFromClerkUser(mockClerkUser());
 
-    expect(prisma.user.upsert).toHaveBeenCalledWith(
+    expect(prisma.user.findUnique).toHaveBeenCalledWith({
+      where: { clerkId: 'user_clerk_abc' },
+    });
+    expect(prisma.user.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { clerkId: 'user_clerk_abc' },
-        create: expect.objectContaining({
+        data: expect.objectContaining({
+          clerkId: 'user_clerk_abc',
           displayName: 'Fatima Sahrawi',
           roles: ['citizen'],
         }),
@@ -65,6 +75,32 @@ describe('ClerkService', () => {
     );
     expect(result.sub).toBe('uuid-local-1');
     expect(result.roles).toEqual(['citizen']);
+  });
+
+  it('upsertFromClerkUser vincula usuario existente por email', async () => {
+    prisma.user.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: 'uuid-existing', email: 'fatima@example.com' });
+    prisma.user.update.mockResolvedValue({
+      id: 'uuid-existing',
+      clerkId: 'user_clerk_abc',
+      phone: '+213555123456',
+      email: 'fatima@example.com',
+      roles: ['admin'],
+      campId: null,
+    });
+
+    const result = await service.upsertFromClerkUser(
+      mockClerkUser({ publicMetadata: { roles: ['admin'] } }),
+    );
+
+    expect(prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'uuid-existing' },
+        data: expect.objectContaining({ clerkId: 'user_clerk_abc', roles: ['admin'] }),
+      }),
+    );
+    expect(result.sub).toBe('uuid-existing');
   });
 
   it('handleWebhookEvent user.deleted desactiva usuario local', async () => {
