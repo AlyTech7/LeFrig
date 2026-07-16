@@ -1,10 +1,27 @@
 import 'server-only';
 import { auth } from '@clerk/nextjs/server';
+import { cookies } from 'next/headers';
 import { API_URL } from './api';
+import {
+  ADMIN_SESSION_COOKIE,
+  createAdminApiToken,
+  verifyAdminSessionToken,
+} from './admin-session';
+
+async function resolveBearerToken(): Promise<string | null> {
+  const { getToken } = await auth();
+  const clerkToken = await getToken();
+  if (clerkToken) return clerkToken;
+
+  const cookieStore = await cookies();
+  const adminSession = await verifyAdminSessionToken(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
+  if (!adminSession) return null;
+
+  return createAdminApiToken(adminSession.clerkUserId);
+}
 
 export async function fetchApi<T>(path: string, init?: RequestInit): Promise<T> {
-  const { getToken } = await auth();
-  const token = await getToken();
+  const token = await resolveBearerToken();
 
   const res = await fetch(`${API_URL}${path}`, {
     ...init,

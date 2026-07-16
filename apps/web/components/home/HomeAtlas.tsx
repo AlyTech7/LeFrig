@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { AtlasQuickRail } from '@/components/home/AtlasQuickRail';
+import { AtlasMobileDeck } from '@/components/home/AtlasMobileDeck';
 import { AtlasVaultGrid } from '@/components/home/AtlasVaultGrid';
 import { AppIcon } from '@/components/AppIcon';
 import { useLocale, useT } from '@/lib/locale';
@@ -30,8 +30,8 @@ export function HomeAtlas() {
           <p className="lf-atlas__sub">{t('home.atlasIntroSub')}</p>
         </header>
 
-        {/* Móvil/tablet: 10 chips · 1 toque */}
-        <AtlasQuickRail />
+        {/* Móvil/tablet: carrusel con subcategorías */}
+        <AtlasMobileDeck />
 
         {/* Escritorio: bento editorial */}
         <div className="lf-atlas__grid-frame">

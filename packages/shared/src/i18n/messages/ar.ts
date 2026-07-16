@@ -175,6 +175,7 @@ const ar: Messages = {
   atlas: {
     allRooms: 'جميع الأروقة',
     seeAllRooms: 'استكشف الأروقة العشرة في الأطلس',
+    swipeRooms: 'مرّر · 10 أروقة السوق',
     vaultOptions: '{{count}} خيار',
     vaultEnter: 'ادخل الرواق',
     vaultExploreServices: 'استكشف الخدمات',

@@ -1562,7 +1562,124 @@
   position: relative;
   z-index: 2;
   margin-bottom: 0.85rem;
+  display: none;
+}
+
+.lf-atlas__deck-wrap {
+  position: relative;
+  z-index: 2;
+  margin-bottom: 0.85rem;
   display: block;
+}
+
+@media (min-width: 1024px) {
+  .lf-atlas__deck-wrap {
+    display: none;
+  }
+}
+
+.lf-atlas__deck-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin: 0 0 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lf-ink-muted);
+}
+
+.lf-atlas__deck {
+  display: flex;
+  gap: 0.65rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 7vw;
+  padding: 0.15rem 7vw 0.65rem;
+  margin-inline: -0.35rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.lf-atlas__deck::-webkit-scrollbar {
+  display: none;
+}
+
+.lf-vault--deck {
+  flex: 0 0 min(86vw, 340px);
+  scroll-snap-align: center;
+  min-height: 268px;
+}
+
+.lf-vault--deck .lf-vault__inner {
+  min-height: 248px;
+  padding: 1rem 1rem 0.9rem;
+}
+
+.lf-vault--deck .lf-vault__head h3 {
+  font-size: 1.05rem;
+}
+
+.lf-vault--deck .lf-vault__tags {
+  margin-bottom: 0.5rem;
+}
+
+.lf-vault--deck .lf-vault__tag {
+  font-size: 0.58rem;
+  padding: 0.2rem 0.42rem;
+}
+
+.lf-vault--deck .lf-vault__list a {
+  padding: 0.44rem 0.55rem;
+}
+
+.lf-vault--deck .lf-vault__item-copy span {
+  font-size: 0.78rem;
+}
+
+.lf-vault--deck .lf-vault__foot {
+  margin-top: auto;
+  padding-top: 0.55rem;
+}
+
+.lf-vault--deck .lf-vault__services-scroll--compact {
+  max-height: 118px;
+  gap: 0.45rem;
+}
+
+.lf-atlas__deck-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.32rem;
+  padding-top: 0.1rem;
+}
+
+.lf-atlas__deck-dots button {
+  width: 0.38rem;
+  height: 0.38rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(168, 132, 45, 0.22);
+  cursor: pointer;
+  transition:
+    width 0.25s ease,
+    background 0.25s ease,
+    transform 0.2s ease;
+}
+
+.lf-atlas__deck-dots button.is-active {
+  width: 1.15rem;
+  background: linear-gradient(90deg, #c9a84c, #8a6b2e);
+}
+
+.lf-atlas__deck-dots button:focus-visible {
+  outline: 2px solid #8a6b2e;
+  outline-offset: 2px;
 }
 
 @media (min-width: 1024px) {

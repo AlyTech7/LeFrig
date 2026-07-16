@@ -174,6 +174,7 @@ const fr: Messages = {
   atlas: {
     allRooms: 'Toutes les salles',
     seeAllRooms: 'Explorer les 10 salles de l’Atlas',
+    swipeRooms: 'Glisse · 10 salles du marché',
     vaultOptions: '{{count}} options',
     vaultEnter: 'Entrer dans la salle',
     vaultExploreServices: 'Explorer les services',
