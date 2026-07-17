@@ -174,6 +174,7 @@ const es = {
     allRooms: 'Todas las salas',
     seeAllRooms: 'Explorar las 10 salas del Atlas',
     swipeRooms: 'Desliza · 10 salas del mercado',
+    deckProgress: '{{current}} / {{total}} · {{name}}',
     vaultOptions: '{{count}} opciones',
     vaultEnter: 'Entrar a la sala',
     vaultExploreServices: 'Explorar servicios',
