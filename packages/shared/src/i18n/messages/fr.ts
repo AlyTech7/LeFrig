@@ -175,6 +175,7 @@ const fr: Messages = {
     allRooms: 'Toutes les salles',
     seeAllRooms: 'Explorer les 10 salles de l’Atlas',
     swipeRooms: 'Glisse · 10 salles du marché',
+    deckProgress: '{{current}} / {{total}} · {{name}}',
     vaultOptions: '{{count}} options',
     vaultEnter: 'Entrer dans la salle',
     vaultExploreServices: 'Explorer les services',

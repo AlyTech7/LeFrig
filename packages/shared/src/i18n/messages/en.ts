@@ -175,6 +175,7 @@ const en: Messages = {
     allRooms: 'All rooms',
     seeAllRooms: 'Explore all 10 Atlas rooms',
     swipeRooms: 'Swipe · 10 bazaar rooms',
+    deckProgress: '{{current}} / {{total}} · {{name}}',
     vaultOptions: '{{count}} options',
     vaultEnter: 'Enter room',
     vaultExploreServices: 'Explore services',

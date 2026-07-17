@@ -1,13 +1,16 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { MARKETPLACE_DEPARTMENTS } from '@lefrig/shared';
+import { MARKETPLACE_DEPARTMENTS, pickLocalized } from '@lefrig/shared';
 import { AtlasVaultCard } from '@/components/home/AtlasVaultCard';
-import { useT } from '@/lib/locale';
+import { useLocale, useT } from '@/lib/locale';
 
-/** Móvil/tablet: carrusel enriquecido con subcategorías por sala */
+const ROOM_COUNT = MARKETPLACE_DEPARTMENTS.length;
+
+/** Móvil/tablet: carrusel editorial con subcategorías por sala */
 export function AtlasMobileDeck() {
   const t = useT();
+  const { locale } = useLocale();
   const deckRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
 
@@ -56,30 +59,29 @@ export function AtlasMobileDeck() {
     el.scrollTo({ left: card.offsetLeft - (el.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' });
   };
 
+  const activeDept = MARKETPLACE_DEPARTMENTS[active];
+  const activeName = activeDept
+    ? pickLocalized({ slug: activeDept.id, nameEs: activeDept.nameEs, nameAr: activeDept.nameAr }, locale)
+    : '';
+
   return (
     <div className="lf-atlas__deck-wrap">
-      <p className="lf-atlas__deck-hint">
-        <span className="lf-atlas__rail-dot" aria-hidden />
-        <span>{t('atlas.swipeRooms')}</span>
-      </p>
-
-      <div className="lf-atlas__deck" ref={deckRef}>
-        {MARKETPLACE_DEPARTMENTS.map((dept, i) => (
-          <AtlasVaultCard key={dept.id} dept={dept} index={i} layout="deck" />
-        ))}
+      <div className="lf-atlas__deck-status" aria-live="polite">
+        <button
+          type="button"
+          className="lf-atlas__deck-progress"
+          onClick={() => scrollToIndex((active + 1) % ROOM_COUNT)}
+        >
+          {t('atlas.deckProgress', { current: active + 1, total: ROOM_COUNT, name: activeName })}
+        </button>
+        <div className="lf-atlas__deck-bar" aria-hidden>
+          <span className="lf-atlas__deck-bar-fill" style={{ width: `${((active + 1) / ROOM_COUNT) * 100}%` }} />
+        </div>
       </div>
 
-      <div className="lf-atlas__deck-dots" role="tablist" aria-label={t('home.atlasQuickAria')}>
+      <div className="lf-atlas__deck" ref={deckRef} aria-label={t('home.atlasQuickAria')}>
         {MARKETPLACE_DEPARTMENTS.map((dept, i) => (
-          <button
-            key={dept.id}
-            type="button"
-            role="tab"
-            aria-selected={i === active}
-            aria-label={dept.nameEs}
-            className={i === active ? 'is-active' : undefined}
-            onClick={() => scrollToIndex(i)}
-          />
+          <AtlasVaultCard key={dept.id} dept={dept} index={i} layout="deck" />
         ))}
       </div>
     </div>

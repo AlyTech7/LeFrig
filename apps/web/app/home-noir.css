@@ -1578,27 +1578,62 @@
   }
 }
 
-.lf-atlas__deck-hint {
+.lf-atlas__deck-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0 0 0.65rem;
+  padding: 0 0.15rem;
+}
+
+.lf-atlas__deck-progress {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  margin: 0 0 0.55rem;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--lf-ink-muted);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.lf-atlas__deck-progress:hover,
+.lf-atlas__deck-progress:focus-visible {
+  color: #8a6b2e;
+  outline: none;
+}
+
+.lf-atlas__deck-bar {
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(168, 132, 45, 0.14);
+  overflow: hidden;
+}
+
+.lf-atlas__deck-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #c9a84c, #8a6b2e);
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .lf-atlas__deck {
   display: flex;
-  gap: 0.65rem;
+  gap: 0.55rem;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  scroll-padding-inline: 7vw;
-  padding: 0.15rem 7vw 0.65rem;
-  margin-inline: -0.35rem;
+  scroll-padding-inline: 1rem;
+  padding: 0.2rem 1rem 0.75rem;
+  margin-inline: -0.5rem;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -1608,78 +1643,77 @@
 }
 
 .lf-vault--deck {
-  flex: 0 0 min(86vw, 340px);
+  flex: 0 0 83%;
+  max-width: 21.5rem;
   scroll-snap-align: center;
-  min-height: 268px;
+  min-height: 252px;
+}
+
+.lf-vault--deck-featured {
+  flex-basis: 87%;
+  max-width: 22.5rem;
+  min-height: 272px;
 }
 
 .lf-vault--deck .lf-vault__inner {
-  min-height: 248px;
-  padding: 1rem 1rem 0.9rem;
+  min-height: 232px;
+  padding: 1.05rem 1rem 0.95rem;
+}
+
+.lf-vault--deck-featured .lf-vault__inner {
+  min-height: 252px;
+  padding: 1.15rem 1.05rem 1rem;
+}
+
+.lf-vault--deck .lf-vault__head {
+  margin-bottom: 0.65rem;
 }
 
 .lf-vault--deck .lf-vault__head h3 {
-  font-size: 1.05rem;
+  font-size: 1.18rem;
+  letter-spacing: 0.01em;
 }
 
-.lf-vault--deck .lf-vault__tags {
-  margin-bottom: 0.5rem;
+.lf-vault--deck-featured .lf-vault__head h3 {
+  font-size: 1.32rem;
 }
 
-.lf-vault--deck .lf-vault__tag {
+.lf-vault--deck .lf-vault__count {
   font-size: 0.58rem;
-  padding: 0.2rem 0.42rem;
+  margin-top: 0.2rem;
+}
+
+.lf-vault--deck .lf-vault__list {
+  gap: 0.28rem;
 }
 
 .lf-vault--deck .lf-vault__list a {
-  padding: 0.44rem 0.55rem;
+  padding: 0.48rem 0.6rem;
+  border-radius: 12px;
+  background: rgba(12, 10, 8, 0.52);
 }
 
 .lf-vault--deck .lf-vault__item-copy span {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
-.lf-vault--deck .lf-vault__foot {
+.lf-vault--deck .lf-vault__foot--deck {
   margin-top: auto;
-  padding-top: 0.55rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.lf-vault--deck .lf-vault__enter--deck {
+  flex: 1;
+  justify-content: center;
+  min-height: 44px;
+  font-size: 0.72rem;
 }
 
 .lf-vault--deck .lf-vault__services-scroll--compact {
-  max-height: 118px;
-  gap: 0.45rem;
-}
-
-.lf-atlas__deck-dots {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.32rem;
-  padding-top: 0.1rem;
-}
-
-.lf-atlas__deck-dots button {
-  width: 0.38rem;
-  height: 0.38rem;
-  padding: 0;
-  border: none;
-  border-radius: 999px;
-  background: rgba(168, 132, 45, 0.22);
-  cursor: pointer;
-  transition:
-    width 0.25s ease,
-    background 0.25s ease,
-    transform 0.2s ease;
-}
-
-.lf-atlas__deck-dots button.is-active {
-  width: 1.15rem;
-  background: linear-gradient(90deg, #c9a84c, #8a6b2e);
-}
-
-.lf-atlas__deck-dots button:focus-visible {
-  outline: 2px solid #8a6b2e;
-  outline-offset: 2px;
+  max-height: 112px;
+  gap: 0.4rem;
 }
 
 @media (min-width: 1024px) {

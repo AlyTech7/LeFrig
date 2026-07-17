@@ -176,6 +176,7 @@ const ar: Messages = {
     allRooms: 'جميع الأروقة',
     seeAllRooms: 'استكشف الأروقة العشرة في الأطلس',
     swipeRooms: 'مرّر · 10 أروقة السوق',
+    deckProgress: '{{current}} / {{total}} · {{name}}',
     vaultOptions: '{{count}} خيار',
     vaultEnter: 'ادخل الرواق',
     vaultExploreServices: 'استكشف الخدمات',

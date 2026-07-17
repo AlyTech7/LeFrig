@@ -116,6 +116,7 @@ export function AtlasVaultCard({
   const isServices = dept.id === 'services-shops';
   const isHero = dept.id === 'vehicles' && layout === 'grid';
   const isDeck = layout === 'deck';
+  const isDeckFeatured = isDeck && index === 0;
   const name = pickLocalized({ slug: dept.id, nameEs: dept.nameEs, nameAr: dept.nameAr }, locale);
   const tagCount = isDeck ? 3 : isHero ? 4 : 3;
   const previewTags = dept.items.slice(0, tagCount);
@@ -124,7 +125,7 @@ export function AtlasVaultCard({
   return (
     <article
       id={isDeck ? undefined : `atlas-${dept.id}`}
-      className={`lf-vault ${visClass('atlas')} ${isServices ? 'lf-vault--services' : ''} ${isHero ? 'lf-vault--hero' : ''} ${isDeck ? 'lf-vault--deck' : ''}`}
+      className={`lf-vault ${visClass('atlas')} ${isServices ? 'lf-vault--services' : ''} ${isHero ? 'lf-vault--hero' : ''} ${isDeck ? 'lf-vault--deck' : ''} ${isDeckFeatured ? 'lf-vault--deck-featured' : ''}`}
       style={
         {
           ...atlasVisStyle(dept.id),
@@ -149,7 +150,7 @@ export function AtlasVaultCard({
           </Link>
         </header>
 
-        {!isServices && previewTags.length > 0 ? (
+        {!isServices && previewTags.length > 0 && !isDeck ? (
           <div className="lf-vault__tags" aria-hidden>
             {previewTags.map((item) => (
               <span key={item.slug} className="lf-vault__tag">
@@ -165,12 +166,12 @@ export function AtlasVaultCard({
           <VaultLinks items={dept.items.slice(0, linkLimit)} compact={isDeck} locale={locale} />
         )}
 
-        <footer className="lf-vault__foot">
-          <Link href={deptHref(dept)} className="lf-vault__enter">
+        <footer className={`lf-vault__foot${isDeck ? ' lf-vault__foot--deck' : ''}`}>
+          <Link href={deptHref(dept)} className={`lf-vault__enter${isDeck ? ' lf-vault__enter--deck' : ''}`}>
             {isServices ? t('atlas.vaultExploreServices') : t('atlas.vaultEnter')}
             <AppIcon name="arrow-up-right" size={14} />
           </Link>
-          {!isServices && dept.items.length > linkLimit ? (
+          {!isDeck && !isServices && dept.items.length > linkLimit ? (
             <span className="lf-vault__more">{t('atlas.vaultMore', { count: dept.items.length - linkLimit })}</span>
           ) : null}
         </footer>
