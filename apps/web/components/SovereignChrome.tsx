@@ -7,72 +7,137 @@ import { SignedIn, SignedOut } from '@clerk/nextjs';
 import { CrownAuth } from '@/components/AuthButtons';
 import { CrownSearch } from '@/components/home/CrownSearch';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { Plus } from 'lucide-react';
+import { AppIcon, type AppIconName } from '@/components/AppIcon';
 import { IconBell, LefrigBrand, LefrigMark } from '@/components/LefrigMark';
 import { useT } from '@/lib/locale';
 import { isClerkEnabled } from '@/lib/clerk';
 
-function useNavItems() {
+type NavIcon = 'mark' | AppIconName;
+
+type NavItem = {
+  href: string;
+  label: string;
+  match: (p: string) => boolean;
+  icon: NavIcon;
+};
+
+function useNavItems(): NavItem[] {
   const t = useT();
   return [
-    { href: '/', label: t('nav.home'), match: (p: string) => p === '/', icon: 'mark' as const },
+    { href: '/', label: t('nav.home'), match: (p) => p === '/', icon: 'mark' },
     {
       href: '/marketplace',
       label: t('nav.marketplace'),
-      match: (p: string) => p.startsWith('/marketplace') && !p.includes('/create'),
-      icon: '🛒',
+      match: (p) => p.startsWith('/marketplace') && !p.includes('/create'),
+      icon: 'shopping-bag',
     },
     {
       href: '/transport',
       label: t('nav.transport'),
-      match: (p: string) => p.startsWith('/transport'),
-      icon: '🚐',
+      match: (p) => p.startsWith('/transport'),
+      icon: 'truck',
     },
     {
       href: '/messages',
       label: t('nav.chat'),
-      match: (p: string) => p.startsWith('/messages'),
-      icon: '💬',
+      match: (p) => p.startsWith('/messages'),
+      icon: 'message-circle',
     },
   ];
 }
 
-function DockItems({ variant }: { variant: 'bottom' | 'rail' }) {
-  const pathname = usePathname();
-  const ITEMS = useNavItems();
+function DockIcon({ icon, active, size }: { icon: NavIcon; active: boolean; size: number }) {
+  if (icon === 'mark') return <LefrigMark size={size} showOrbit={false} />;
+  return <AppIcon name={icon} size={size} strokeWidth={active ? 2.35 : 1.9} />;
+}
+
+function DockLink({
+  item,
+  pathname,
+  showLabel,
+  iconSize,
+}: {
+  item: NavItem;
+  pathname: string;
+  showLabel: boolean;
+  iconSize: number;
+}) {
+  const active = item.match(pathname);
+
+  return (
+    <Link
+      href={item.href}
+      className={`sv-dock__item ${active ? 'sv-dock__item--active' : ''}`}
+      aria-current={active ? 'page' : undefined}
+    >
+      <span className="sv-dock__item-glow" aria-hidden />
+      <span className="sv-dock__icon-wrap">
+        <DockIcon icon={item.icon} active={active} size={iconSize} />
+      </span>
+      {showLabel ? <small>{item.label}</small> : null}
+    </Link>
+  );
+}
+
+function DockSell({ showLabel }: { showLabel: boolean }) {
   const t = useT();
 
   return (
+    <Link href="/marketplace/create" className="sv-dock__sell" aria-label={t('nav.sell')}>
+      <span className="sv-dock__sell-halo" aria-hidden />
+      <span className="sv-dock__sell-btn">
+        <Plus size={24} strokeWidth={2.4} aria-hidden />
+      </span>
+      {showLabel ? <small>{t('nav.sell')}</small> : null}
+    </Link>
+  );
+}
+
+function DockItems({ variant }: { variant: 'bottom' | 'rail' }) {
+  const pathname = usePathname();
+  const items = useNavItems();
+  const iconSize = variant === 'rail' ? 22 : 20;
+
+  return (
     <>
-      {ITEMS.map((item) => (
-        <Link
+      {items.map((item) => (
+        <DockLink
           key={item.href}
-          href={item.href}
-          className={`sv-dock__item ${item.match(pathname) ? 'sv-dock__item--active' : ''}`}
-          aria-current={item.match(pathname) ? 'page' : undefined}
-        >
-          <span>
-            {item.icon === 'mark' ? (
-              <LefrigMark size={variant === 'rail' ? 26 : 24} showOrbit={false} />
-            ) : (
-              item.icon
-            )}
-          </span>
-          {variant === 'bottom' && <small>{item.label}</small>}
-        </Link>
+          item={item}
+          pathname={pathname}
+          showLabel={variant === 'bottom'}
+          iconSize={iconSize}
+        />
       ))}
-      <Link href="/marketplace/create" className="sv-dock__sell" aria-label={t('nav.sell')}>
-        <span className="sv-dock__sell-btn">+</span>
-        {variant === 'bottom' && <small>{t('nav.sell')}</small>}
-      </Link>
+      <DockSell showLabel={variant === 'bottom'} />
     </>
   );
 }
 
 export function WebDock() {
+  const pathname = usePathname();
+  const items = useNavItems();
+  const [left, right] = [items.slice(0, 2), items.slice(2)];
+
   return (
     <>
       <nav className="sv-dock sv-dock--bottom" aria-label="Navegación principal">
-        <DockItems variant="bottom" />
+        <div className="sv-dock__surface" aria-hidden />
+        <div className="sv-dock__rim" aria-hidden />
+        <div className="sv-dock__inner">
+          <div className="sv-dock__side">
+            {left.map((item) => (
+              <DockLink key={item.href} item={item} pathname={pathname} showLabel iconSize={20} />
+            ))}
+          </div>
+          <DockSell showLabel />
+          <div className="sv-dock__side">
+            {right.map((item) => (
+              <DockLink key={item.href} item={item} pathname={pathname} showLabel iconSize={20} />
+            ))}
+          </div>
+        </div>
       </nav>
       <nav className="sv-dock sv-dock--rail" aria-label="Navegación lateral">
         <Link href="/" className="sv-mark" style={{ marginBottom: '1.25rem', textDecoration: 'none', width: 40, height: 40 }} aria-label="Lefrig inicio">
