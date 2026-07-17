@@ -302,6 +302,10 @@ export function TransportConnect() {
 
   return (
     <div className="lx" ref={rootRef}>
+      {activeField ? (
+        <button type="button" className="lx-sheet-backdrop" tabIndex={-1} aria-hidden onClick={() => setActiveField(null)} />
+      ) : null}
+
       <header className="lx-intro">
         <h1 className="lx-intro__ar">{t('transport.title')}</h1>
         <p className="lx-intro__es">{t('transport.connect.tagline')}</p>
@@ -447,17 +451,29 @@ export function TransportConnect() {
           <p className="lx-disclaimer">{t('transport.connect.disclaimer')}</p>
         </section>
 
-        <aside className="lx-live-panel" aria-label={t('transport.connect.liveAria')}>
-          <div className="lx-live-panel__top">
-            <div>
-              <h2>{t('transport.connect.liveTitle')}</h2>
-              <p className="lx-route-live">{routeLabel}</p>
-            </div>
-            <button type="button" className="lx-refresh" onClick={loadMatches} disabled={loading}>
-              {loading ? '···' : '↻'}
-            </button>
-          </div>
-
+        <aside className="lx-live-panel">
+          <details className="lx-live-drawer">
+            <summary className="lx-live-drawer__summary">
+              <div className="lx-live-panel__top lx-live-panel__top--drawer">
+                <div>
+                  <h2>{t('transport.connect.liveTitle')}</h2>
+                  <p className="lx-route-live">{routeLabel}</p>
+                </div>
+                <button
+                  type="button"
+                  className="lx-refresh"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    loadMatches();
+                  }}
+                  disabled={loading}
+                >
+                  {loading ? '···' : '↻'}
+                </button>
+              </div>
+            </summary>
+            <div className="lx-live-drawer__body">
           <div className="lx-live-counts">
             <div className="lx-count">
               <span className="lx-count__n">{drivers.length}</span>
@@ -527,6 +543,8 @@ export function TransportConnect() {
               ))
             )}
           </div>
+            </div>
+          </details>
         </aside>
       </div>
     </div>
