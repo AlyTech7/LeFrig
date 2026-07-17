@@ -100,6 +100,10 @@ body {
   min-height: 100vh;
   position: relative;
   z-index: 1;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
 }
 
 @media (min-width: 768px) {
@@ -210,6 +214,9 @@ body {
   left: 0;
   right: 0;
   z-index: 1000;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
   padding: calc(0.5rem + env(safe-area-inset-top, 0px)) 0.85rem 0.5rem;
   pointer-events: none;
   transition: padding 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
@@ -247,10 +254,13 @@ body {
 
 .sv-crown__deck {
   pointer-events: auto;
+  width: 100%;
   max-width: 1180px;
+  min-width: 0;
   margin: 0 auto;
+  box-sizing: border-box;
   display: grid;
-  grid-template-columns: minmax(0, auto) 1fr;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
   grid-template-rows: auto auto;
   gap: 0.55rem 0.65rem;
   align-items: center;
@@ -760,6 +770,10 @@ body {
     display: none;
   }
 
+  .sv-crown__btn--me {
+    display: none;
+  }
+
   .sv-crown__btn--ghost {
     min-height: 36px;
     padding: 0 0.55rem;
@@ -772,14 +786,6 @@ body {
     min-height: 36px;
     padding: 0;
     border-radius: 12px;
-    font-size: 0;
-  }
-
-  .sv-crown__btn--gold::before {
-    content: '+';
-    font-size: 1.1rem;
-    font-weight: 400;
-    line-height: 1;
   }
 }
 

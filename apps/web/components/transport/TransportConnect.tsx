@@ -268,7 +268,8 @@ export function TransportConnect() {
         return;
       }
     } else {
-      const hasIntl = origin.zone === 'espana' || origin.zone === 'francia' || dest.zone === 'espana' || dest.zone === 'francia';
+      const intlZones: TransportHubZone[] = ['espana', 'francia', 'mauritania'];
+      const hasIntl = intlZones.includes(origin.zone) || intlZones.includes(dest.zone);
       if (!hasIntl) {
         setToast(t('transport.connect.errors.intlScope'));
         return;

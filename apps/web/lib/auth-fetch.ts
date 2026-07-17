@@ -31,7 +31,16 @@ function useClerkAuthFetch() {
       }
 
       const res = await fetch(`${API_URL}${path}`, { ...init, headers });
-      if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
+      if (!res.ok) {
+        let detail = '';
+        try {
+          const body = (await res.json()) as { message?: string | string[] };
+          detail = Array.isArray(body.message) ? body.message.join('; ') : (body.message ?? '');
+        } catch {
+          /* ignore non-JSON */
+        }
+        throw new Error(detail ? `API ${res.status}: ${detail}` : `API ${res.status}: ${path}`);
+      }
       return res.json() as Promise<T>;
     },
     [getToken, isSignedIn],

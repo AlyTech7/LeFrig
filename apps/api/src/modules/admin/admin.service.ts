@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { paginate, skipTake } from '../../common/utils/pagination';
-import { paginationSchema } from '@lefrig/shared';
+import { paginationSchema, TrustBadge } from '@lefrig/shared';
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notifications: NotificationsService,
+  ) {}
 
   async getDashboard() {
     const [
@@ -572,11 +576,61 @@ export class AdminService {
     const profile = await this.prisma.driverProfile.findUnique({ where: { userId } });
     if (!profile) throw new NotFoundException('Perfil de conductor no encontrado');
 
-    return this.prisma.driverProfile.update({
+    const updated = await this.prisma.driverProfile.update({
       where: { userId },
       data: { isVerified: verified },
-      include: { user: { select: { displayName: true } } },
+      include: { user: { select: { displayName: true, roles: true } } },
     });
+
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+
+    if (verified) {
+      if (!user.roles.includes('driver')) {
+        await this.prisma.user.update({
+          where: { id: userId },
+          data: { roles: [...user.roles, 'driver'] },
+        });
+      }
+      await this.prisma.userBadge.upsert({
+        where: { userId_badge: { userId, badge: TrustBadge.DRIVER_VERIFIED } },
+        update: { reason: 'Verificado por admin Lefrig' },
+        create: {
+          userId,
+          badge: TrustBadge.DRIVER_VERIFIED,
+          reason: 'Verificado por admin Lefrig',
+        },
+      });
+      if (!user.badges.includes(TrustBadge.DRIVER_VERIFIED)) {
+        await this.prisma.user.update({
+          where: { id: userId },
+          data: { badges: [...user.badges, TrustBadge.DRIVER_VERIFIED] },
+        });
+      }
+      await this.notifications.create(userId, {
+        type: 'driver_verified',
+        title: '¡Eres conductor verificado!',
+        body: 'Lefrig ha aprobado tu solicitud. Ya puedes gestionar rutas y aceptar viajes.',
+        data: { href: '/me/driver', mobileHref: '/transport/garage' },
+      });
+    } else {
+      await this.prisma.userBadge.deleteMany({
+        where: { userId, badge: TrustBadge.DRIVER_VERIFIED },
+      });
+      if (user.badges.includes(TrustBadge.DRIVER_VERIFIED)) {
+        await this.prisma.user.update({
+          where: { id: userId },
+          data: { badges: user.badges.filter((b) => b !== TrustBadge.DRIVER_VERIFIED) },
+        });
+      }
+      await this.notifications.create(userId, {
+        type: 'driver_revoked',
+        title: 'Verificación de conductor retirada',
+        body: 'Tu perfil de conductor ya no está verificado. Contacta con soporte si crees que es un error.',
+        data: { href: '/me/driver', mobileHref: '/transport/garage' },
+      });
+    }
+
+    return updated;
   }
 
   async listJobs(query: unknown) {

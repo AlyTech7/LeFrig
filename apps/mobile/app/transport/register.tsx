@@ -101,7 +101,9 @@ export default function DriverRegisterScreen() {
 
         if (cancelled) return;
 
-        const list = campsRes.data;
+        const list = campsRes.data.filter((c) =>
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(c.id),
+        );
         setCamps(list);
         setExisting(profile);
 
@@ -160,6 +162,20 @@ export default function DriverRegisterScreen() {
     setSubmitting(true);
     try {
       await syncUser();
+      const uuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      const routes =
+        uuid.test(form.originCampId) &&
+        uuid.test(form.destinationCampId) &&
+        form.originCampId !== form.destinationCampId
+          ? [
+              {
+                originCampId: form.originCampId,
+                destinationCampId: form.destinationCampId,
+                frequency: form.frequency,
+              },
+            ]
+          : undefined;
       await authFetch('/transport/drivers/register', {
         method: 'POST',
         body: JSON.stringify({
@@ -167,13 +183,7 @@ export default function DriverRegisterScreen() {
           vehiclePlate: form.vehiclePlate.trim() || undefined,
           licenseNumber: form.licenseNumber.trim() || undefined,
           seatsCapacity: form.seatsCapacity,
-          routes: [
-            {
-              originCampId: form.originCampId,
-              destinationCampId: form.destinationCampId,
-              frequency: form.frequency,
-            },
-          ],
+          routes,
         }),
       });
       setSuccess(true);
