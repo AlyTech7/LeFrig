@@ -36,7 +36,7 @@ export type TransportCorridor = {
 
 export const TRANSPORT_SCOPE_ZONES: Record<TransportRouteScope, TransportHubZone[]> = {
   local: ['wilaya', 'tindouf', 'argelia', 'mauritania'],
-  international: ['espana', 'francia'],
+  international: ['espana', 'francia', 'mauritania'],
 };
 
 export const TRANSPORT_HUB_ZONES: { id: TransportHubZone; labelEs: string; labelAr: string; icon: string }[] = [
@@ -118,6 +118,10 @@ export const TRANSPORT_CORRIDORS: TransportCorridor[] = [
   { origin: 'valencia', destination: 'tindouf', labelEs: 'Valencia → Tindouf', tag: 'europa', scope: 'international' },
   { origin: 'fr-59-nord', destination: 'rabouni', labelEs: 'Nord → Rabouni', tag: 'europa', scope: 'international' },
   { origin: 'fr-31-haute-garonne', destination: 'tindouf', labelEs: 'Toulouse → Tindouf', tag: 'europa', scope: 'international' },
+  // Internacional — Mauritania
+  { origin: 'las-palmas', destination: 'nouadhibou', labelEs: 'Canarias → Nuadibú', tag: 'mauritania', scope: 'international' },
+  { origin: 'madrid', destination: 'nouakchott', labelEs: 'Madrid → Nuakchott', tag: 'mauritania', scope: 'international' },
+  { origin: 'paris', destination: 'nouakchott', labelEs: 'París → Nuakchott', tag: 'mauritania', scope: 'international' },
 ];
 
 export function getTransportHub(slug: string): TransportHub | undefined {
@@ -128,8 +132,13 @@ export function hubsInZone(zone: TransportHubZone): TransportHub[] {
   return TRANSPORT_HUBS.filter((h) => h.zone === zone);
 }
 
+/**
+ * Ámbito "natural" de una zona. Mauritania pertenece a ambos ámbitos
+ * (corredor saharaui local y rutas internacionales), así que se resuelve
+ * como local primero para no romper los corredores Rabouni ↔ Mauritania.
+ */
 export function hubScope(zone: TransportHubZone): TransportRouteScope {
-  return TRANSPORT_SCOPE_ZONES.international.includes(zone) ? 'international' : 'local';
+  return TRANSPORT_SCOPE_ZONES.local.includes(zone) ? 'local' : 'international';
 }
 
 export function hubsInScope(scope: TransportRouteScope): TransportHub[] {

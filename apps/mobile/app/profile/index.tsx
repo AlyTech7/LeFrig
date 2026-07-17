@@ -1,27 +1,53 @@
 import { useUser, useAuth } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Image } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon, type FeatherIconName } from '@/components/AppIcon';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useT } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
 import { clearLegacySession, getLegacyUser, type LegacyUser } from '@/lib/legacySession';
+import { useAuthApi } from '@/lib/useAuthApi';
 
 type LinkGroup = {
   titleKey: string;
   items: { labelKey: string; route: string; icon: FeatherIconName }[];
 };
 
+type HubPayload = {
+  driverStatus: 'none' | 'pending' | 'verified';
+  stats: {
+    listingsActive: number;
+    ordersAsBuyer: number;
+    transportOpen: number;
+    unreadNotifications: number;
+  };
+  user: {
+    displayName: string;
+    reputationScore: number;
+    camp: { nameEs: string } | null;
+  };
+};
+
 const LINK_GROUPS: LinkGroup[] = [
+  {
+    titleKey: 'profile.groups.activity',
+    items: [
+      { labelKey: 'nav.orders', route: '/orders', icon: 'package' },
+      { labelKey: 'profile.links.driverArea', route: '/transport/garage', icon: 'truck' },
+      { labelKey: 'nav.transport', route: '/transport', icon: 'map' },
+      { labelKey: 'nav.messages', route: '/messages', icon: 'message-circle' },
+      { labelKey: 'nav.notifications', route: '/notifications', icon: 'bell' },
+      { labelKey: 'nav.favorites', route: '/favorites', icon: 'heart' },
+    ],
+  },
   {
     titleKey: 'profile.groups.explore',
     items: [
       { labelKey: 'nav.marketplace', route: '/marketplace', icon: 'grid' },
       { labelKey: 'nav.shops', route: '/shops', icon: 'shopping-bag' },
       { labelKey: 'nav.services', route: '/services', icon: 'zap' },
-      { labelKey: 'nav.transport', route: '/transport', icon: 'truck' },
       { labelKey: 'nav.jobs', route: '/jobs', icon: 'briefcase' },
       { labelKey: 'nav.camps', route: '/camps', icon: 'map-pin' },
     ],
@@ -29,10 +55,6 @@ const LINK_GROUPS: LinkGroup[] = [
   {
     titleKey: 'profile.groups.account',
     items: [
-      { labelKey: 'nav.orders', route: '/orders', icon: 'package' },
-      { labelKey: 'nav.favorites', route: '/favorites', icon: 'heart' },
-      { labelKey: 'nav.messages', route: '/messages', icon: 'message-circle' },
-      { labelKey: 'nav.notifications', route: '/notifications', icon: 'bell' },
       { labelKey: 'profile.links.cashPin', route: '/cash', icon: 'dollar-sign' },
       { labelKey: 'nav.disputes', route: '/disputes', icon: 'shield' },
     ],
@@ -51,21 +73,46 @@ const LINK_GROUPS: LinkGroup[] = [
 export default function ProfileScreen() {
   const { user } = useUser();
   const { signOut, isSignedIn } = useAuth();
+  const { authFetch } = useAuthApi();
   const router = useRouter();
   const t = useT();
   const [legacyUser, setLegacyUser] = useState<LegacyUser | null>(null);
+  const [hub, setHub] = useState<HubPayload | null>(null);
+  const [hubLoading, setHubLoading] = useState(false);
+
+  const loadHub = useCallback(async () => {
+    if (!isSignedIn) {
+      setHub(null);
+      return;
+    }
+    setHubLoading(true);
+    try {
+      const data = await authFetch<HubPayload>('/users/me/hub');
+      setHub(data);
+    } catch {
+      setHub(null);
+    } finally {
+      setHubLoading(false);
+    }
+  }, [authFetch, isSignedIn]);
 
   useEffect(() => {
     getLegacyUser().then(setLegacyUser);
   }, [isSignedIn]);
 
+  useEffect(() => {
+    loadHub();
+  }, [loadHub]);
+
   const displayName =
+    hub?.user.displayName ??
     user?.fullName ??
     user?.firstName ??
     (legacyUser?.phone ? t('home.guestUser', { suffix: legacyUser.phone.slice(-4) }) : t('profile.guest'));
   const email = user?.primaryEmailAddress?.emailAddress;
   const phone = user?.primaryPhoneNumber?.phoneNumber ?? legacyUser?.phone ?? undefined;
   const authed = isSignedIn || !!legacyUser;
+  const driverStatus = hub?.driverStatus ?? 'none';
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
@@ -79,6 +126,7 @@ export default function ProfileScreen() {
             </View>
           )}
           <Text style={styles.name}>{displayName}</Text>
+          {hub?.user.camp ? <Text style={styles.meta}>{hub.user.camp.nameEs}</Text> : null}
           {phone ? (
             <View style={styles.metaRow}>
               <AppIcon name="smartphone" size={14} color={theme.dune} />
@@ -94,7 +142,11 @@ export default function ProfileScreen() {
           {authed ? (
             <View style={styles.badgeRow}>
               <AppIcon name="shield" size={14} color={theme.oasis} />
-              <Text style={styles.rep}>{t('profile.activeAccount')}</Text>
+              <Text style={styles.rep}>
+                {hub
+                  ? t('me.reputation', { score: Math.round(hub.user.reputationScore) })
+                  : t('profile.activeAccount')}
+              </Text>
             </View>
           ) : (
             <Pressable style={styles.signInBtn} onPress={() => router.replace('/sign-in')}>
@@ -103,6 +155,38 @@ export default function ProfileScreen() {
           )}
         </View>
       </SafeAreaView>
+
+      {authed ? (
+        <Pressable
+          style={[
+            styles.driverCard,
+            driverStatus === 'verified' && styles.driverCardVerified,
+            driverStatus === 'pending' && styles.driverCardPending,
+          ]}
+          onPress={() => router.push('/transport/garage' as never)}
+        >
+          {hubLoading ? (
+            <ActivityIndicator color={theme.gold} />
+          ) : (
+            <>
+              <View style={styles.driverCardTop}>
+                <AppIcon name="truck" size={22} color={theme.oasisDeep} />
+                <Text style={styles.driverCardTitle}>{t('profile.links.driverArea')}</Text>
+              </View>
+              <Text style={styles.driverCardStatus}>{t(`profile.driverStatus.${driverStatus}`)}</Text>
+              {hub ? (
+                <Text style={styles.driverCardMeta}>
+                  {t('me.modules.orders')}: {hub.stats.ordersAsBuyer}
+                  {' · '}
+                  {t('me.modules.sales')}: {hub.stats.listingsActive}
+                  {' · '}
+                  {t('nav.notifications')}: {hub.stats.unreadNotifications}
+                </Text>
+              ) : null}
+            </>
+          )}
+        </Pressable>
+      ) : null}
 
       <View style={styles.languageSection}>
         <Text style={styles.groupTitle}>{t('profile.language')}</Text>
@@ -194,6 +278,28 @@ const styles = StyleSheet.create({
     backgroundColor: theme.oasisDeep,
   },
   signInText: { color: theme.pearl, fontWeight: '800', fontSize: 15 },
+  driverCard: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    padding: 16,
+    borderRadius: radii.lg,
+    backgroundColor: theme.surface,
+    borderWidth: 1,
+    borderColor: theme.border,
+    gap: 6,
+  },
+  driverCardVerified: {
+    backgroundColor: 'rgba(45,138,98,0.08)',
+    borderColor: 'rgba(45,138,98,0.3)',
+  },
+  driverCardPending: {
+    backgroundColor: 'rgba(168,132,45,0.1)',
+    borderColor: 'rgba(168,132,45,0.35)',
+  },
+  driverCardTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  driverCardTitle: { fontSize: 16, fontWeight: '800', color: theme.ink },
+  driverCardStatus: { fontSize: 14, fontWeight: '700', color: theme.oasisDeep },
+  driverCardMeta: { fontSize: 12, color: theme.inkMuted, marginTop: 2 },
   languageSection: {
     paddingHorizontal: 20,
     paddingTop: 20,

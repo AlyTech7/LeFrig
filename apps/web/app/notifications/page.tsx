@@ -57,8 +57,18 @@ export default function NotificationsPage() {
   const openNotification = async (n: Notification) => {
     if (!n.isRead) await markRead(n.id);
     const conversationId = n.data?.conversationId;
+    const href = typeof n.data?.href === 'string' ? n.data.href : null;
+
     if (n.type === 'new_message' && typeof conversationId === 'string') {
       router.push(`/messages/${conversationId}`);
+      return;
+    }
+    if (n.type === 'driver_verified' || n.type === 'driver_revoked') {
+      router.push(href || '/me/driver');
+      return;
+    }
+    if (href?.startsWith('/')) {
+      router.push(href);
     }
   };
 
@@ -111,7 +121,10 @@ export default function NotificationsPage() {
                 onClick={() => openNotification(n)}
               >
                 <p style={{ margin: '0 0 4px', fontSize: '0.75rem', fontWeight: 700, color: colors.deepGreen[500], textTransform: 'uppercase' }}>
-                  {n.type.replace(/_/g, ' ')}
+                  {t(`notifications.types.${n.type}` as 'notifications.types.new_message') ===
+                  `notifications.types.${n.type}`
+                    ? n.type.replace(/_/g, ' ')
+                    : t(`notifications.types.${n.type}` as 'notifications.types.new_message')}
                 </p>
                 <strong>{n.title}</strong>
                 <p style={{ margin: '6px 0 0', color: colors.gray[600], lineHeight: 1.5 }}>{n.body}</p>

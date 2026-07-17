@@ -40,9 +40,12 @@
 
 .transport-page .lx {
   position: relative;
+  width: 100%;
   max-width: var(--lx-max);
+  min-width: 0;
   margin: 0 auto;
-  padding: 0.35rem clamp(1rem, 3vw, 1.25rem) 3.5rem;
+  padding: 0.35rem clamp(0.75rem, 3vw, 1.25rem) 3.5rem;
+  box-sizing: border-box;
 }
 
 /* ─── Intro compacta ─── */
@@ -144,12 +147,21 @@
   line-height: 1.45;
 }
 
-/* ─── Layout ─── */
+/* ─── Layout (mobile-first: una columna) ─── */
 .lx-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
-  gap: clamp(0.85rem, 2.5vw, 1.35rem);
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.lx-layout > * {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* ─── Panel reserva ─── */
@@ -157,8 +169,10 @@
   background: var(--lx-surface);
   border: 1px solid var(--lx-line);
   border-radius: var(--lx-r);
-  padding: clamp(1.15rem, 2.5vw, 1.65rem);
+  padding: clamp(1rem, 2.5vw, 1.65rem);
   box-shadow: var(--lx-shadow);
+  width: 100%;
+  min-width: 0;
 }
 
 .lx-booking__head {
@@ -194,13 +208,15 @@
   color: var(--lx-gold-bright);
 }
 
-/* ─── Origen / destino ─── */
+/* ─── Origen / destino (mobile-first: columna) ─── */
 .lx-route-box {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 0.55rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
   align-items: stretch;
-  margin-bottom: 1.35rem;
+  margin-bottom: 1.15rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .lx-field {
@@ -210,7 +226,9 @@
 
 .lx-field__trigger {
   width: 100%;
-  min-height: 88px;
+  max-width: 100%;
+  min-height: 0;
+  box-sizing: border-box;
   text-align: left;
   background: var(--lx-surface-up);
   border: 1px solid var(--lx-line);
@@ -387,10 +405,11 @@
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s, box-shadow 0.2s;
   flex-shrink: 0;
   box-shadow: var(--lx-shadow);
+  transform: rotate(90deg);
 }
 
 .lx-swap:hover {
-  transform: rotate(180deg);
+  transform: rotate(270deg);
   border-color: var(--lx-line-hover);
   box-shadow: var(--lx-shadow-lg);
 }
@@ -413,6 +432,10 @@
   margin-bottom: 1.15rem;
   scrollbar-width: thin;
   scrollbar-color: var(--lx-line) transparent;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 .lx-corridor {
@@ -446,9 +469,11 @@
 /* ─── Modos ─── */
 .lx-modes {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.45rem;
   margin-bottom: 1.15rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .lx-mode {
@@ -495,9 +520,11 @@
 /* ─── Campos inline ─── */
 .lx-inline-fields {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr;
   gap: 0.65rem;
   margin-bottom: 1rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .lx-inline-fields label {
@@ -516,6 +543,9 @@
 }
 
 .lx-inline-fields input {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 0.68rem 0.8rem;
   border-radius: var(--lx-r);
   border: 1px solid var(--lx-line);
@@ -592,8 +622,9 @@
   border-radius: var(--lx-r);
   padding: clamp(1.1rem, 2.5vw, 1.5rem);
   box-shadow: var(--lx-shadow);
-  position: sticky;
-  top: calc(var(--sv-chrome-top, 72px) + 0.75rem);
+  position: static;
+  width: 100%;
+  min-width: 0;
 }
 
 .lx-live-panel__top {
@@ -875,15 +906,17 @@
   border: none;
   margin: 0;
   padding: 0;
+  width: 100%;
+  min-width: 0;
 }
 
-  .lx-live-drawer__summary {
-    list-style: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    width: 100%;
-  }
+.lx-live-drawer__summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
 
 .lx-live-drawer__summary::-webkit-details-marker {
   display: none;
@@ -893,33 +926,45 @@
   padding-top: 0.15rem;
 }
 
-/* ─── Responsive ─── */
-@media (max-width: 1024px) {
+/* ─── Escritorio ─── */
+@media (min-width: 1025px) {
   .lx-layout {
-    grid-template-columns: 1fr;
-    gap: 0.85rem;
-  }
-
-  .lx-live-panel {
-    position: static;
+    display: grid;
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+    gap: clamp(0.85rem, 2.5vw, 1.35rem);
+    align-items: start;
   }
 
   .lx-route-box {
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 0.55rem;
+    align-items: stretch;
+  }
+
+  .lx-field__trigger {
+    min-height: 88px;
+  }
+
+  .lx-inline-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lx-live-panel {
+    position: sticky;
+    top: calc(var(--sv-chrome-top, 72px) + 0.75rem);
   }
 
   .lx-swap {
-    align-self: center;
-    transform: rotate(90deg);
+    transform: none;
   }
 
   .lx-swap:hover {
-    transform: rotate(270deg);
+    transform: rotate(180deg);
   }
 }
 
+/* ─── Responsive móvil ─── */
 @media (max-width: 768px) {
   .transport-page {
     --lx-r: 14px;
@@ -1082,16 +1127,6 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 0.75rem;
-  }
-}
-
-@media (max-width: 960px) {
-  .lx-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .lx-live-panel {
-    position: static;
   }
 }
 

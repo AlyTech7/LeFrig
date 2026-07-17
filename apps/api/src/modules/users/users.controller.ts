@@ -21,6 +21,13 @@ export class UsersController {
     return this.usersService.getMe(user.sub);
   }
 
+  @Get('me/hub')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  getHub(@CurrentUser() user: { sub: string }) {
+    return this.usersService.getHub(user.sub);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);

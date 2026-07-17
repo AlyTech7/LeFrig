@@ -246,6 +246,8 @@ export enum NotificationType {
   CASH_CONFIRMED = 'cash_confirmed',
   CREDIT_UPDATED = 'credit_updated',
   DISPUTE_UPDATE = 'dispute_update',
+  DRIVER_VERIFIED = 'driver_verified',
+  DRIVER_REVOKED = 'driver_revoked',
   GENERAL = 'general',
 }
 

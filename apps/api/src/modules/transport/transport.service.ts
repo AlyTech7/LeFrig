@@ -278,15 +278,32 @@ export class TransportService {
     }
 
     if (data.routes?.length) {
-      await this.prisma.frequentRoute.deleteMany({ where: { driverProfileId: profile.id } });
-      await this.prisma.frequentRoute.createMany({
-        data: data.routes.map((r) => ({
-          driverProfileId: profile.id,
-          originCampId: r.originCampId,
-          destinationCampId: r.destinationCampId,
-          frequency: r.frequency,
-        })),
+      const campIds = [
+        ...new Set(data.routes.flatMap((r) => [r.originCampId, r.destinationCampId])),
+      ];
+      const existing = await this.prisma.camp.findMany({
+        where: { id: { in: campIds }, isActive: true },
+        select: { id: true },
       });
+      const valid = new Set(existing.map((c) => c.id));
+      const safeRoutes = data.routes.filter(
+        (r) =>
+          valid.has(r.originCampId) &&
+          valid.has(r.destinationCampId) &&
+          r.originCampId !== r.destinationCampId,
+      );
+
+      if (safeRoutes.length) {
+        await this.prisma.frequentRoute.deleteMany({ where: { driverProfileId: profile.id } });
+        await this.prisma.frequentRoute.createMany({
+          data: safeRoutes.map((r) => ({
+            driverProfileId: profile.id,
+            originCampId: r.originCampId,
+            destinationCampId: r.destinationCampId,
+            frequency: r.frequency,
+          })),
+        });
+      }
     }
 
     return this.prisma.driverProfile.findUniqueOrThrow({

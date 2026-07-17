@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import '@lefrig/ui/styles.css';
 import './globals.css';
 import './sovereign.css';
@@ -22,6 +22,12 @@ export const metadata: Metadata = {
     locale: 'es_ES',
     type: 'website',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

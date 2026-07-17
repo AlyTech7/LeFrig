@@ -72,8 +72,23 @@ export default function NotificationsScreen() {
   const openNotification = async (item: Notification) => {
     if (!item.isRead) await markRead(item.id);
     const conversationId = item.data?.conversationId;
+    const mobileHref = typeof item.data?.mobileHref === 'string' ? item.data.mobileHref : null;
+    const href = typeof item.data?.href === 'string' ? item.data.href : null;
+
     if (item.type === 'new_message' && typeof conversationId === 'string') {
       router.push(`/messages/${conversationId}`);
+      return;
+    }
+    if (item.type === 'driver_verified' || item.type === 'driver_revoked') {
+      router.push((mobileHref || '/transport/garage') as never);
+      return;
+    }
+    if (mobileHref?.startsWith('/')) {
+      router.push(mobileHref as never);
+      return;
+    }
+    if (href === '/me/driver') {
+      router.push('/transport/garage' as never);
     }
   };
 

@@ -1,0 +1,345 @@
+.me-hub {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.me-muted {
+  color: rgba(26, 22, 18, 0.55);
+  font-size: 0.92rem;
+  margin: 0.5rem 0;
+}
+
+.me-identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.25rem;
+  padding: 1.15rem 1.25rem;
+  background: #fff;
+  border: 1px solid rgba(26, 22, 18, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(26, 22, 18, 0.05);
+}
+
+.me-identity__avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(145deg, #f0cc7a, #a8842d);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.me-identity__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.me-identity__copy {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.me-identity__copy h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1a1612;
+}
+
+.me-identity__copy p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(26, 22, 18, 0.58);
+}
+
+.me-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+}
+
+.me-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.22rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(45, 138, 98, 0.1);
+  color: #2d8a62;
+  border: 1px solid rgba(45, 138, 98, 0.25);
+}
+
+.me-driver-chip {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  text-decoration: none;
+  border: 1px solid rgba(26, 22, 18, 0.12);
+  color: rgba(26, 22, 18, 0.7);
+  background: #faf8f4;
+}
+
+.me-driver-chip--verified {
+  background: rgba(45, 138, 98, 0.12);
+  border-color: rgba(45, 138, 98, 0.35);
+  color: #2d8a62;
+}
+
+.me-driver-chip--pending {
+  background: rgba(168, 132, 45, 0.12);
+  border-color: rgba(168, 132, 45, 0.35);
+  color: #a8842d;
+}
+
+.me-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.75rem;
+}
+
+.me-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem 0.95rem;
+  background: #fff;
+  border: 1px solid rgba(26, 22, 18, 0.1);
+  border-radius: 14px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  min-width: 0;
+}
+
+.me-card:hover {
+  border-color: rgba(168, 132, 45, 0.4);
+  box-shadow: 0 8px 28px rgba(26, 22, 18, 0.07);
+  transform: translateY(-1px);
+}
+
+.me-card--accent {
+  border-color: rgba(168, 132, 45, 0.28);
+  background: linear-gradient(180deg, #fffef9 0%, #faf8f4 100%);
+}
+
+.me-card__icon {
+  display: inline-flex;
+  margin-bottom: 0.15rem;
+}
+
+.me-card strong {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #1a1612;
+}
+
+.me-card small {
+  font-size: 0.74rem;
+  color: rgba(26, 22, 18, 0.55);
+  line-height: 1.35;
+}
+
+.me-recent {
+  padding: 1.15rem 1.25rem;
+  background: #fff;
+  border: 1px solid rgba(26, 22, 18, 0.1);
+  border-radius: 16px;
+}
+
+.me-recent h3 {
+  margin: 0 0 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #a8842d;
+}
+
+.me-recent__cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.me-recent h4 {
+  margin: 0 0 0.45rem;
+  font-size: 0.8rem;
+  color: rgba(26, 22, 18, 0.55);
+}
+
+.me-recent ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.me-recent li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.84rem;
+}
+
+.me-recent a {
+  color: #1a1612;
+  font-weight: 600;
+  text-decoration: none;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.me-recent a:hover {
+  color: #a8842d;
+}
+
+.me-recent span {
+  color: rgba(26, 22, 18, 0.45);
+  font-size: 0.72rem;
+  flex-shrink: 0;
+}
+
+/* Driver cockpit */
+.me-driver-banner {
+  padding: 1.1rem 1.2rem;
+  border-radius: 16px;
+  border: 1px solid rgba(26, 22, 18, 0.1);
+  background: #fff;
+  margin-bottom: 1rem;
+}
+
+.me-driver-banner--verified {
+  background: rgba(45, 138, 98, 0.08);
+  border-color: rgba(45, 138, 98, 0.28);
+}
+
+.me-driver-banner--pending {
+  background: rgba(168, 132, 45, 0.1);
+  border-color: rgba(168, 132, 45, 0.3);
+}
+
+.me-driver-banner h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.me-driver-banner p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: rgba(26, 22, 18, 0.62);
+  line-height: 1.45;
+}
+
+.me-driver-panel {
+  padding: 1.15rem 1.25rem;
+  background: #fff;
+  border: 1px solid rgba(26, 22, 18, 0.1);
+  border-radius: 16px;
+  margin-bottom: 1rem;
+}
+
+.me-driver-panel h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #a8842d;
+}
+
+.me-driver-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.75rem;
+}
+
+.me-driver-facts dt {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(26, 22, 18, 0.45);
+  margin: 0 0 0.2rem;
+}
+
+.me-driver-facts dd {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #1a1612;
+}
+
+.me-driver-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.25rem;
+}
+
+.me-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.65rem 1rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.86rem;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.me-btn--primary {
+  background: linear-gradient(135deg, #c9a84c, #a8842d);
+  color: #fff;
+}
+
+.me-btn--ghost {
+  background: #fff;
+  border-color: rgba(26, 22, 18, 0.14);
+  color: #1a1612;
+}
+
+.me-route-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.me-route-list li {
+  padding: 0.55rem 0.7rem;
+  background: #faf8f4;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .me-identity {
+    padding: 1rem;
+  }
+
+  .me-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
