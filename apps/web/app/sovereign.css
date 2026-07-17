@@ -361,6 +361,10 @@ body {
   .sv-crown__icon--msg {
     display: none;
   }
+
+  .sv-crown__btn--publish {
+    display: none;
+  }
 }
 
 .sv-crown__search {
@@ -756,11 +760,40 @@ body {
     display: none;
   }
 
+  .sv-crown__btn--ghost {
+    min-height: 36px;
+    padding: 0 0.55rem;
+    font-size: 0.68rem;
+  }
+
   .sv-crown__btn--gold {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
+    min-height: 36px;
     padding: 0;
     border-radius: 12px;
+    font-size: 0;
+  }
+
+  .sv-crown__btn--gold::before {
+    content: '+';
+    font-size: 1.1rem;
+    font-weight: 400;
+    line-height: 1;
+  }
+}
+
+@media (max-width: 400px) {
+  .sv-crown {
+    padding-inline: 0.55rem;
+  }
+
+  .sv-crown__actions {
+    gap: 0.22rem;
+  }
+
+  .sv-crown__live {
+    display: none;
   }
 }
 
