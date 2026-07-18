@@ -20,21 +20,34 @@ type Notification = {
 
 export default function NotificationsPage() {
   const router = useRouter();
-  const { authFetch, isSignedIn } = useAuthFetch();
+  const { authFetch, isSignedIn, isLoaded } = useAuthFetch();
   const t = useT();
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isLoaded) return;
     if (!isSignedIn) {
-      router.push('/sign-in');
+      setLoading(false);
+      setItems([]);
       return;
     }
+    let cancelled = false;
+    setLoading(true);
     authFetch<Notification[]>('/notifications')
-      .then(setItems)
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false));
-  }, [authFetch, isSignedIn, router]);
+      .then((data) => {
+        if (!cancelled) setItems(data);
+      })
+      .catch(() => {
+        if (!cancelled) setItems([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authFetch, isLoaded, isSignedIn]);
 
   const markAllRead = async () => {
     try {
@@ -89,7 +102,7 @@ export default function NotificationsPage() {
                 {unread > 0 ? t('notifications.unread', { count: unread }) : t('notifications.allCaughtUp')}
               </p>
             </div>
-            {unread > 0 && (
+            {unread > 0 && isSignedIn && (
               <Button variant="outline" onClick={markAllRead}>
                 {t('notifications.markAllRead')}
               </Button>
@@ -99,8 +112,17 @@ export default function NotificationsPage() {
       </section>
 
       <div className="lf-page-body" style={{ maxWidth: 720 }}>
-        {loading ? (
+        {!isLoaded || loading ? (
           <p style={{ color: colors.gray[500] }}>{t('common.loading')}</p>
+        ) : !isSignedIn ? (
+          <Card padding="lg">
+            <p style={{ margin: 0, color: colors.gray[600] }}>
+              {t('me.signInPrompt')}{' '}
+              <Link href="/sign-in?redirect_url=/notifications" style={{ color: colors.deepGreen[600], fontWeight: 600 }}>
+                {t('nav.signIn')}
+              </Link>
+            </p>
+          </Card>
         ) : items.length === 0 ? (
           <Card padding="lg">
             <p style={{ margin: 0, color: colors.gray[600] }}>

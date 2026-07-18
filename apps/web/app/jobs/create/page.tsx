@@ -18,7 +18,7 @@ export default function CreateJobPage() {
   const t = useT();
   const { locale } = useLocale();
   const router = useRouter();
-  const { authFetch, isSignedIn } = useAuthFetch();
+  const { authFetch, isSignedIn, isLoaded } = useAuthFetch();
   const [camps, setCamps] = useState<CampSummary[]>(demoCamps);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -33,17 +33,18 @@ export default function CreateJobPage() {
   });
 
   useEffect(() => {
-    if (!isSignedIn) {
-      router.push('/sign-in');
-      return;
-    }
+    if (!isLoaded || !isSignedIn) return;
     fetchWithMeta<CampSummary[]>('/camps', demoCamps).then((res) => {
       setCamps(res.data.length ? res.data : demoCamps);
       setForm((f) => ({ ...f, campId: f.campId || res.data[0]?.id || demoCamps[0]?.id || '' }));
     });
-  }, [isSignedIn, router]);
+  }, [isLoaded, isSignedIn]);
 
   const submit = async () => {
+    if (!isSignedIn) {
+      router.push('/sign-in?redirect_url=/jobs/create');
+      return;
+    }
     if (!form.title.trim() || !form.description.trim() || !form.campId) return;
     setSubmitting(true);
     setError('');

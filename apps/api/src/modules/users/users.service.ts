@@ -63,6 +63,28 @@ export class UsersService {
     return user;
   }
 
+  /** Perfil público: sin teléfono ni datos sensibles */
+  async findOnePublic(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id, isActive: true },
+      select: {
+        id: true,
+        displayName: true,
+        avatarUrl: true,
+        roles: true,
+        campId: true,
+        preferredLanguage: true,
+        verificationLevel: true,
+        reputationScore: true,
+        badges: true,
+        createdAt: true,
+        camp: { select: { id: true, slug: true, nameEs: true, nameAr: true, nameEn: true } },
+      },
+    });
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+    return user;
+  }
+
   async updateProfile(userId: string, data: { displayName?: string; preferredLanguage?: string; avatarUrl?: string }) {
     return this.prisma.user.update({
       where: { id: userId },

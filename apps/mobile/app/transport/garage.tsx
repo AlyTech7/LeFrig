@@ -39,7 +39,10 @@ type OpenTrip = {
   destinationLabel?: string | null;
   originHubSlug?: string | null;
   destinationHubSlug?: string | null;
+  requesterName?: string | null;
 };
+
+type PaginatedTrips = { data: OpenTrip[] };
 
 export default function DriverGarageScreen() {
   const router = useRouter();
@@ -47,23 +50,33 @@ export default function DriverGarageScreen() {
   const t = useT();
   const [hub, setHub] = useState<HubDriver | null>(null);
   const [trips, setTrips] = useState<OpenTrip[]>([]);
+  const [openBoard, setOpenBoard] = useState<OpenTrip[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [claimingId, setClaimingId] = useState<string | null>(null);
+  const [claimMsg, setClaimMsg] = useState('');
+  const [loadError, setLoadError] = useState(false);
 
   const load = useCallback(async () => {
     if (!isSignedIn) {
       setLoading(false);
       return;
     }
+    setLoadError(false);
     try {
-      const [h, raw] = await Promise.all([
+      const [h, rawMine, rawOpen] = await Promise.all([
         authFetch<HubDriver>('/users/me/hub'),
-        authFetch<OpenTrip[] | { data: OpenTrip[] }>('/transport/my').catch(() => [] as OpenTrip[]),
+        authFetch<OpenTrip[] | PaginatedTrips>('/transport/my').catch(() => [] as OpenTrip[]),
+        authFetch<PaginatedTrips>('/transport?status=requested&limit=20').catch(() => ({
+          data: [] as OpenTrip[],
+        })),
       ]);
       setHub(h);
-      setTrips(Array.isArray(raw) ? raw : raw.data ?? []);
+      setTrips(Array.isArray(rawMine) ? rawMine : rawMine.data ?? []);
+      setOpenBoard(Array.isArray(rawOpen) ? rawOpen : rawOpen.data ?? []);
     } catch {
       setHub(null);
+      setLoadError(true);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -74,8 +87,26 @@ export default function DriverGarageScreen() {
     load();
   }, [load]);
 
+  const claimTrip = async (tripId: string) => {
+    setClaimingId(tripId);
+    setClaimMsg('');
+    try {
+      await authFetch(`/transport/${tripId}/claim`, { method: 'PATCH' });
+      setClaimMsg(t('me.driver.claimSuccess'));
+      await load();
+    } catch {
+      setClaimMsg(t('me.driver.claimError'));
+    } finally {
+      setClaimingId(null);
+    }
+  };
+
   const status = hub?.driverStatus ?? 'none';
   const driver = hub?.driver;
+  const claimable =
+    status === 'verified'
+      ? openBoard.filter((tr) => tr.status === 'requested' || tr.status === 'open')
+      : [];
 
   return (
     <View style={styles.root}>
@@ -106,6 +137,8 @@ export default function DriverGarageScreen() {
           </Pressable>
         ) : loading ? (
           <ActivityIndicator color={theme.gold} style={{ marginTop: 40 }} />
+        ) : loadError ? (
+          <Text style={styles.factMuted}>{t('errors.apiUnavailable')}</Text>
         ) : (
           <>
             <View
@@ -155,6 +188,34 @@ export default function DriverGarageScreen() {
                     <Text key={r.id} style={styles.route}>
                       {r.origin.nameEs} → {r.destination.nameEs}
                     </Text>
+                  ))
+                )}
+              </View>
+            ) : null}
+
+            {status === 'verified' ? (
+              <View style={styles.panel}>
+                <Text style={styles.panelTitle}>{t('me.driver.openBoard')}</Text>
+                {claimMsg ? <Text style={styles.factMuted}>{claimMsg}</Text> : null}
+                {claimable.length === 0 ? (
+                  <Text style={styles.factMuted}>{t('me.driver.noOpenTrips')}</Text>
+                ) : (
+                  claimable.map((tr) => (
+                    <View key={tr.id} style={styles.claimRow}>
+                      <Text style={styles.route}>
+                        {(tr.originLabel ?? tr.originHubSlug) ?? '?'} →{' '}
+                        {(tr.destinationLabel ?? tr.destinationHubSlug) ?? '?'}
+                      </Text>
+                      <Pressable
+                        style={styles.claimBtn}
+                        disabled={claimingId === tr.id}
+                        onPress={() => void claimTrip(tr.id)}
+                      >
+                        <Text style={styles.claimBtnText}>
+                          {claimingId === tr.id ? t('me.driver.claiming') : t('me.driver.claimCta')}
+                        </Text>
+                      </Pressable>
+                    </View>
                   ))
                 )}
               </View>
@@ -232,7 +293,16 @@ const styles = StyleSheet.create({
   },
   fact: { fontSize: 15, fontWeight: '700', color: theme.ink },
   factMuted: { fontSize: 13, color: theme.inkMuted },
-  route: { fontSize: 14, fontWeight: '600', color: theme.ink },
+  route: { fontSize: 14, fontWeight: '600', color: theme.ink, flex: 1 },
+  claimRow: { gap: 8, paddingVertical: 6, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border },
+  claimBtn: {
+    alignSelf: 'flex-start',
+    backgroundColor: theme.dune,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: radii.md,
+  },
+  claimBtnText: { color: theme.pearl, fontWeight: '800', fontSize: 13 },
   cta: {
     marginTop: 4,
     padding: 16,

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Card } from '@lefrig/ui/client';
 import type { ListingSummary } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
@@ -12,29 +11,49 @@ import { useAuthFetch } from '@/lib/auth-fetch';
 import { useT } from '@/lib/locale';
 
 export default function FavoritesPage() {
-  const router = useRouter();
-  const { authFetch, isSignedIn } = useAuthFetch();
+  const { authFetch, isSignedIn, isLoaded } = useAuthFetch();
   const t = useT();
   const [listings, setListings] = useState<ListingSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isLoaded) return;
     if (!isSignedIn) {
-      router.push('/sign-in');
+      setLoading(false);
+      setListings([]);
       return;
     }
+    let cancelled = false;
+    setLoading(true);
     authFetch<Record<string, unknown>[]>('/listings/favorites/mine')
-      .then((items) => setListings(items.map((item) => mapApiListing(item))))
-      .catch(() => setListings([]))
-      .finally(() => setLoading(false));
-  }, [authFetch, isSignedIn, router]);
+      .then((items) => {
+        if (!cancelled) setListings(items.map((item) => mapApiListing(item)));
+      })
+      .catch(() => {
+        if (!cancelled) setListings([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authFetch, isLoaded, isSignedIn]);
 
   return (
     <>
       <PageHero icon="heart" title={t('nav.favorites')} subtitle={t('favorites.sub')} maxWidth={900} />
       <PageBody maxWidth={900}>
-        {loading ? (
+        {!isLoaded || loading ? (
           <p style={{ color: 'var(--lf-text-muted)' }}>{t('favorites.loading')}</p>
+        ) : !isSignedIn ? (
+          <Card padding="lg">
+            <p style={{ margin: 0, color: 'var(--lf-text-muted)' }}>
+              <Link href="/sign-in?redirect_url=/favorites" style={{ color: 'var(--lf-gold)', fontWeight: 600 }}>
+                {t('nav.signIn')}
+              </Link>
+            </p>
+          </Card>
         ) : listings.length === 0 ? (
           <Card padding="lg">
             <p style={{ margin: 0, color: 'var(--lf-text-muted)' }}>

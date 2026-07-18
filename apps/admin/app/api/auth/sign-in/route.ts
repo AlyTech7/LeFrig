@@ -4,18 +4,43 @@ import {
   ADMIN_SESSION_COOKIE,
   createAdminSessionToken,
 } from '@/lib/admin-session';
-import { adminRedirectUrl } from '@/lib/site-url';
+import { adminRedirectUrl, getAdminOrigin } from '@/lib/site-url';
 
 function rolesFromUser(user: { publicMetadata?: unknown }): string[] {
   const meta = user.publicMetadata as { roles?: string[] } | undefined;
   return meta?.roles ?? [];
 }
 
+/** Solo paths internos o URLs del origen admin — evita open redirect */
+function safeAdminRedirectTarget(req: NextRequest, redirectUrl: string | null): string {
+  const fallback = adminRedirectUrl('/');
+  if (!redirectUrl) return fallback;
+  if (redirectUrl.startsWith('/') && !redirectUrl.startsWith('//')) {
+    const pathOnly = redirectUrl.split('?')[0] || '/';
+    return adminRedirectUrl(pathOnly);
+  }
+  try {
+    const target = new URL(redirectUrl);
+    const origin = getAdminOrigin();
+    const allowed = new Set<string>(['https://admin.lefrig.com']);
+    if (origin) allowed.add(origin);
+    allowed.add(new URL(req.url).origin);
+    if (allowed.has(target.origin)) {
+      return `${target.origin}${target.pathname}${target.search}`;
+    }
+  } catch {
+    /* ignore */
+  }
+  return fallback;
+}
+
 function signInErrorRedirect(req: NextRequest, message: string): NextResponse {
   const url = new URL('/sign-in', req.url);
   url.searchParams.set('error', message);
   const redirectUrl = req.nextUrl.searchParams.get('redirect_url');
-  if (redirectUrl) url.searchParams.set('redirect_url', redirectUrl);
+  if (redirectUrl?.startsWith('/') && !redirectUrl.startsWith('//')) {
+    url.searchParams.set('redirect_url', redirectUrl);
+  }
   return NextResponse.redirect(url, 303);
 }
 
@@ -66,7 +91,7 @@ export async function POST(req: NextRequest) {
     }
 
     const sessionToken = await createAdminSessionToken({ clerkUserId: user.id, roles });
-    const redirectTo = req.nextUrl.searchParams.get('redirect_url') ?? adminRedirectUrl('/');
+    const redirectTo = safeAdminRedirectTarget(req, req.nextUrl.searchParams.get('redirect_url'));
     const res = NextResponse.redirect(redirectTo, 303);
     res.cookies.set(ADMIN_SESSION_COOKIE, sessionToken, {
       httpOnly: true,

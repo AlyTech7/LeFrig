@@ -31,7 +31,7 @@ export default function OrdersPage() {
   const t = useT();
   const { locale } = useLocale();
   const router = useRouter();
-  const { authFetch, isSignedIn } = useAuthFetch();
+  const { authFetch, isSignedIn, isLoaded } = useAuthFetch();
   const [orders, setOrders] = useState<Order[]>([]);
   const [selected, setSelected] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,15 +48,28 @@ export default function OrdersPage() {
   };
 
   useEffect(() => {
+    if (!isLoaded) return;
     if (!isSignedIn) {
-      router.push('/sign-in');
+      setLoading(false);
+      setOrders([]);
       return;
     }
+    let cancelled = false;
+    setLoading(true);
     authFetch<PaginatedResponse<Order>>('/orders')
-      .then((res) => setOrders(unwrapPaginated(res)))
-      .catch(() => setOrders([]))
-      .finally(() => setLoading(false));
-  }, [authFetch, isSignedIn, router]);
+      .then((res) => {
+        if (!cancelled) setOrders(unwrapPaginated(res));
+      })
+      .catch(() => {
+        if (!cancelled) setOrders([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authFetch, isLoaded, isSignedIn]);
 
   const openOrder = async (order: Order) => {
     try {
@@ -122,8 +135,16 @@ export default function OrdersPage() {
       </section>
 
       <div className="lf-page-body" style={{ maxWidth: 800 }}>
-        {loading ? (
+        {!isLoaded || loading ? (
           <p style={{ color: 'var(--lf-text-muted)' }}>{t('orders.loading')}</p>
+        ) : !isSignedIn ? (
+          <Card padding="lg">
+            <p style={{ margin: 0, color: 'var(--lf-text-muted)' }}>
+              <Link href="/sign-in?redirect_url=/orders" style={{ color: 'var(--lf-gold)', fontWeight: 600 }}>
+                {t('nav.signIn')}
+              </Link>
+            </p>
+          </Card>
         ) : orders.length === 0 ? (
           <Card padding="lg">
             <p style={{ margin: 0, color: 'var(--lf-text-muted)' }}>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button, Card, Input } from '@lefrig/ui/client';
 import { PageBody, PageHero } from '@/components/PageHero';
 import { useAuthFetch } from '@/lib/auth-fetch';
@@ -32,8 +32,7 @@ type LookupResult = {
 };
 
 export default function CashPage() {
-  const router = useRouter();
-  const { authFetch, isSignedIn } = useAuthFetch();
+  const { authFetch, isSignedIn, isLoaded } = useAuthFetch();
   const t = useT();
   const [agreements, setAgreements] = useState<CashAgreement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,8 +44,9 @@ export default function CashPage() {
   const [newAgreement, setNewAgreement] = useState<CashAgreement | null>(null);
 
   useEffect(() => {
+    if (!isLoaded) return;
     if (!isSignedIn) {
-      router.push('/sign-in');
+      setLoading(false);
       return;
     }
     authFetch<CashAgreement[]>('/cash/my')
@@ -63,7 +63,7 @@ export default function CashPage() {
       }
       sessionStorage.removeItem('lefrig_new_cash');
     }
-  }, [authFetch, isSignedIn, router]);
+  }, [authFetch, isLoaded, isSignedIn]);
 
   const loadLookup = async (code: string) => {
     setLookupCode(code);
@@ -122,6 +122,18 @@ export default function CashPage() {
         subtitle={t('cash.subtitle')}
       />
       <PageBody maxWidth={800}>
+        {!isLoaded ? (
+          <p style={{ color: 'var(--lf-text-muted)' }}>{t('common.loading')}</p>
+        ) : !isSignedIn ? (
+          <Card padding="lg">
+            <p style={{ margin: 0 }}>
+              <Link href="/sign-in?redirect_url=/cash" style={{ color: 'var(--lf-gold)', fontWeight: 600 }}>
+                {t('nav.signIn')}
+              </Link>
+            </p>
+          </Card>
+        ) : (
+          <>
         {newAgreement && (
           <Card padding="lg" style={{ marginBottom: 24, border: '1px solid rgba(232,184,109,0.35)' }}>
             <h2 style={{ marginTop: 0, color: 'var(--lf-gold)' }}>{t('cash.agreementCreated')}</h2>
@@ -231,7 +243,8 @@ export default function CashPage() {
             ))}
           </div>
         )}
-
+          </>
+        )}
       </PageBody>
     </>
   );
