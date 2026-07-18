@@ -16,6 +16,7 @@ import { buildGlobalSearchHref, type GlobalSearchScope } from '@lefrig/shared';
 import { AppIcon, type AppIconName } from '@/components/AppIcon';
 import { API_URL } from '@/lib/api';
 import { useLocale, useT } from '@/lib/locale';
+import styles from './CrownSearch.module.css';
 
 const SCOPES: { id: GlobalSearchScope; labelKey: string; icon: AppIconName }[] = [
   { id: 'all', labelKey: 'search.scopeAll', icon: 'globe' },
@@ -68,6 +69,20 @@ const TYPE_ICON: Record<string, AppIconName> = {
   category: 'tag',
 };
 
+function suggestionMatchesScope(s: Suggestion, scope: GlobalSearchScope): boolean {
+  if (scope === 'all') return true;
+  if (scope === 'market') {
+    return s.type === 'listing' || (s.type === 'category' && s.id.startsWith('listing-'));
+  }
+  if (scope === 'shops') return s.type === 'shop';
+  if (scope === 'services') {
+    return s.type === 'service' || (s.type === 'category' && s.id.startsWith('service-'));
+  }
+  if (scope === 'transport') return s.type === 'hub' || s.type === 'camp';
+  if (scope === 'jobs') return s.type === 'job' || s.type === 'need';
+  return true;
+}
+
 export function CrownSearch() {
   const t = useT();
   const { dir } = useLocale();
@@ -95,7 +110,11 @@ export function CrownSearch() {
   const activeScope = SCOPES.find((s) => s.id === scope) ?? SCOPES[0]!;
   const placeholder =
     focused || query ? t(SCOPE_PLACEHOLDER[scope]) : placeholders[placeholderIdx];
-  const showSuggest = focused && query.trim().length >= 2 && scope === 'all';
+  const showSuggest = focused && query.trim().length >= 2;
+  const visibleSuggestions = useMemo(
+    () => suggestions.filter((s) => suggestionMatchesScope(s, scope)).slice(0, 8),
+    [suggestions, scope],
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -191,7 +210,7 @@ export function CrownSearch() {
 
   useEffect(() => {
     const q = query.trim();
-    if (scope !== 'all' || q.length < 2) {
+    if (q.length < 2) {
       setSuggestions([]);
       setSuggestLoading(false);
       abortRef.current?.abort();
@@ -205,7 +224,7 @@ export function CrownSearch() {
     const timer = window.setTimeout(async () => {
       try {
         const res = await fetch(
-          `${API_URL}/search?q=${encodeURIComponent(q)}&limit=5`,
+          `${API_URL}/search?q=${encodeURIComponent(q)}&limit=8`,
           { signal: controller.signal },
         );
         if (!res.ok) throw new Error('search failed');
@@ -226,11 +245,12 @@ export function CrownSearch() {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [query, scope]);
+  }, [query]);
 
   const pickScope = useCallback((id: GlobalSearchScope) => {
     setScope(id);
     setScopeOpen(false);
+    setActiveIdx(-1);
     requestAnimationFrame(() => inputRef.current?.focus());
   }, []);
 
@@ -247,12 +267,12 @@ export function CrownSearch() {
   );
 
   const submit = useCallback(() => {
-    if (activeIdx >= 0 && suggestions[activeIdx]) {
-      go(suggestions[activeIdx]!.href);
+    if (activeIdx >= 0 && visibleSuggestions[activeIdx]) {
+      go(visibleSuggestions[activeIdx]!.href);
       return;
     }
     go(buildGlobalSearchHref(scope, query));
-  }, [activeIdx, suggestions, go, scope, query]);
+  }, [activeIdx, visibleSuggestions, go, scope, query]);
 
   const scopeMenu =
     scopeOpen && menuStyle && mounted ? (
@@ -289,38 +309,37 @@ export function CrownSearch() {
     showSuggest && suggestStyle && mounted ? (
       <div
         ref={suggestRef}
-        className="sv-crown__suggest"
+        className={styles.suggest}
         style={suggestStyle}
         role="listbox"
         aria-label={t('search.suggestionsAria')}
       >
-        {suggestLoading && suggestions.length === 0 ? (
-          <p className="sv-crown__suggest-muted">{t('search.searching')}</p>
-        ) : suggestions.length === 0 ? (
-          <p className="sv-crown__suggest-muted">{t('search.noSuggestions')}</p>
+        {suggestLoading && visibleSuggestions.length === 0 ? (
+          <p className={styles.muted}>{t('search.searching')}</p>
+        ) : visibleSuggestions.length === 0 ? (
+          <p className={styles.muted}>{t('search.noSuggestions')}</p>
         ) : (
-          <ul className="sv-crown__suggest-list">
-            {suggestions.map((s, i) => (
+          <ul className={styles.list} id="sv-crown-suggest">
+            {visibleSuggestions.map((s, i) => (
               <li key={`${s.type}-${s.id}`} role="option" aria-selected={i === activeIdx}>
                 <button
                   type="button"
-                  className={
-                    i === activeIdx
-                      ? 'sv-crown__suggest-item sv-crown__suggest-item--on'
-                      : 'sv-crown__suggest-item'
-                  }
+                  className={i === activeIdx ? `${styles.item} ${styles.itemOn}` : styles.item}
                   onMouseDown={(e) => {
                     e.preventDefault();
                     go(s.href);
                   }}
                   onMouseEnter={() => setActiveIdx(i)}
                 >
-                  <span className="sv-crown__suggest-ico" aria-hidden>
+                  <span className={styles.ico} aria-hidden>
                     <AppIcon name={TYPE_ICON[s.type] ?? 'search'} size={16} />
                   </span>
-                  <span className="sv-crown__suggest-copy">
-                    <strong>{s.title}</strong>
-                    {s.subtitle ? <small>{s.subtitle}</small> : null}
+                  <span className={styles.copy}>
+                    <span className={styles.title}>{s.title}</span>
+                    {s.subtitle ? <span className={styles.sub}>{s.subtitle}</span> : null}
+                  </span>
+                  <span className={styles.type}>
+                    {t(`search.groups.${s.type}` as 'search.groups.listing')}
                   </span>
                 </button>
               </li>
@@ -329,10 +348,10 @@ export function CrownSearch() {
         )}
         <button
           type="button"
-          className="sv-crown__suggest-all"
+          className={styles.all}
           onMouseDown={(e) => {
             e.preventDefault();
-            go(buildGlobalSearchHref('all', query));
+            go(buildGlobalSearchHref(scope, query));
           }}
         >
           {t('search.seeAllResults', { q: query.trim() })}
@@ -384,13 +403,13 @@ export function CrownSearch() {
           onFocus={() => setFocused(true)}
           onBlur={() => window.setTimeout(() => setFocused(false), 160)}
           onKeyDown={(e) => {
-            if (!showSuggest || suggestions.length === 0) return;
+            if (!showSuggest || visibleSuggestions.length === 0) return;
             if (e.key === 'ArrowDown') {
               e.preventDefault();
-              setActiveIdx((i) => (i + 1) % suggestions.length);
+              setActiveIdx((i) => (i + 1) % visibleSuggestions.length);
             } else if (e.key === 'ArrowUp') {
               e.preventDefault();
-              setActiveIdx((i) => (i <= 0 ? suggestions.length - 1 : i - 1));
+              setActiveIdx((i) => (i <= 0 ? visibleSuggestions.length - 1 : i - 1));
             } else if (e.key === 'Escape') {
               setSuggestions([]);
               setActiveIdx(-1);
