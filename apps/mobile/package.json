@@ -44,6 +44,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.0",
+    "@expo/ngrok": "^4.1.0",
     "@lefrig/config": "workspace:*",
     "@types/react": "~19.1.0",
     "cross-env": "^10.1.0",

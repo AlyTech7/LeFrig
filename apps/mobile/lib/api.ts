@@ -8,7 +8,11 @@ function isLocalHost(host: string): boolean {
 }
 
 function resolveApiUrl(): string {
-  const envUrl = process.env.EXPO_PUBLIC_API_URL;
+  const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
+  // Prefer explicit non-local API (preview against production).
+  if (envUrl && !isLocalHost(envUrl.replace(/^https?:\/\//, '').split(':')[0] ?? '')) {
+    return envUrl.replace(/\/$/, '');
+  }
   const debuggerHost = Constants.expoGoConfig?.debuggerHost;
   if (debuggerHost) {
     const host = debuggerHost.split(':')[0];
@@ -19,7 +23,6 @@ function resolveApiUrl(): string {
     const host = hostUri.split(':')[0];
     if (host && !isLocalHost(host)) return `http://${host}:3001`;
   }
-  if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) return envUrl;
   if (Platform.OS === 'android') return 'http://10.0.2.2:3001';
   return envUrl ?? 'http://localhost:3001';
 }

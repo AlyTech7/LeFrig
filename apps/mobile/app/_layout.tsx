@@ -1,10 +1,10 @@
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
-import { tokenCache } from '@clerk/clerk-expo/token-cache';
+import { tokenCache as clerkNativeTokenCache } from '@clerk/clerk-expo/token-cache';
 import * as WebBrowser from 'expo-web-browser';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { Platform, View, StyleSheet, ActivityIndicator } from 'react-native';
 import { theme } from '@/lib/theme';
 import { hasLegacySession } from '@/lib/legacySession';
 import { routeRequiresAuth, isAuthScreen } from '@/lib/auth-routes';
@@ -13,10 +13,20 @@ import { PushRegister } from '@/components/PushRegister';
 import { BottomNav } from '@/components/BottomNav';
 import { LocaleProvider } from '@/lib/locale';
 import { SyncPreferredLanguage } from '@/components/SyncPreferredLanguage';
+import { storageGet, storageSet } from '@/lib/safeStorage';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
+
+/** SecureStore-backed cache is native-only; web uses AsyncStorage. */
+const tokenCache =
+  Platform.OS === 'web'
+    ? {
+        getToken: (key: string) => storageGet(key),
+        saveToken: (key: string, value: string) => storageSet(key, value),
+      }
+    : clerkNativeTokenCache;
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn } = useAuth();
