@@ -57,6 +57,7 @@ export enum PaymentMethod {
   CASH_ON_DELIVERY = 'cash_on_delivery',
   /** @deprecated No aceptado en nuevos pedidos */
   FIADO = 'fiado',
+  /** @deprecated No aceptado en nuevos pedidos */
   MANUAL_TRANSFER = 'manual_transfer',
   /** @deprecated No aceptado en nuevos pedidos */
   VOUCHER = 'voucher',
@@ -64,7 +65,7 @@ export enum PaymentMethod {
 }
 
 /** Métodos permitidos al crear pedidos / listados */
-export const ACTIVE_PAYMENT_METHODS = ['cash', 'cash_on_delivery', 'manual_transfer'] as const;
+export const ACTIVE_PAYMENT_METHODS = ['cash', 'cash_on_delivery'] as const;
 export type ActivePaymentMethod = (typeof ACTIVE_PAYMENT_METHODS)[number];
 
 export enum PaymentStatus {

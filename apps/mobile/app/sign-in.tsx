@@ -19,18 +19,9 @@ import { SocialAuthButtons } from '@/components/auth/SocialAuthButtons';
 import { useT } from '@/lib/locale';
 import { theme, gradients } from '@/lib/theme';
 import { API_URL } from '@/lib/api';
-import { formatPhone } from '@/lib/formatPhone';
-import { setLegacySession } from '@/lib/legacySession';
 
-const DEV_OTP = __DEV__;
-
-function phoneDigits(input: string): string {
-  return input.replace(/\D/g, '');
-}
-
-function isValidPhone(input: string): boolean {
-  const digits = phoneDigits(input);
-  return digits.length >= 8 && digits.length <= 15;
+function isValidEmail(input: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.trim());
 }
 
 export default function SignInScreen() {
@@ -38,7 +29,7 @@ export default function SignInScreen() {
   const { getToken } = useAuth();
   const router = useRouter();
   const t = useT();
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [pendingVerification, setPendingVerification] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -56,42 +47,30 @@ export default function SignInScreen() {
   };
 
   const onSendCode = async () => {
-    if (!isValidPhone(phone)) {
-      setError(t('auth.errors.phoneRequired'));
+    if (!isValidEmail(email)) {
+      setError(t('auth.errors.emailRequired'));
+      return;
+    }
+    if (!isLoaded || !signIn) {
+      setError(t('auth.errors.authLoading'));
       return;
     }
     setLoading(true);
     setError('');
-    const formatted = formatPhone(phone);
+    const identifier = email.trim().toLowerCase();
 
     try {
-      if (DEV_OTP) {
-        const res = await fetch(`${API_URL}/auth/otp/request`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: formatted }),
-        });
-        if (!res.ok) throw new Error('otp request failed');
-        setPhone(formatted);
-        setPendingVerification(true);
-        return;
-      }
-
-      if (!isLoaded || !signIn) {
-        setError(t('auth.errors.authLoading'));
-        return;
-      }
-      await signIn.create({ identifier: formatted });
-      const phoneFactor = signIn.supportedFirstFactors?.find((f) => f.strategy === 'phone_code');
-      if (phoneFactor && 'phoneNumberId' in phoneFactor) {
+      await signIn.create({ identifier });
+      const emailFactor = signIn.supportedFirstFactors?.find((f) => f.strategy === 'email_code');
+      if (emailFactor && 'emailAddressId' in emailFactor) {
         await signIn.prepareFirstFactor({
-          strategy: 'phone_code',
-          phoneNumberId: phoneFactor.phoneNumberId,
+          strategy: 'email_code',
+          emailAddressId: emailFactor.emailAddressId,
         });
-        setPhone(formatted);
+        setEmail(identifier);
         setPendingVerification(true);
       } else {
-        setError(t('auth.errors.clerkPhone'));
+        setError(t('auth.errors.clerkEmail'));
       }
     } catch {
       setError(t('auth.errors.sendFailed'));
@@ -102,34 +81,18 @@ export default function SignInScreen() {
 
   const onVerify = async () => {
     if (code.trim().length < 6) {
-      setError('Introduce el código de 6 dígitos.');
+      setError(t('auth.errors.wrongCode'));
+      return;
+    }
+    if (!isLoaded || !signIn) {
+      setError(t('auth.errors.authLoading'));
       return;
     }
     setLoading(true);
     setError('');
 
     try {
-      if (DEV_OTP) {
-        const res = await fetch(`${API_URL}/auth/otp/verify`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone, code: code.trim() }),
-        });
-        if (!res.ok) throw new Error('invalid code');
-        const data = (await res.json()) as {
-          accessToken: string;
-          user: { id: string; phone: string | null; roles: string[]; campId?: string | null };
-        };
-        await setLegacySession(data.accessToken, data.user);
-        router.replace('/');
-        return;
-      }
-
-      if (!isLoaded || !signIn) {
-        setError(t('auth.errors.authLoading'));
-        return;
-      }
-      const result = await signIn.attemptFirstFactor({ strategy: 'phone_code', code });
+      const result = await signIn.attemptFirstFactor({ strategy: 'email_code', code: code.trim() });
       if (result.status === 'complete' && result.createdSessionId) {
         await setActive({ session: result.createdSessionId });
         const token = await getToken();
@@ -158,27 +121,26 @@ export default function SignInScreen() {
             {!pendingVerification ? (
               <>
                 <View style={styles.inputWrap}>
-                  <AppIcon name="phone" size={18} color={theme.gold} />
+                  <AppIcon name="mail" size={18} color={theme.gold} />
                   <TextInput
                     style={styles.inputInner}
-                    placeholder={t('auth.phonePlaceholder')}
+                    placeholder={t('auth.emailPlaceholder')}
                     placeholderTextColor={theme.textMuted}
-                    value={phone}
-                    onChangeText={setPhone}
-                    keyboardType="phone-pad"
-                    autoComplete="tel"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    autoCorrect={false}
                   />
                 </View>
-                {DEV_OTP ? (
-                  <Text style={styles.devHint}>{t('auth.devHint')}</Text>
-                ) : null}
                 <Pressable style={styles.btnPrimary} onPress={onSendCode} disabled={loading}>
                   {loading ? (
                     <ActivityIndicator color={theme.obsidian} />
                   ) : (
                     <>
-                      <AppIcon name="message-circle" size={18} color={theme.obsidian} />
-                      <Text style={styles.btnPrimaryText}>{t('auth.sendSms')}</Text>
+                      <AppIcon name="mail" size={18} color={theme.obsidian} />
+                      <Text style={styles.btnPrimaryText}>{t('auth.sendEmailCode')}</Text>
                     </>
                   )}
                 </Pressable>
@@ -187,15 +149,14 @@ export default function SignInScreen() {
                   <Text style={styles.dividerText}>{t('common.or')}</Text>
                   <View style={styles.dividerLine} />
                 </View>
-                <SocialAuthButtons variant="hero" disabled={loading} onError={setError} />
+                <SocialAuthButtons variant="hero" providers={['google']} disabled={loading} onError={setError} />
               </>
             ) : (
               <>
                 <View style={styles.codeHeader}>
                   <AppIcon name="lock" size={20} color={theme.gold} />
-                  <Text style={styles.codeHint}>{t('auth.codeSent', { phone })}</Text>
+                  <Text style={styles.codeHint}>{t('auth.codeSent', { email })}</Text>
                 </View>
-                {DEV_OTP ? <Text style={styles.devHint}>Usa 123456 en desarrollo</Text> : null}
                 <TextInput
                   style={[styles.input, styles.codeInput]}
                   placeholder={t('auth.codePlaceholder')}
@@ -213,7 +174,7 @@ export default function SignInScreen() {
                   )}
                 </Pressable>
                 <Pressable onPress={() => setPendingVerification(false)}>
-                  <Text style={styles.backLink}>{t('auth.changeNumber')}</Text>
+                  <Text style={styles.backLink}>{t('auth.changeEmail')}</Text>
                 </Pressable>
               </>
             )}
@@ -259,13 +220,6 @@ const styles = StyleSheet.create({
   brand: { fontSize: 14, fontWeight: '800', color: theme.gold, letterSpacing: 4, textAlign: 'center', marginBottom: 8 },
   title: { fontSize: 32, fontWeight: '800', color: theme.text, letterSpacing: -1, textAlign: 'center' },
   subtitle: { fontSize: 16, color: theme.textMuted, marginTop: 8, marginBottom: 32, textAlign: 'center' },
-  devHint: {
-    fontSize: 13,
-    color: theme.gold,
-    marginBottom: 12,
-    textAlign: 'center',
-    fontWeight: '600',
-  },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',

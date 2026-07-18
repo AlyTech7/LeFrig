@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import type { PrismaService } from '../../prisma/prisma.service';
-import type { ManualPaymentAdapter } from '../../adapters/payment.adapter';
 
 describe('OrdersService updateStatus', () => {
   let service: OrdersService;
@@ -22,10 +21,7 @@ describe('OrdersService updateStatus', () => {
         ),
       },
     };
-    service = new OrdersService(
-      prisma as unknown as PrismaService,
-      { initiate: vi.fn() } as unknown as ManualPaymentAdapter,
-    );
+    service = new OrdersService(prisma as unknown as PrismaService);
   });
 
   it('tienda puede pending → confirmed', async () => {

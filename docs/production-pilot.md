@@ -26,26 +26,25 @@ doctl databases delete <fork-id> --force
 
 Repetir el drill sobre **prod** solo si quieres validar el cluster grande (cuesta un nodo extra mientras exista).
 
-## 2. Clerk live + SMS +213 (bloqueante)
+## 2. Clerk live — email / Google (piloto)
 
 ### Estado 2026-07-18
 - Instancia **production** OK; dominio primario `lefrig.com` (`clerk.lefrig.com`, `accounts.lefrig.com`).
 - Orígenes: `www.lefrig.com`, `lefrig.com`, `admin.lefrig.com`, `staging.lefrig.com`.
 - CLI: `npx clerk login` → `alyelyar@alum.us.es`.
 - `sk_live` sincronizado en DO (prod+staging) y Vercel (`lefrig`, `lefrig-admin`).
+- **Auth piloto:** email (código) + Google. SMS/OTP teléfono **fuera** del piloto (plan Clerk bloquea DZ/MR).
 
-### SMS Argelia / Mauritania — bloqueo de plan
-La API `/instance/communication` tiene **DZ** y **MR** en `blocked_country_codes`. Quitarlos responde:
+### SMS Argelia / Mauritania — aplazado
+La API `/instance/communication` tiene **DZ** y **MR** en `blocked_country_codes` (`sms_country_removal_restricted`). Reactivar SMS solo tras upgrade/support Clerk; hasta entonces no hay UI de teléfono en login móvil.
 
-`sms_country_removal_restricted` — *Contact support to activate these countries* / upgraded plan.
+### Webhook — ✅ 2026-07-18
+- Endpoint Svix: `https://whale-app-xpe4g.ondigitalocean.app/auth/clerk/webhook`
+- Eventos: `user.created`, `user.updated`, `user.deleted`
+- `CLERK_WEBHOOK_SECRET` sincronizado en DO prod + staging
+- Script: `node scripts/setup-clerk-webhook-playwright.cjs` (requiere `CLERK_SECRET_KEY`)
 
-**Acción:** en Clerk Dashboard → Support / Billing, pedir activar SMS para **DZ** (y **MR** si aplica). Hasta entonces el piloto debe autenticar por **email/OAuth**, no OTP SMS +213.
-
-### Webhook
-Portal Svix (one-time): generar con `POST /v1/webhooks/svix_url` o Dashboard → Webhooks.
-Endpoint: `https://whale-app-xpe4g.ondigitalocean.app/auth/clerk/webhook`  
-Eventos: `user.created`, `user.updated`, `user.deleted` (mínimo).  
-Copiar Signing Secret → `CLERK_WEBHOOK_SECRET` en DO.
+Si el endpoint aparece **Disabled** en el portal Svix, habilítalo (badge Disabled → Enable) o ejecuta `node scripts/enable-svix-endpoint.cjs`.
 
 ## 3. `ADMIN_SESSION_SECRET` (bloqueante de sesión admin)
 

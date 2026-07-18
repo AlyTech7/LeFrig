@@ -18,18 +18,9 @@ import { SocialAuthButtons } from '@/components/auth/SocialAuthButtons';
 import { useT } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
 import { API_URL } from '@/lib/api';
-import { formatPhone } from '@/lib/formatPhone';
-import { setLegacySession } from '@/lib/legacySession';
 
-const DEV_OTP = __DEV__;
-
-function phoneDigits(input: string): string {
-  return input.replace(/\D/g, '');
-}
-
-function isValidPhone(input: string): boolean {
-  const digits = phoneDigits(input);
-  return digits.length >= 8 && digits.length <= 15;
+function isValidEmail(input: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.trim());
 }
 
 export default function SignUpScreen() {
@@ -37,41 +28,29 @@ export default function SignUpScreen() {
   const { getToken } = useAuth();
   const router = useRouter();
   const t = useT();
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [pendingVerification, setPendingVerification] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const onSendCode = async () => {
-    if (!isValidPhone(phone)) {
-      setError(t('auth.errors.phoneRequired'));
+    if (!isValidEmail(email)) {
+      setError(t('auth.errors.emailRequired'));
+      return;
+    }
+    if (!isLoaded || !signUp) {
+      setError(t('auth.errors.authLoading'));
       return;
     }
     setLoading(true);
     setError('');
-    const formatted = formatPhone(phone);
+    const emailAddress = email.trim().toLowerCase();
 
     try {
-      if (DEV_OTP) {
-        const res = await fetch(`${API_URL}/auth/otp/request`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: formatted }),
-        });
-        if (!res.ok) throw new Error('otp request failed');
-        setPhone(formatted);
-        setPendingVerification(true);
-        return;
-      }
-
-      if (!isLoaded || !signUp) {
-        setError(t('auth.errors.authLoading'));
-        return;
-      }
-      await signUp.create({ phoneNumber: formatted });
-      await signUp.preparePhoneNumberVerification();
-      setPhone(formatted);
+      await signUp.create({ emailAddress });
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+      setEmail(emailAddress);
       setPendingVerification(true);
     } catch {
       setError(t('auth.errors.sendFailed'));
@@ -85,31 +64,15 @@ export default function SignUpScreen() {
       setError(t('auth.errors.wrongCode'));
       return;
     }
+    if (!isLoaded || !signUp) {
+      setError(t('auth.errors.authLoading'));
+      return;
+    }
     setLoading(true);
     setError('');
 
     try {
-      if (DEV_OTP) {
-        const res = await fetch(`${API_URL}/auth/otp/verify`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone, code: code.trim() }),
-        });
-        if (!res.ok) throw new Error('invalid code');
-        const data = (await res.json()) as {
-          accessToken: string;
-          user: { id: string; phone: string | null; roles: string[]; campId?: string | null };
-        };
-        await setLegacySession(data.accessToken, data.user);
-        router.replace('/');
-        return;
-      }
-
-      if (!isLoaded || !signUp) {
-        setError(t('auth.errors.authLoading'));
-        return;
-      }
-      const result = await signUp.attemptPhoneNumberVerification({ code: code.trim() });
+      const result = await signUp.attemptEmailAddressVerification({ code: code.trim() });
       if (result.status === 'complete' && setActive) {
         await setActive({ session: result.createdSessionId! });
         const token = await getToken();
@@ -146,31 +109,30 @@ export default function SignUpScreen() {
           {!pendingVerification ? (
             <>
               <View style={styles.inputWrap}>
-                <AppIcon name="phone" size={18} color={theme.dune} />
+                <AppIcon name="mail" size={18} color={theme.dune} />
                 <TextInput
                   style={styles.inputInner}
-                  placeholder={t('auth.phonePlaceholder')}
+                  placeholder={t('auth.emailPlaceholder')}
                   placeholderTextColor={theme.inkSoft}
-                  value={phone}
-                  onChangeText={setPhone}
-                  keyboardType="phone-pad"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  autoCorrect={false}
                 />
               </View>
               <Pressable style={styles.btnPrimary} onPress={onSendCode} disabled={loading}>
                 {loading ? (
                   <ActivityIndicator color={theme.pearl} />
                 ) : (
-                  <Text style={styles.btnPrimaryText}>{t('auth.sendSms')}</Text>
+                  <Text style={styles.btnPrimaryText}>{t('auth.sendEmailCode')}</Text>
                 )}
               </Pressable>
-              {DEV_OTP ? (
-                <Text style={styles.devHint}>{t('auth.devHint')}</Text>
-              ) : null}
             </>
           ) : (
             <>
-              <Text style={styles.codeHint}>{t('auth.codeSent', { phone })}</Text>
-              {DEV_OTP ? <Text style={styles.devHint}>{t('auth.devCode')}</Text> : null}
+              <Text style={styles.codeHint}>{t('auth.codeSent', { email })}</Text>
               <TextInput
                 style={[styles.input, styles.codeInput]}
                 placeholder={t('auth.codePlaceholder')}
@@ -187,6 +149,9 @@ export default function SignUpScreen() {
                   <Text style={styles.btnPrimaryText}>{t('auth.verify')}</Text>
                 )}
               </Pressable>
+              <Pressable onPress={() => setPendingVerification(false)}>
+                <Text style={styles.switchLink}>{t('auth.changeEmail')}</Text>
+              </Pressable>
             </>
           )}
 
@@ -196,7 +161,7 @@ export default function SignUpScreen() {
             <View style={styles.dividerLine} />
           </View>
 
-          <SocialAuthButtons variant="perla" disabled={loading} onError={setError} />
+          <SocialAuthButtons variant="perla" providers={['google']} disabled={loading} onError={setError} />
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -239,13 +204,6 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 32, fontWeight: '800', color: theme.ink, letterSpacing: -1, textAlign: 'center' },
   subtitle: { fontSize: 16, color: theme.inkMuted, marginTop: 8, marginBottom: 32, textAlign: 'center' },
-  devHint: {
-    fontSize: 13,
-    color: theme.dune,
-    marginBottom: 12,
-    textAlign: 'center',
-    fontWeight: '600',
-  },
   codeHint: { color: theme.inkMuted, fontSize: 14, textAlign: 'center', marginBottom: 12 },
   inputWrap: {
     flexDirection: 'row',

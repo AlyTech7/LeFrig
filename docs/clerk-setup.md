@@ -17,11 +17,13 @@ CLERK_WEBHOOK_SECRET=whsec_...
 
 ## 3. Métodos de login en Clerk Dashboard
 
+Piloto (web + móvil): **email** + **Google**. Desactiva Phone/SMS hasta tener plan Clerk con DZ/MR.
+
 Habilita en **User & Authentication**:
 
-- **Phone number** (SMS OTP) — principal para campamentos
-- **Email** — opcional
-- **Google** — útil para diáspora
+- **Email address** (código / magic link) — principal
+- **Google** — OAuth
+- **Phone number** — desactivado en el piloto (SMS +213 bloqueado por plan)
 
 ## 4. Roles (publicMetadata)
 
@@ -48,9 +50,11 @@ Roles Lefrig: `citizen`, `seller`, `shop_owner`, `driver`, `moderator`, `admin`,
 
 En Clerk → **Webhooks** → Add endpoint:
 
-- URL: `https://tu-api.com/auth/clerk/webhook` (local: usar ngrok)
+- URL prod: `https://whale-app-xpe4g.ondigitalocean.app/auth/clerk/webhook`
 - Eventos: `user.created`, `user.updated`, `user.deleted`
-- Copia **Signing secret** → `CLERK_WEBHOOK_SECRET`
+- Copia **Signing secret** → `CLERK_WEBHOOK_SECRET` (DO)
+
+Automatización local: `CLERK_SECRET_KEY=… node scripts/setup-clerk-webhook-playwright.cjs`
 
 ## 6. Flujo
 
@@ -69,7 +73,7 @@ Solo usuarios con `publicMetadata.roles` que incluya `admin` o `moderator` acced
 ## 8. Mobile (Expo)
 
 - `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` en `.env`
-- Pantalla `/sign-in` con teléfono + Google
+- Pantalla `/sign-in` y `/sign-up` con **email** + **Google**
 - Token cache en SecureStore (automático con `@clerk/clerk-expo`)
 
 ## 9. Legacy JWT (dev)
