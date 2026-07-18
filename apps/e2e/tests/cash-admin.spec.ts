@@ -71,10 +71,10 @@ test.describe('Publish listing UI smoke', () => {
 });
 
 test.describe('Admin smoke', () => {
+  // CI solo arranca API + web; activar con E2E_ADMIN=1 y admin en :3002
   test('admin sign-in page carga', async ({ page }) => {
-    await page.goto(`${adminUrl}/sign-in`).catch(async () => {
-      await page.goto(`${adminUrl}/`);
-    });
+    test.skip(process.env.E2E_ADMIN !== '1', 'Admin no se arranca en CI por defecto');
+    await page.goto(`${adminUrl}/sign-in`);
     await expect(page.locator('body')).toBeVisible();
     const text = await page.locator('body').innerText();
     expect(text.length).toBeGreaterThan(10);
