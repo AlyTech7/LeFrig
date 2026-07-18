@@ -2,13 +2,20 @@
   "name": "@lefrig/config",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
+  "exports": {
+    "./eslint/base.mjs": "./eslint/base.mjs",
+    "./typescript/*": "./typescript/*"
+  },
   "files": ["eslint", "typescript", "prettier"],
   "devDependencies": {
+    "@eslint/js": "^9.17.0",
     "@typescript-eslint/eslint-plugin": "^8.18.2",
     "@typescript-eslint/parser": "^8.18.2",
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.4.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.2"
   }
 }

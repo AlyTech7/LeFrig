@@ -5,8 +5,9 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
-import { isSwaggerEnabled } from './common/config/production-security';
+import { assertProductionSecrets, isSwaggerEnabled } from './common/config/production-security';
 
 function parseCorsOrigins(raw: string | undefined, isProd: boolean): boolean | string[] {
   const trimmed = raw?.trim();
@@ -34,7 +35,16 @@ function parseCorsOrigins(raw: string | undefined, isProd: boolean): boolean | s
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
   const config = app.get(ConfigService);
+  assertProductionSecrets(config);
   const isProd = config.get('NODE_ENV') === 'production';
+
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+      hsts: isProd ? { maxAge: 31536000, includeSubDomains: true } : false,
+    }),
+  );
 
   const uploadDir = config.get('UPLOAD_DIR', join(process.cwd(), 'uploads'));
   app.useStaticAssets(uploadDir, { prefix: '/uploads/' });
@@ -56,7 +66,7 @@ async function bootstrap() {
   if (enableSwagger) {
     const swaggerConfig = new DocumentBuilder()
       .setTitle('LeFrig API')
-      .setDescription('Superapp saharaui — marketplace, efectivo, fiado, transporte, diáspora')
+      .setDescription('Superapp saharaui — marketplace, efectivo, transporte, diáspora')
       .setVersion('0.1.0')
       .addBearerAuth()
       .build();

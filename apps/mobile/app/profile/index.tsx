@@ -72,8 +72,8 @@ const LINK_GROUPS: LinkGroup[] = [
 
 export default function ProfileScreen() {
   const { user } = useUser();
-  const { signOut, isSignedIn } = useAuth();
-  const { authFetch } = useAuthApi();
+  const { signOut } = useAuth();
+  const { authFetch, isSignedIn } = useAuthApi();
   const router = useRouter();
   const t = useT();
   const [legacyUser, setLegacyUser] = useState<LegacyUser | null>(null);

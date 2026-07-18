@@ -139,6 +139,8 @@ Todos los botones principales ≥ 48px. Home actions ≥ 120px height.
 
 ## Componentes (`@lefrig/ui`)
 
+Paquete **web-only** (Next.js). El admin usa sobre todo el CSS; móvil Expo no importa estos componentes (ver `packages/ui/README.md`).
+
 | Componente | Uso |
 |------------|-----|
 | `Button` | primary, secondary, outline, ghost, danger |

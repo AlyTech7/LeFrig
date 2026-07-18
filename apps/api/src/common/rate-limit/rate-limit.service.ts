@@ -18,6 +18,20 @@ export class RateLimitService {
     return this.incrementMemory(key, windowSec);
   }
 
+  async getCount(key: string): Promise<number> {
+    if (this.redis.isConfigured()) {
+      // incr almacena enteros en claro; get() hace JSON.parse (válido para "3").
+      const raw = await this.redis.get<unknown>(key);
+      if (raw != null) {
+        const n = typeof raw === 'number' ? raw : Number(raw);
+        if (Number.isFinite(n) && n > 0) return n;
+      }
+    }
+    const entry = this.memory.get(key);
+    if (!entry || entry.expiresAt <= Date.now()) return 0;
+    return entry.count;
+  }
+
   async isAllowed(key: string, limit: number, windowSec: number): Promise<boolean> {
     const count = await this.increment(key, windowSec);
     return count <= limit;

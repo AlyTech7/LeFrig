@@ -1,6 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ClerkService } from '../auth/clerk.service';
 import {
   TRANSPORT_CORRIDORS,
   TRANSPORT_HUBS,
@@ -15,10 +14,7 @@ import { paginate, skipTake } from '../../common/utils/pagination';
 
 @Injectable()
 export class TransportService {
-  constructor(
-    private prisma: PrismaService,
-    private clerk: ClerkService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   getHubCatalog() {
     return {
@@ -95,8 +91,8 @@ export class TransportService {
         include: {
           originCamp: { select: { slug: true, nameEs: true } },
           destinationCamp: { select: { slug: true, nameEs: true } },
-          requester: { select: { displayName: true, phone: true } },
-          driver: { select: { displayName: true, phone: true } },
+          requester: { select: { displayName: true } },
+          driver: { select: { displayName: true } },
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -118,7 +114,7 @@ export class TransportService {
         originCamp: { select: { nameEs: true } },
         destinationCamp: { select: { nameEs: true } },
         requester: { select: { displayName: true } },
-        driver: { select: { displayName: true, phone: true } },
+        driver: { select: { displayName: true } },
       },
       orderBy: { createdAt: 'desc' },
       take: 50,
@@ -133,8 +129,8 @@ export class TransportService {
         destinationCamp: true,
         pickupPoint: true,
         dropoffPoint: true,
-        requester: { select: { displayName: true, phone: true, id: true } },
-        driver: { select: { displayName: true, phone: true, id: true } },
+        requester: { select: { displayName: true, id: true } },
+        driver: { select: { displayName: true, id: true } },
       },
     });
     if (!req) throw new NotFoundException('Solicitud no encontrada');
@@ -192,8 +188,8 @@ export class TransportService {
       include: {
         originCamp: { select: { nameEs: true } },
         destinationCamp: { select: { nameEs: true } },
-        driver: { select: { displayName: true, phone: true } },
-        requester: { select: { displayName: true, phone: true } },
+        driver: { select: { displayName: true } },
+        requester: { select: { displayName: true } },
       },
     });
     return this.formatTrip(updated);
@@ -226,7 +222,7 @@ export class TransportService {
       .findMany({
         where: { isVerified: true },
         include: {
-          user: { select: { displayName: true, phone: true, campId: true } },
+          user: { select: { displayName: true, campId: true } },
           frequentRoutes: { include: { originCamp: true, destinationCamp: true } },
         },
       })
@@ -279,14 +275,7 @@ export class TransportService {
       },
     });
 
-    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
-    if (!user.roles.includes('driver')) {
-      const roles = [...user.roles, 'driver'];
-      await this.prisma.user.update({ where: { id: userId }, data: { roles } });
-      if (user.clerkId) {
-        await this.clerk.updateClerkRoles(user.clerkId, roles);
-      }
-    }
+    // Driver role is granted only after admin verification (isVerified=true)
 
     if (data.routes?.length) {
       const campIds = [

@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { I18nManager } from 'react-native';
+import { Alert, I18nManager } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   type Locale,
@@ -15,7 +15,7 @@ import {
   resolveLocale,
   getDirection,
   t as translate,
-  detectBrowserLocale,
+  isLocale,
 } from '@lefrig/shared';
 
 type LocaleContextValue = {
@@ -28,22 +28,58 @@ type LocaleContextValue = {
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
-async function applyRtl(locale: Locale) {
-  const rtl = getDirection(locale) === 'rtl';
-  if (I18nManager.isRTL !== rtl) {
-    I18nManager.allowRTL(rtl);
-    I18nManager.forceRTL(rtl);
+/** Prefer expo-localization when available; otherwise null (caller uses arabic-first default). */
+async function detectDeviceLocale(): Promise<Locale | null> {
+  try {
+    // Optional peer — do not hard-depend
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const Localization = require('expo-localization') as {
+      getLocales?: () => Array<{ languageCode?: string | null }>;
+      locale?: string;
+    };
+    const code =
+      Localization.getLocales?.()?.[0]?.languageCode?.slice(0, 2).toLowerCase() ??
+      Localization.locale?.slice(0, 2).toLowerCase();
+    return isLocale(code) ? code : null;
+  } catch {
+    return null;
   }
 }
 
+async function applyRtl(locale: Locale) {
+  const rtl = getDirection(locale) === 'rtl';
+  if (I18nManager.isRTL === rtl) return;
+
+  I18nManager.allowRTL(rtl);
+  I18nManager.forceRTL(rtl);
+
+  try {
+    // Optional — reload so layout direction takes effect
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const Updates = require('expo-updates') as { reloadAsync?: () => Promise<void> };
+    if (typeof Updates.reloadAsync === 'function') {
+      await Updates.reloadAsync();
+      return;
+    }
+  } catch {
+    // expo-updates unavailable
+  }
+
+  Alert.alert(
+    'Reinicio necesario',
+    'Cambia la dirección de la interfaz. Reinicia la app para aplicar el cambio.',
+  );
+}
+
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>('es');
+  const [locale, setLocaleState] = useState<Locale>('ar');
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     (async () => {
       const stored = await AsyncStorage.getItem(LOCALE_STORAGE_KEY);
-      const resolved = resolveLocale(stored ?? detectBrowserLocale(), 'es');
+      const detected = stored ? null : await detectDeviceLocale();
+      const resolved = resolveLocale(stored ?? detected ?? 'ar', 'ar');
       setLocaleState(resolved);
       await applyRtl(resolved);
       setReady(true);

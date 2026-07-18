@@ -28,13 +28,20 @@ type LocaleContextValue = {
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+
+function writeLocaleCookie(locale: Locale) {
+  document.cookie = `${LOCALE_STORAGE_KEY}=${encodeURIComponent(locale)};path=/;max-age=${COOKIE_MAX_AGE};samesite=lax`;
+}
+
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>('es');
+  const [locale, setLocaleState] = useState<Locale>('ar');
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
-    setLocaleState(resolveLocale(stored ?? detectBrowserLocale(), 'es'));
+    const resolved = resolveLocale(stored ?? detectBrowserLocale(), 'ar');
+    setLocaleState(resolved);
     setReady(true);
   }, []);
 
@@ -44,6 +51,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = locale;
     document.documentElement.dir = dir;
     localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+    writeLocaleCookie(locale);
     document.body.classList.toggle('lf-rtl', dir === 'rtl');
   }, [locale, ready]);
 

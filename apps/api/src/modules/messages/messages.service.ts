@@ -53,6 +53,10 @@ export class MessagesService {
   async sendMessage(userId: string, data: { conversationId?: string; recipientId?: string; content: string; type?: string; refId?: string }) {
     let conversationId = data.conversationId;
 
+    if (conversationId) {
+      await this.assertParticipant(conversationId, userId);
+    }
+
     if (!conversationId && data.recipientId) {
       const existing = await this.prisma.conversation.findFirst({
         where: {

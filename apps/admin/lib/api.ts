@@ -1,10 +1,15 @@
 import { readEnv } from './site-url';
 
-const API_PRODUCTION_ORIGIN = 'https://whale-app-xpe4g.ondigitalocean.app';
+function resolveApiUrl(): string {
+  const fromEnv = readEnv('NEXT_PUBLIC_API_URL')?.trim();
+  if (fromEnv) return fromEnv;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('NEXT_PUBLIC_API_URL es obligatoria en producción');
+  }
+  return 'http://localhost:3001';
+}
 
-export const API_URL =
-  readEnv('NEXT_PUBLIC_API_URL') ??
-  (process.env.NODE_ENV === 'production' ? API_PRODUCTION_ORIGIN : 'http://localhost:3001');
+export const API_URL = resolveApiUrl();
 
 export async function fetchApi<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
@@ -29,5 +34,3 @@ export async function fetchWithFallback<T>(path: string, fallback: T, init?: Req
     return fallback;
   }
 }
-
-export * from './demo-data';

@@ -53,7 +53,10 @@ export async function fetchWithMeta<T>(path: string, fallback: T, init?: Request
   try {
     const data = await fetchApi<T>(path, init);
     return { data, fromFallback: false };
-  } catch {
+  } catch (err) {
+    if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_ALLOW_DEMO_FALLBACK !== 'true') {
+      throw err;
+    }
     return { data: fallback, fromFallback: true };
   }
 }

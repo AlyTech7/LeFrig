@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,7 @@ import {
   areRequiredAttributesFilled,
 } from '@lefrig/shared';
 import { enqueueOfflineAction } from '@/lib/offline';
-import { useAuthApi } from '@/lib/useAuthApi';
+import { ApiError, useAuthApi } from '@/lib/useAuthApi';
 import { prepareListingPhoto } from '@/lib/image-prep';
 import { uploadListingImageFromUri } from '@/lib/uploads';
 import { ListingPhotoPicker, type PhotoSlot } from '@/components/ListingPhotoPicker';
@@ -29,6 +29,15 @@ import { AppIcon } from '@/components/AppIcon';
 import { pickLabel, pickName } from '@/lib/bilingual';
 import { useLocale, useT } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
+
+function isNetworkError(err: unknown): boolean {
+  if (err instanceof ApiError) return err.status === 0;
+  if (err instanceof TypeError) return true;
+  if (err instanceof Error) {
+    return /failed to fetch|network request failed|networkerror/i.test(err.message);
+  }
+  return false;
+}
 
 export default function CreateListingScreen() {
   const router = useRouter();
@@ -46,6 +55,15 @@ export default function CreateListingScreen() {
   const [recording, setRecording] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [pulse] = useState(new Animated.Value(1));
+  const pulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+  const voiceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      pulseLoopRef.current?.stop();
+      if (voiceTimeoutRef.current) clearTimeout(voiceTimeoutRef.current);
+    };
+  }, []);
 
   const selectedCat = LISTING_CATEGORIES.find((c) => c.slug === category);
   const attrSchema = getListingAttributeSchema(category);
@@ -94,13 +112,19 @@ export default function CreateListingScreen() {
   const toggleVoice = () => {
     setRecording(!recording);
     if (!recording) {
-      Animated.loop(
+      pulseLoopRef.current?.stop();
+      pulseLoopRef.current = Animated.loop(
         Animated.sequence([
           Animated.timing(pulse, { toValue: 1.12, duration: 600, useNativeDriver: true }),
           Animated.timing(pulse, { toValue: 1, duration: 600, useNativeDriver: true }),
         ]),
-      ).start();
-      setTimeout(() => {
+      );
+      pulseLoopRef.current.start();
+      if (voiceTimeoutRef.current) clearTimeout(voiceTimeoutRef.current);
+      voiceTimeoutRef.current = setTimeout(() => {
+        voiceTimeoutRef.current = null;
+        pulseLoopRef.current?.stop();
+        pulseLoopRef.current = null;
         setTitle('Panel solar 150W en buen estado');
         setDescription('Panel en perfecto estado, ideal para campamento.');
         setPrice('12500');
@@ -113,6 +137,26 @@ export default function CreateListingScreen() {
 
   const imageUrls = photos.filter((p) => p.remoteUrl).map((p) => p.remoteUrl!);
   const photosUploading = photos.some((p) => p.uploading);
+
+  const resolveCampId = async (): Promise<string | null> => {
+    try {
+      const synced = await syncUser();
+      const syncedUser = synced?.user as { preferredCampId?: string; campId?: string } | undefined;
+      const fromSync = syncedUser?.preferredCampId || syncedUser?.campId;
+      if (fromSync) return fromSync;
+    } catch {
+      /* fall through */
+    }
+    try {
+      const me = await authFetch<{ preferredCampId?: string; campId?: string }>('/users/me');
+      const fromMe = me.preferredCampId || me.campId;
+      if (fromMe) return fromMe;
+    } catch {
+      /* fall through */
+    }
+    const camps = await authFetch<{ id: string }[]>('/camps');
+    return camps[0]?.id ?? null;
+  };
 
   const publish = async () => {
     if (!title.trim()) {
@@ -132,39 +176,55 @@ export default function CreateListingScreen() {
       return;
     }
     setPublishing(true);
+    const desc =
+      description.trim() ||
+      (hasStructured ? title.trim() : `${title.trim()}. Publicado desde Lefrig móvil. Pago en efectivo al recibir.`);
+    const attrs = hasStructured ? parsedAttributes() : undefined;
+    const payload = {
+      title: title.trim(),
+      description: desc,
+      price: Number(price) > 0 ? Number(price) : 100,
+      currency,
+      category,
+      paymentMethods: ['cash'] as string[],
+      images: imageUrls,
+      attributes: attrs,
+    };
     try {
-      await syncUser();
-      const camps = await authFetch<{ id: string }[]>('/camps');
-      const campId = camps[0]?.id;
+      const campId = await resolveCampId();
       if (!campId) throw new Error('no_camp');
 
       await authFetch('/listings', {
         method: 'POST',
-        body: JSON.stringify({
-          title: title.trim(),
-          description:
-            description.trim() ||
-            (hasStructured ? title.trim() : `${title.trim()}. Publicado desde Lefrig móvil. Pago en efectivo al recibir.`),
-          price: Number(price) > 0 ? Number(price) : 100,
-          currency,
-          category,
-          campId,
-          paymentMethods: ['cash'],
-          images: imageUrls,
-          attributes: hasStructured ? parsedAttributes() : undefined,
-        }),
+        body: JSON.stringify({ ...payload, campId }),
       });
       Alert.alert(t('common.success'), t('marketplaceExtra.publishSuccess'));
       router.back();
-    } catch {
-      await enqueueOfflineAction('create_listing', {
-        title: title.trim(),
-        price: Number(price) || 0,
-        category,
-        description: description.trim() || title.trim(),
-      });
-      Alert.alert(t('common.offline'), t('marketplaceExtra.publishOffline'));
-      router.back();
+    } catch (err) {
+      if (err instanceof ApiError && err.status >= 400 && err.status < 500) {
+        Alert.alert(t('common.error'), err.message);
+        return;
+      }
+      if (isNetworkError(err)) {
+        let campId: string | undefined;
+        try {
+          campId = (await resolveCampId()) ?? undefined;
+        } catch {
+          campId = undefined;
+        }
+        if (!campId) {
+          Alert.alert(t('common.error'), t('common.offline'));
+          return;
+        }
+        await enqueueOfflineAction('create_listing', {
+          ...payload,
+          campId,
+        });
+        Alert.alert(t('common.offline'), t('marketplaceExtra.publishOffline'));
+        router.back();
+        return;
+      }
+      Alert.alert(t('common.error'), err instanceof Error ? err.message : t('common.error'));
     } finally {
       setPublishing(false);
     }

@@ -36,9 +36,7 @@ services:
       - key: ENABLE_SWAGGER
         value: 'true'
       - key: AUTH_LEGACY_JWT
-        value: 'true'
-      - key: OTP_MOCK_CODE
-        value: '123456'
+        value: 'false'
       - key: MEILI_SYNC_ON_BOOT
         value: 'false'
       - key: DATABASE_URL

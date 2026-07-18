@@ -49,8 +49,8 @@ const styles = StyleSheet.create({
     minWidth: 72,
     backgroundColor: theme.surface,
   },
-  chipOn: { borderColor: theme.primary, backgroundColor: theme.primarySoft },
+  chipOn: { borderColor: theme.oasis, backgroundColor: 'rgba(45,138,98,0.12)' },
   chipText: { fontWeight: '700', color: theme.textDark, fontSize: 13 },
   chipSub: { fontSize: 11, color: theme.textDarkMuted, marginTop: 2 },
-  chipTextOn: { color: theme.primaryDark },
+  chipTextOn: { color: theme.oasisDeep },
 });

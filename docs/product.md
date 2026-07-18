@@ -2,34 +2,33 @@
 
 ## Visión
 
-Lefrig es la **superapp saharaui** que conecta campamentos, Tindouf y la diáspora en una sola plataforma digital comunitaria. Por fuera debe ser tan fácil como WhatsApp; por dentro debe ser una infraestructura económica completa.
+Lefrig es la **superapp saharaui** que conecta campamentos, Tindouf y la diáspora en una sola plataforma digital comunitaria. Por fuera debe ser tan fácil como WhatsApp; por dentro debe ser una infraestructura económica completa centrada en **efectivo con confianza**.
 
 ## Problema
 
 Los campamentos saharauis carecen de una plataforma digital unificada que combine:
 - Comercio local (no solo anuncios)
-- Pagos en efectivo organizados con confianza
-- Fiado/libreta entre tiendas y clientes
+- Pagos en efectivo organizados con PIN bilateral
 - Transporte entre campamentos y desde Tindouf
 - Conexión con la diáspora para enviar ayuda
-- Vouchers humanitarios de ONGs
 - Empleo, servicios y comunidad
+- Reputación basada en transacciones reales
 
-Las soluciones existentes (Wallapop, Milanuncios, Facebook Marketplace) son genéricas, no cash-first, no entienden campamentos/dairas/marsas, y no integran fiado, transporte ni diáspora.
+Las soluciones existentes (Wallapop, Milanuncios, Facebook Marketplace) son genéricas, no cash-first, no entienden campamentos/dairas/marsas, y no integran transporte ni diáspora.
 
 ## Diferenciación
 
 | Competidor | Lefrig |
 |------------|--------|
-| Anuncios clasificados | Economía digital completa |
-| Pago online obligatorio | Cash-first + fiado + vouchers |
+| Anuncios clasificados | Economía digital comunitaria |
+| Pago online obligatorio | Cash-first con PIN y recibos |
 | Sin geografía campamentos | 7 campamentos + dairas + marsas |
 | Sin transporte | Logística inter-campamentos + Tindouf |
-| Sin diáspora | Pedidos para familiares con confirmación PIN |
-| Sin fiado | Libreta privada tienda-cliente |
+| Sin diáspora | Pedidos para familiares |
 | Sin confianza | Reputación, verificación, moderación local |
 | Sin comunidad | Avisos, eventos, ayuda urgente |
-| Sin IA | Preparado para voz, traducción, moderación |
+
+> **Nota:** Fiado/libreta y vouchers ONG existen como esquema histórico en base de datos pero **están desmontados del producto** (no se aceptan en altas nuevas; superficies UI redirigen).
 
 ## Usuarios
 
@@ -40,16 +39,13 @@ Persona en campamento que compra, vende, pide servicios, usa transporte.
 Publica anuncios en marketplace, confirma ventas en efectivo.
 
 ### Comerciante (shop_owner)
-Tiene tienda/marsa, catálogo, pedidos, fiado, vouchers.
+Tiene tienda/marsa, catálogo, pedidos en efectivo.
 
 ### Transportista (driver)
 Taxis colectivos, entregas, traer de Tindouf, viajes compartidos.
 
 ### Diáspora (diaspora)
 Persona fuera que compra/envía para familiares en campamentos.
-
-### ONG (ngo)
-Emite vouchers humanitarios, no accede a libretas privadas.
 
 ### Moderador (moderator)
 Revisa reportes por campamento, resuelve disputas.
@@ -66,11 +62,8 @@ Dashboard, verificación, analytics agregada, soporte.
 4. Paga en efectivo al recibir
 5. Confirma con PIN → recibo digital
 
-### Fiado / Libreta
-1. Tienda registra deuda en libreta privada
-2. Cliente acepta/verifica
-3. Pagos parciales registrados
-4. Solo tienda + cliente ven saldo (admin solo en disputa con log)
+### Fiado / Libreta _(desmontado)_
+Flujo histórico; no disponible en producto activo. Ver nota arriba.
 
 ### Diáspora
 1. Perfil diáspora elige tienda verificada

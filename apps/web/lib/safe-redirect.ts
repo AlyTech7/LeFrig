@@ -1,8 +1,9 @@
-/** Solo rutas internas de la app (evita open redirects). */
+/** Solo rutas internas de la app (evita open redirects / protocol-relative). */
 export function safeInternalPath(raw: string | null | undefined, fallback: string): string {
   if (!raw) return fallback;
   try {
-    if (raw.startsWith('/') && !raw.startsWith('//')) {
+    // Rechaza //evil.com y otros protocol-relative
+    if (raw.startsWith('/') && !raw.startsWith('//') && !raw.includes('://')) {
       return raw;
     }
     const u = new URL(raw);

@@ -47,14 +47,18 @@ flowchart TB
 
 ```
 pnpm workspaces + Turborepo
-├── apps/api       → NestJS, Prisma, 24 módulos
-├── apps/web       → Next.js App Router, SSR/SSG
+├── apps/api       → NestJS, Prisma
+├── apps/web       → Next.js App Router
 ├── apps/admin     → Next.js, panel SaaS
-├── apps/mobile    → Expo Router, offline queue
+├── apps/mobile    → Expo Router
 ├── packages/shared → Enums, tipos, Zod schemas
-├── packages/ui    → Design tokens + componentes React
-└── packages/config → TSConfig, ESLint, Prettier
+├── packages/ui    → Design tokens + componentes React **(web-only)**
+└── packages/config → TSConfig, ESLint flat config, Prettier
 ```
+
+### Lint / ESLint
+
+Config flat en [`packages/config/eslint/base.mjs`](../packages/config/eslint/base.mjs). Cada app/paquete tiene `eslint.config.mjs` y el script `lint` ejecuta ESLint + (donde aplica) `tsc --noEmit`. CI job `lint` cubre shared, ui, web, admin, api y mobile.
 
 ## Backend — NestJS
 
@@ -76,14 +80,13 @@ pnpm workspaces + Turborepo
 | `/categories` | Categorías listing/service |
 | `/listings` | Marketplace CRUD, favoritos, reportes |
 | `/cash` | Acuerdos, confirmaciones PIN, recibos |
-| `/ledger` | Libreta/fiado privado |
 | `/services` | Directorio servicios |
 | `/shops` | Tiendas, productos |
 | `/orders` | Pedidos tienda/diáspora |
 | `/transport` | Solicitudes, conductores |
 | `/jobs` | Empleo |
 | `/diaspora` | Perfil + pedidos diáspora |
-| `/vouchers` | Programas ONG, canje QR/PIN |
+| `/vouchers` | _(desmontado del producto — esquema histórico)_ |
 | `/messages` | Chat REST (WebSocket-ready) |
 | `/notifications` | Push FCM abstraction |
 | `/reviews` | Reviews + TrustScoreService |
@@ -111,7 +114,7 @@ pnpm workspaces + Turborepo
 - Zod/class-validator en DTOs
 - Rate-limit OTP vía Redis (8 solicitudes/hora por teléfono)
 - AdminAccessLog para acceso a libretas/disputas
-- Separación vouchers ≠ ledger ≠ reputación
+- Fiado/vouchers desmontados del runtime; no mezclar con cash/reputación
 
 ## Base de datos — Prisma + PostgreSQL
 

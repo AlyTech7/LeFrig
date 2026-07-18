@@ -11,8 +11,15 @@ export interface ListingCardProps {
   tone?: 'light' | 'mirage';
 }
 
+function acceptsCash(listing: ListingSummary): boolean {
+  if (!listing.paymentMethods || listing.paymentMethods.length === 0) return true;
+  return listing.paymentMethods.includes('cash') || listing.paymentMethods.includes('cash_on_delivery');
+}
+
 export function ListingCard({ listing, onClick, locale = 'es', tone = 'mirage' }: ListingCardProps) {
   const dark = tone === 'mirage';
+  const showCash = acceptsCash(listing);
+  const showVerified = Boolean(listing.sellerVerified);
 
   return (
     <Card padding="sm" hover onClick={onClick} tone={tone}>
@@ -42,13 +49,16 @@ export function ListingCard({ listing, onClick, locale = 'es', tone = 'mirage' }
               left: '50%',
               transform: 'translate(-50%,-50%)',
             }}
+            aria-hidden
           >
             📦
           </span>
         )}
-        <Badge variant="gold" size="sm">
-          {locale === 'ar' ? 'نقداً' : '💵 Efectivo'}
-        </Badge>
+        {showCash ? (
+          <Badge variant="gold" size="sm">
+            {locale === 'ar' ? 'نقداً' : '💵 Efectivo'}
+          </Badge>
+        ) : null}
       </div>
       <h3
         style={{
@@ -102,9 +112,11 @@ export function ListingCard({ listing, onClick, locale = 'es', tone = 'mirage' }
         >
           {listing.sellerName}
         </span>
-        <span style={{ fontSize: '0.75rem', color: dark ? 'rgba(212, 168, 83, 0.85)' : colors.gray[400] }}>
-          ⭐ Verificado
-        </span>
+        {showVerified ? (
+          <span style={{ fontSize: '0.75rem', color: dark ? 'rgba(212, 168, 83, 0.85)' : colors.gray[400] }}>
+            ⭐ {locale === 'ar' ? 'موثّق' : 'Verificado'}
+          </span>
+        ) : null}
       </div>
     </Card>
   );

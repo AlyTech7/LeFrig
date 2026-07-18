@@ -22,10 +22,11 @@ pnpm test:e2e
 
 ## CI (`.github/workflows/ci.yml`)
 
-- `lint` — turbo lint (web, admin, shared, ui)
+- `lint` — ESLint flat + tsc (shared, ui, web, admin, api, mobile)
 - `api` — migrate + vitest + build
+- `mobile` — typecheck (también cubierto en lint)
 - `build-web` / `build-admin`
-- `e2e` — seed + API/web en background + Playwright
+- `e2e` — seed + API/web en background + Playwright (smoke, piloto, cash PIN, admin)
 
 ## Rate limiting
 
@@ -35,6 +36,7 @@ Guard global `@RateLimit()` con Redis si está configurado; **fallback en memori
 |----------|--------|
 | `POST /auth/otp/request` | 8 / hora |
 | `POST /auth/otp/verify` | 20 / 10 min |
+| `POST /auth/refresh` | rate-limit (anti-abuso refresh) |
 | `POST /analytics/track` | 120 / min (por IP) |
 | `POST /uploads/images` | 30 / min (por usuario) |
 | `POST /uploads/images/batch` | 15 / min |
@@ -54,9 +56,15 @@ Ver [staging-setup.md](./staging-setup.md). Spec DO: `.do/app.staging.yaml`.
 
 `/health` reporta `redis` y `meilisearch` como `connected/configured` u `optional`.
 
+## Secrets admin
+
+- `ADMIN_SESSION_SECRET` — firma cookie de sesión del panel (obligatorio en producción; en non-prod puede caer a `CLERK_SECRET_KEY`).
+- `NEXT_PUBLIC_API_URL` — obligatorio en producción admin/web (sin fallback a host hardcodeado).
+
 ## Pendiente humano
 
 - Crear app DO staging + Vercel staging + DNS
 - Añadir `REDIS_URL` en prod DO
+- Configurar `ADMIN_SESSION_SECRET` en Vercel admin
 - Configurar `SENTRY_DSN` en DO y Vercel
 - GitHub Watch en repo para alertas uptime

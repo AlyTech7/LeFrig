@@ -131,6 +131,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @RateLimit({ limit: 30, windowSec: 600, keyPrefix: 'auth:refresh' })
   refresh(@Body('refreshToken') refreshToken: string) {
     if (!isLegacyAuthEnabled(this.config)) throw new NotFoundException();
     return this.authService.refresh(refreshToken);

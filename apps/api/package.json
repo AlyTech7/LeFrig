@@ -11,6 +11,7 @@
     "db:seed-camps": "tsx prisma/seed-camps.ts",
     "db:studio": "prisma studio",
     "test": "vitest run",
+    "lint": "eslint . --max-warnings 9999",
     "clean": "rimraf dist"
   },
   "dependencies": {
@@ -30,6 +31,7 @@
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "helmet": "^8.3.0",
     "multer": "^2.0.2",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
@@ -46,6 +48,7 @@
     "@nestjs/testing": "^10.4.15",
     "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.0",
+    "@types/helmet": "^4.0.0",
     "@types/multer": "^2.2.0",
     "@types/node": "^22.10.2",
     "@types/passport-jwt": "^4.0.1",

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { CashService } from './cash.service';
 import type { PrismaService } from '../../prisma/prisma.service';
+import type { RateLimitService } from '../../common/rate-limit/rate-limit.service';
 import { ListingStatus } from '@lefrig/shared';
 
 describe('CashService', () => {
@@ -24,14 +25,17 @@ describe('CashService', () => {
     cashReceipt: { create: ReturnType<typeof vi.fn> };
     $transaction: ReturnType<typeof vi.fn>;
   };
+  let rateLimit: {
+    isAllowed: ReturnType<typeof vi.fn>;
+    getCount: ReturnType<typeof vi.fn>;
+    increment: ReturnType<typeof vi.fn>;
+  };
 
   const buyerId = 'buyer-uuid';
   const sellerId = 'seller-uuid';
   const listingId = 'listing-uuid';
 
   beforeEach(() => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.5);
-
     prisma = {
       listing: {
         findUnique: vi.fn(),
@@ -48,19 +52,37 @@ describe('CashService', () => {
         count: vi.fn(),
       },
       cashReceipt: { create: vi.fn() },
-      $transaction: vi.fn().mockResolvedValue([]),
+      $transaction: vi.fn(),
     };
 
-    service = new CashService(prisma as unknown as PrismaService);
+    // Interactive transactions: run callback with prisma mock as tx
+    prisma.$transaction.mockImplementation(async (arg: unknown) => {
+      if (typeof arg === 'function') {
+        return (arg as (tx: typeof prisma) => Promise<unknown>)(prisma);
+      }
+      return [];
+    });
+
+    rateLimit = {
+      isAllowed: vi.fn().mockResolvedValue(true),
+      getCount: vi.fn().mockResolvedValue(0),
+      increment: vi.fn().mockResolvedValue(1),
+    };
+
+    service = new CashService(
+      prisma as unknown as PrismaService,
+      rateLimit as unknown as RateLimitService,
+    );
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('createAgreement genera PIN, reserva listing y devuelve acuerdo', async () => {
+  it('createAgreement genera PIN, reserva listing y no devuelve pin al comprador', async () => {
     prisma.listing.findUnique.mockResolvedValue({
       id: listingId,
+      sellerId,
       status: ListingStatus.ACTIVE,
     });
     prisma.cashAgreement.create.mockResolvedValue({
@@ -83,6 +105,7 @@ describe('CashService', () => {
       amount: 1500,
     });
 
+    expect(prisma.$transaction).toHaveBeenCalled();
     expect(prisma.cashAgreement.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -100,11 +123,34 @@ describe('CashService', () => {
       data: { status: ListingStatus.RESERVED },
     });
     expect(result.operationCode).toMatch(/^CASH-/);
+    expect(result.hasPin).toBe(true);
+    expect((result as { pin?: string }).pin).toBeUndefined();
+  });
+
+  it('createAgreement rechaza buyerId === sellerId', async () => {
+    await expect(
+      service.createAgreement({ buyerId, sellerId: buyerId, amount: 100 }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.cashAgreement.create).not.toHaveBeenCalled();
+  });
+
+  it('createAgreement rechaza si sellerId no coincide con listing.sellerId', async () => {
+    prisma.listing.findUnique.mockResolvedValue({
+      id: listingId,
+      sellerId: 'other-seller',
+      status: ListingStatus.ACTIVE,
+    });
+
+    await expect(
+      service.createAgreement({ listingId, buyerId, sellerId, amount: 100 }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.cashAgreement.create).not.toHaveBeenCalled();
   });
 
   it('createAgreement rechaza listing ya reservado', async () => {
     prisma.listing.findUnique.mockResolvedValue({
       id: listingId,
+      sellerId,
       status: ListingStatus.RESERVED,
     });
 
@@ -172,7 +218,15 @@ describe('CashService', () => {
     const result = await service.confirm(sellerId, { operationCode: 'CASH-FULL', pin: '5678' });
 
     expect(result.fullyConfirmed).toBe(true);
-    expect(prisma.$transaction).toHaveBeenCalled();
+    expect(prisma.cashAgreement.update).toHaveBeenCalledWith({
+      where: { id: 'agreement-1' },
+      data: { status: 'confirmed' },
+    });
+    expect(prisma.cashReceipt.create).toHaveBeenCalled();
+    expect(prisma.listing.update).toHaveBeenCalledWith({
+      where: { id: listingId },
+      data: { status: ListingStatus.SOLD },
+    });
   });
 
   it('confirm rechaza usuario ajeno a la operación', async () => {
@@ -233,7 +287,7 @@ describe('CashService', () => {
     );
   });
 
-  it('findByCode oculta PIN a usuarios no implicados', async () => {
+  it('findByCode oculta PIN a comprador y ajenos; solo vendedor lo ve', async () => {
     prisma.cashAgreement.findUnique.mockResolvedValue({
       operationCode: 'CASH-VIEW',
       pin: '4321',
@@ -250,6 +304,9 @@ describe('CashService', () => {
     const publicView = await service.findByCode('CASH-VIEW');
     expect(publicView.pin).toBeUndefined();
     expect(publicView.hasPin).toBe(true);
+
+    const buyerView = await service.findByCode('CASH-VIEW', buyerId);
+    expect(buyerView.pin).toBeUndefined();
 
     const sellerView = await service.findByCode('CASH-VIEW', sellerId);
     expect(sellerView.pin).toBe('4321');

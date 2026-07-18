@@ -2,6 +2,8 @@ import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@ne
 import { ApiTags } from '@nestjs/swagger';
 import { TransportService } from './transport.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('transport')
@@ -54,7 +56,8 @@ export class TransportController {
   }
 
   @Patch(':id/assign')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'moderator')
   assignDriver(@Param('id') id: string, @Body('driverId') driverId: string) {
     return this.transportService.assignDriver(id, driverId);
   }

@@ -11,7 +11,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { ClerkService, type AuthUserPayload } from '../../modules/auth/clerk.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { JwtPayload } from '@lefrig/shared';
-import { isLegacyAuthEnabled } from '../config/production-security';
+import { isLegacyAuthEnabled, resolveJwtSecret } from '../config/production-security';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -63,19 +63,27 @@ export class AuthGuard implements CanActivate {
       return this.clerk.syncUserFromClerk(clerkResult.clerkUserId);
     }
 
-    // 3. Legacy JWT interno (dev / seed / migración)
+    // 3. Legacy JWT interno (dev / seed / migración) — roles/camp from DB, not token alone
     if (isLegacyAuthEnabled(this.config)) {
       try {
         const payload = this.jwt.verify<JwtPayload>(token, {
-          secret: this.config.get('JWT_SECRET', 'change-me'),
+          secret: resolveJwtSecret(this.config),
         });
+        const dbUser = await this.prisma.user.findUnique({
+          where: { id: payload.sub },
+          select: { roles: true, campId: true, phone: true },
+        });
+        if (!dbUser) {
+          throw new UnauthorizedException('Usuario no encontrado');
+        }
         return {
           sub: payload.sub,
-          phone: payload.phone,
-          roles: payload.roles,
-          campId: payload.campId,
+          phone: dbUser.phone ?? payload.phone,
+          roles: dbUser.roles,
+          campId: dbUser.campId ?? payload.campId,
         };
-      } catch {
+      } catch (err) {
+        if (err instanceof UnauthorizedException) throw err;
         // fall through
       }
     }

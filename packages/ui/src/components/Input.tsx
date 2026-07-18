@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { colors, radii, touchTarget } from '../tokens';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -7,16 +7,28 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   hint?: string;
 }
 
-export function Input({ label, error, hint, style, ...props }: InputProps) {
+export function Input({ label, error, hint, style, id: idProp, ...props }: InputProps) {
+  const autoId = useId();
+  const id = idProp ?? autoId;
+  const hintId = hint ? `${id}-hint` : undefined;
+  const errorId = error ? `${id}-error` : undefined;
+  const describedBy = [errorId, hintId].filter(Boolean).join(' ') || undefined;
+
   return (
     <div style={{ width: '100%' }}>
       {label && (
-        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 500, fontSize: '0.9375rem' }}>
+        <label
+          htmlFor={id}
+          style={{ display: 'block', marginBottom: '6px', fontWeight: 500, fontSize: '0.9375rem' }}
+        >
           {label}
         </label>
       )}
       <input
         {...props}
+        id={id}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy}
         style={{
           width: '100%',
           minHeight: touchTarget.comfortable,
@@ -30,10 +42,14 @@ export function Input({ label, error, hint, style, ...props }: InputProps) {
         }}
       />
       {hint && !error && (
-        <p style={{ margin: '4px 0 0', fontSize: '0.8125rem', color: colors.gray[500] }}>{hint}</p>
+        <p id={hintId} style={{ margin: '4px 0 0', fontSize: '0.8125rem', color: colors.gray[500] }}>
+          {hint}
+        </p>
       )}
       {error && (
-        <p style={{ margin: '4px 0 0', fontSize: '0.8125rem', color: colors.error }}>{error}</p>
+        <p id={errorId} role="alert" style={{ margin: '4px 0 0', fontSize: '0.8125rem', color: colors.error }}>
+          {error}
+        </p>
       )}
     </div>
   );

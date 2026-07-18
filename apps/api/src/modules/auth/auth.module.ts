@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { ClerkService } from './clerk.service';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthGuard } from '../../common/guards/auth.guard';
+import { resolveJwtSecret } from '../../common/config/production-security';
 
 @Global()
 @Module({
@@ -16,7 +17,7 @@ import { AuthGuard } from '../../common/guards/auth.guard';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        secret: config.get('JWT_SECRET', 'change-me'),
+        secret: resolveJwtSecret(config),
         signOptions: { expiresIn: config.get('JWT_EXPIRES_IN', '15m') },
       }),
     }),

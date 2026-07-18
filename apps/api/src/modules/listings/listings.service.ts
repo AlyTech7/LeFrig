@@ -108,15 +108,19 @@ export class ListingsService {
     const { skip, take } = skipTake(page, limit);
 
     if (q?.trim() && this.meili.isConfigured() && !useAttrFilter) {
+      const UUID_RE =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      const CATEGORY_RE = /^[a-z0-9_-]+$/;
       const filterParts = ["status = 'active'"];
-      if (campId) filterParts.push(`campId = '${campId}'`);
-      if (category) filterParts.push(`category = '${category}'`);
-      const hits = await this.meili.search('listings', q, {
+      if (campId && UUID_RE.test(campId)) filterParts.push(`campId = '${campId}'`);
+      if (category && CATEGORY_RE.test(category)) filterParts.push(`category = '${category}'`);
+      const result = await this.meili.search('listings', q, {
         limit: take,
+        offset: skip,
         filter: filterParts.join(' AND '),
       });
-      if (hits?.length) {
-        const ids = hits.map((h) => h.id);
+      if (result?.hits?.length) {
+        const ids = result.hits.map((h) => h.id);
         const data = await this.prisma.listing.findMany({
           where: {
             id: { in: ids },
@@ -131,7 +135,7 @@ export class ListingsService {
         });
         const order = Object.fromEntries(ids.map((id, i) => [id, i]));
         data.sort((a, b) => (order[a.id] ?? 0) - (order[b.id] ?? 0));
-        return paginate(data, data.length, page, limit);
+        return paginate(data, result.estimatedTotalHits, page, limit);
       }
     }
 
@@ -184,7 +188,7 @@ export class ListingsService {
         category: true,
         camp: true,
         daira: true,
-        seller: { select: { id: true, displayName: true, phone: true, reputationScore: true, badges: true } },
+        seller: { select: { id: true, displayName: true, reputationScore: true, badges: true } },
       },
     });
     if (!listing) throw new NotFoundException('Anuncio no encontrado');

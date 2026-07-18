@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { colors, radii, touchTarget } from '../tokens';
 
 export interface SearchBarProps {
@@ -7,6 +7,7 @@ export interface SearchBarProps {
   placeholder?: string;
   onSubmit?: () => void;
   large?: boolean;
+  label?: string;
 }
 
 export function SearchBar({
@@ -15,7 +16,10 @@ export function SearchBar({
   placeholder = '¿Qué necesitas hoy?',
   onSubmit,
   large,
+  label = 'Buscar',
 }: SearchBarProps) {
+  const id = useId();
+
   return (
     <div
       style={{
@@ -29,12 +33,16 @@ export function SearchBar({
         minHeight: large ? touchTarget.large : touchTarget.comfortable,
       }}
     >
-      <span style={{ fontSize: '1.25rem', marginRight: '12px' }}>🔍</span>
+      <span style={{ fontSize: '1.25rem', marginRight: '12px' }} aria-hidden>
+        🔍
+      </span>
       <input
+        id={id}
         type="search"
         value={value}
         onChange={(e) => onChange?.(e.target.value)}
         placeholder={placeholder}
+        aria-label={label}
         onKeyDown={(e) => e.key === 'Enter' && onSubmit?.()}
         style={{
           flex: 1,
@@ -49,6 +57,7 @@ export function SearchBar({
         <button
           type="button"
           onClick={onSubmit}
+          aria-label={label}
           style={{
             background: colors.deepGreen[500],
             color: colors.warmWhite,

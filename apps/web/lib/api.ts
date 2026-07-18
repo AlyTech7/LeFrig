@@ -331,11 +331,24 @@ export const demoTransport: TransportRequestSummary[] = [
 
 export function mapApiListing(raw: Record<string, unknown>): ListingSummary {
   const category = raw.category as { slug?: string; nameEs?: string } | undefined;
-  const seller = raw.seller as { displayName?: string } | undefined;
+  const seller = raw.seller as {
+    displayName?: string;
+    verificationLevel?: string;
+    reputationScore?: number;
+  } | undefined;
   const images = raw.images as string[] | undefined;
   const attributes = (raw.attributes as Record<string, unknown> | undefined) ?? undefined;
   const categorySlug = category?.slug ?? String(raw.category ?? 'other');
   const hasAttributes = attributes && Object.keys(attributes).length > 0;
+  const paymentMethods = Array.isArray(raw.paymentMethods)
+    ? (raw.paymentMethods as string[])
+    : undefined;
+  const sellerVerified =
+    Boolean(raw.sellerVerified) ||
+    (typeof seller?.verificationLevel === 'string' &&
+      seller.verificationLevel !== 'unverified' &&
+      seller.verificationLevel !== 'phone') ||
+    (typeof seller?.reputationScore === 'number' && seller.reputationScore >= 4.5);
   return {
     id: String(raw.id),
     title: String(raw.title),
@@ -349,6 +362,8 @@ export function mapApiListing(raw: Record<string, unknown>): ListingSummary {
     createdAt: String(raw.createdAt ?? new Date().toISOString()),
     attributes: hasAttributes ? attributes : undefined,
     attributeLabels: hasAttributes ? formatAttributeHighlights(categorySlug, attributes) : undefined,
+    paymentMethods,
+    sellerVerified,
   };
 }
 

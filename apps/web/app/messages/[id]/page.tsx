@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
 import { Button, Input, colors } from '@lefrig/ui/client';
 import { AppIcon } from '@/components/AppIcon';
 import { PageBody, PageHero } from '@/components/PageHero';
@@ -13,8 +12,8 @@ import { streamConversation, type ChatMessage } from '@/lib/messageStream';
 
 export default function ConversationPage() {
   const params = useParams<{ id: string }>();
-  const { authFetch, isSignedIn } = useAuthFetch();
-  const { getToken } = useAuth();
+  /** getToken vía useAuthFetch (ya guarda isClerkEnabled); no llamar useAuth() directo */
+  const { authFetch, isSignedIn, isLoaded, getToken } = useAuthFetch();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(true);
@@ -35,15 +34,15 @@ export default function ConversationPage() {
   };
 
   useEffect(() => {
-    if (!isSignedIn || !params.id) {
+    if (!isLoaded || !isSignedIn || !params.id) {
       setLoading(false);
       return;
     }
     load();
-  }, [authFetch, isSignedIn, params.id]);
+  }, [authFetch, isLoaded, isSignedIn, params.id]);
 
   useEffect(() => {
-    if (!isSignedIn || !params.id) return;
+    if (!isLoaded || !isSignedIn || !params.id) return;
     let cancelled = false;
     const ac = new AbortController();
 
@@ -69,7 +68,7 @@ export default function ConversationPage() {
       ac.abort();
       setLive(false);
     };
-  }, [getToken, isSignedIn, params.id]);
+  }, [getToken, isLoaded, isSignedIn, params.id]);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
@@ -89,6 +88,14 @@ export default function ConversationPage() {
       setSending(false);
     }
   };
+
+  if (!isLoaded) {
+    return (
+      <div style={{ maxWidth: 640, margin: '0 auto', padding: '80px 20px', textAlign: 'center' }}>
+        <p style={{ color: colors.gray[500] }}>Cargando...</p>
+      </div>
+    );
+  }
 
   if (!isSignedIn) {
     return (

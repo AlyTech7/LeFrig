@@ -41,7 +41,7 @@ export function ListingPhotoPicker({ photos, onChange, onUpload, disabled }: Pro
 
     if (result.canceled) return;
 
-    const assets = 'assets' in result ? result.assets : [result.assets[0]!].filter(Boolean);
+    const assets = result.assets ?? [];
     const newSlots: PhotoSlot[] = assets.map((a) => ({
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       localUri: a.uri,
