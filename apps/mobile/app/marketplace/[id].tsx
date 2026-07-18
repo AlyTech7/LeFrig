@@ -12,12 +12,13 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { findDepartmentForSlug, formatAttributeDetails, resolveImageUrl } from '@lefrig/shared';
-import { demoListings, fetchWithMeta, mapApiListing, API_URL } from '@/lib/api';
+import { fetchApi, mapApiListing, API_URL } from '@/lib/api';
 import { useAuthApi } from '@/lib/useAuthApi';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { AppIcon } from '@/components/AppIcon';
 import { savePendingCashAgreement } from '@/lib/cash-session';
 import { SellerTrustBadge } from '@/components/SellerTrustBadge';
+import { ReportButton } from '@/components/ReportButton';
 import { pickName } from '@/lib/bilingual';
 import { useLocale, useT } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
@@ -55,25 +56,32 @@ export default function ListingDetailScreen() {
   const { authFetch, syncUser, isSignedIn } = useAuthApi();
   const [listing, setListing] = useState<ListingDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [favorited, setFavorited] = useState(false);
   const [contacting, setContacting] = useState(false);
   const [creatingCash, setCreatingCash] = useState(false);
 
   useEffect(() => {
     if (!id) return;
-    fetchWithMeta<Record<string, unknown>>(`/listings/${id}`, demoListings[0] as never).then((res) => {
-      const mapped: ListingDetail = res.fromFallback
-        ? {
-            ...(demoListings.find((l) => l.id === id) ?? demoListings[0]!),
-            images: (() => {
-              const d = demoListings.find((l) => l.id === id) ?? demoListings[0]!;
-              return d.imageUrl ? [d.imageUrl] : [];
-            })(),
-          }
-        : parseListing(res.data);
-      setListing(mapped);
-      setLoading(false);
-    });
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(false);
+    fetchApi<Record<string, unknown>>(`/listings/${id}`)
+      .then((data) => {
+        if (cancelled) return;
+        setListing(parseListing(data));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setListing(null);
+        setLoadError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const dept = listing ? findDepartmentForSlug(listing.category) : undefined;
@@ -108,7 +116,7 @@ export default function ListingDetailScreen() {
       const agreement = await authFetch<{
         id: string;
         operationCode: string;
-        pin: string;
+        pin?: string;
         amount: number | string;
         listing?: { title: string };
       }>('/cash/agreements', {
@@ -123,12 +131,12 @@ export default function ListingDetailScreen() {
       await savePendingCashAgreement({
         id: agreement.id,
         operationCode: agreement.operationCode,
-        pin: agreement.pin,
+        pin: agreement.pin ?? '',
         amount: agreement.amount,
         listingTitle: listing.title,
         createdAt: new Date().toISOString(),
       });
-      Alert.alert(t('cash.agreementCreated'), `${agreement.operationCode}\nPIN: ${agreement.pin}`, [
+      Alert.alert(t('cash.agreementCreated'), agreement.operationCode, [
         { text: t('nav.cash'), onPress: () => router.push('/cash') },
       ]);
     } catch {
@@ -164,10 +172,26 @@ export default function ListingDetailScreen() {
     }
   };
 
-  if (loading || !listing) {
+  if (loading) {
     return (
       <View style={styles.boot}>
         <ActivityIndicator color={theme.dune} size="large" />
+      </View>
+    );
+  }
+
+  if (loadError || !listing) {
+    return (
+      <View style={styles.root}>
+        <ScreenHeader title={t('common.error')} backLabel={t('nav.marketplace')} />
+        <View style={styles.boot}>
+          <Text style={{ color: theme.inkMuted, textAlign: 'center', paddingHorizontal: 24 }}>
+            {t('errors.genericBody')}
+          </Text>
+          <Pressable onPress={() => router.back()} style={{ marginTop: 16 }}>
+            <Text style={{ color: theme.dune, fontWeight: '700' }}>{t('common.back')}</Text>
+          </Pressable>
+        </View>
       </View>
     );
   }

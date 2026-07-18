@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     color: theme.textDark,
     backgroundColor: theme.surface,
   },
-  inputError: { borderColor: theme.error },
+  inputError: { borderColor: theme.flare },
   picker: {
     borderWidth: 1,
     borderColor: theme.border,
@@ -99,5 +99,5 @@ const styles = StyleSheet.create({
   },
   pickerItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: theme.border },
   pickerText: { color: theme.textDark },
-  error: { color: theme.error, fontSize: 13 },
+  error: { color: theme.flare, fontSize: 13 },
 });

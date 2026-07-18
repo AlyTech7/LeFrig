@@ -68,6 +68,10 @@ export interface ListingSummary {
   createdAt: string;
   attributes?: Record<string, unknown>;
   attributeLabels?: string[];
+  /** Métodos de pago del anuncio; si falta, ListingCard asume efectivo. */
+  paymentMethods?: string[];
+  /** Vendedor con verificación de identidad/reputación. */
+  sellerVerified?: boolean;
 }
 
 export interface ShopSummary {

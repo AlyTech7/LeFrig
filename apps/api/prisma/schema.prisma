@@ -360,6 +360,7 @@ model CashConfirmation {
   agreement   CashAgreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
   confirmedBy User          @relation(fields: [confirmedById], references: [id])
 
+  @@unique([agreementId, confirmedById])
   @@map("cash_confirmations")
 }
 

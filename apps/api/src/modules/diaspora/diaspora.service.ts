@@ -20,10 +20,17 @@ export class DiasporaService {
     beneficiaryPhone?: string;
     preferredCampId?: string;
   }) {
+    const profileData = {
+      country: data.country,
+      city: data.city,
+      beneficiaryName: data.beneficiaryName,
+      beneficiaryPhone: data.beneficiaryPhone,
+      preferredCampId: data.preferredCampId,
+    };
     return this.prisma.diasporaProfile.upsert({
       where: { userId },
-      update: data,
-      create: { userId, ...data },
+      update: profileData,
+      create: { userId, ...profileData },
     });
   }
 
@@ -40,7 +47,13 @@ export class DiasporaService {
         });
       }
       return this.prisma.diasporaOrder.create({
-        data: { profileId: profile.id, ...data },
+        data: {
+          profileId: profile.id,
+          orderType: data.orderType,
+          description: data.description,
+          budget: data.budget,
+          campId: data.campId,
+        },
       });
     });
   }

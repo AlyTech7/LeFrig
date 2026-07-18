@@ -17,10 +17,10 @@ export function CrownAuth() {
     <>
       <SignedOut>
         <Link href="/sign-in" className="sv-crown__btn sv-crown__btn--ghost">
-          Entrar
+          {t('nav.signIn')}
         </Link>
         <Link href="/sign-up" className="sv-crown__btn sv-crown__btn--gold">
-          Unirse
+          {t('nav.signUp')}
         </Link>
       </SignedOut>
       <SignedIn>
@@ -86,13 +86,14 @@ export function CrownAuth() {
 }
 
 function FallbackCrownAuth() {
+  const t = useT();
   return (
     <>
       <Link href="/sign-in" className="sv-crown__btn sv-crown__btn--ghost">
-        Entrar
+        {t('nav.signIn')}
       </Link>
       <Link href="/sign-up" className="sv-crown__btn sv-crown__btn--gold">
-        Unirse
+        {t('nav.signUp')}
       </Link>
     </>
   );

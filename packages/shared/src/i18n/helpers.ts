@@ -67,7 +67,7 @@ export function pickLocalized<T extends NamedItem>(item: T, locale: Locale): str
 }
 
 export function detectBrowserLocale(): Locale {
-  if (typeof navigator === 'undefined') return 'es';
+  if (typeof navigator === 'undefined') return 'ar';
   const lang = navigator.language?.slice(0, 2).toLowerCase();
   if (lang === 'ar' || lang === 'es' || lang === 'fr' || lang === 'en') return lang;
   return 'es';

@@ -8,10 +8,14 @@ export function PushRegister() {
 
   useEffect(() => {
     if (!isLoaded || !isPushSupported()) return;
+    let cancelled = false;
     hasLegacySession().then((legacy) => {
-      if (!isSignedIn && !legacy) return;
+      if (cancelled || (!isSignedIn && !legacy)) return;
       registerForPushNotifications(() => getToken(), isSignedIn).catch(() => undefined);
     });
+    return () => {
+      cancelled = true;
+    };
   }, [getToken, isSignedIn, isLoaded]);
 
   return null;

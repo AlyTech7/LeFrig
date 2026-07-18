@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from 'next';
+import { cookies } from 'next/headers';
+import { getDirection, LOCALE_STORAGE_KEY, resolveLocale } from '@lefrig/shared';
 import '@lefrig/ui/styles.css';
 import './globals.css';
 import './sovereign.css';
@@ -30,9 +32,13 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies();
+  const locale = resolveLocale(cookieStore.get(LOCALE_STORAGE_KEY)?.value, 'ar');
+  const dir = getDirection(locale);
+
   return (
-    <html lang="es" dir="ltr">
+    <html lang={locale} dir={dir}>
       <body>
         <AppProviders>
           <ClientShell>{children}</ClientShell>

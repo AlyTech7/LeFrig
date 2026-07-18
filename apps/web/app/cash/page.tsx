@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button, Card, Input } from '@lefrig/ui/client';
 import { PageBody, PageHero } from '@/components/PageHero';
 import { useAuthFetch } from '@/lib/auth-fetch';
+import { takePendingCashAgreement } from '@/lib/cash-pending';
 import { useT } from '@/lib/locale';
 
 type CashAgreement = {
@@ -54,14 +55,9 @@ export default function CashPage() {
       .catch(() => setAgreements([]))
       .finally(() => setLoading(false));
 
-    const raw = sessionStorage.getItem('lefrig_new_cash');
-    if (raw) {
-      try {
-        setNewAgreement(JSON.parse(raw) as CashAgreement);
-      } catch {
-        /* ignore */
-      }
-      sessionStorage.removeItem('lefrig_new_cash');
+    const pending = takePendingCashAgreement();
+    if (pending) {
+      setNewAgreement(pending as CashAgreement);
     }
   }, [authFetch, isLoaded, isSignedIn]);
 

@@ -2,6 +2,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { useCallback, useRef } from 'react';
 import { API_URL } from './api';
 import { getLegacyAccessToken } from './legacySession';
+import { useIsAuthed } from './useIsAuthed';
 
 export class ApiError extends Error {
   constructor(
@@ -14,18 +15,19 @@ export class ApiError extends Error {
 }
 
 export function useAuthApi() {
-  const { getToken, isSignedIn, isLoaded, userId } = useAuth();
+  const { getToken, isSignedIn: clerkSignedIn, isLoaded, userId } = useAuth();
+  const { isAuthed, refresh: refreshAuth } = useIsAuthed();
   const getTokenRef = useRef(getToken);
-  const isSignedInRef = useRef(isSignedIn);
+  const clerkSignedInRef = useRef(clerkSignedIn);
   getTokenRef.current = getToken;
-  isSignedInRef.current = isSignedIn;
+  clerkSignedInRef.current = clerkSignedIn;
 
   const authFetch = useCallback(async <T,>(path: string, init?: RequestInit): Promise<T> => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(init?.headers as Record<string, string>),
     };
-    const clerkToken = isSignedInRef.current ? await getTokenRef.current() : null;
+    const clerkToken = clerkSignedInRef.current ? await getTokenRef.current() : null;
     const legacyToken = clerkToken ? null : await getLegacyAccessToken();
     const token = clerkToken ?? legacyToken;
     if (token) headers.Authorization = `Bearer ${token}`;
@@ -37,7 +39,7 @@ export function useAuthApi() {
 
   const syncUser = useCallback(async () => {
     const legacyToken = await getLegacyAccessToken();
-    if (!isSignedInRef.current && !legacyToken) return null;
+    if (!clerkSignedInRef.current && !legacyToken) return null;
     try {
       return await authFetch<{ success: boolean; user: unknown }>('/auth/sync', { method: 'POST' });
     } catch (err) {
@@ -47,10 +49,20 @@ export function useAuthApi() {
   }, [authFetch]);
 
   const getAccessToken = useCallback(async () => {
-    const clerkToken = isSignedInRef.current ? await getTokenRef.current() : null;
+    const clerkToken = clerkSignedInRef.current ? await getTokenRef.current() : null;
     if (clerkToken) return clerkToken;
     return getLegacyAccessToken();
   }, []);
 
-  return { authFetch, syncUser, isSignedIn, isLoaded, getAccessToken, userId };
+  return {
+    authFetch,
+    syncUser,
+    /** Clerk O sesión legacy */
+    isSignedIn: isAuthed,
+    isClerkSignedIn: Boolean(clerkSignedIn),
+    isLoaded,
+    getAccessToken,
+    userId,
+    refreshAuth,
+  };
 }

@@ -60,6 +60,7 @@ export function Button({
     <button
       {...props}
       disabled={disabled || loading}
+      aria-busy={loading || undefined}
       style={{
         display: 'inline-flex',
         alignItems: 'center',

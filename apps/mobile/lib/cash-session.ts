@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
 const KEY = 'lefrig_new_cash';
 
@@ -12,11 +12,11 @@ export type PendingCashAgreement = {
 };
 
 export async function savePendingCashAgreement(data: PendingCashAgreement): Promise<void> {
-  await AsyncStorage.setItem(KEY, JSON.stringify(data));
+  await SecureStore.setItemAsync(KEY, JSON.stringify(data));
 }
 
 export async function loadPendingCashAgreement(): Promise<PendingCashAgreement | null> {
-  const raw = await AsyncStorage.getItem(KEY);
+  const raw = await SecureStore.getItemAsync(KEY);
   if (!raw) return null;
   try {
     return JSON.parse(raw) as PendingCashAgreement;
@@ -26,5 +26,5 @@ export async function loadPendingCashAgreement(): Promise<PendingCashAgreement |
 }
 
 export async function clearPendingCashAgreement(): Promise<void> {
-  await AsyncStorage.removeItem(KEY);
+  await SecureStore.deleteItemAsync(KEY);
 }

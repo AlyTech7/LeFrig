@@ -36,27 +36,37 @@ const listingBodySchema = z.object({
   attributes: z.record(z.unknown()).optional(),
 });
 
-export const createListingSchema = listingBodySchema.superRefine((data, ctx) => {
-    const descMin = getDescriptionMinLength(data.category);
-    if ((data.description?.length ?? 0) < descMin) {
-      ctx.addIssue({
-        code: 'custom',
-        message: descMin === 0 ? 'Descripción opcional' : `Descripción mínimo ${descMin} caracteres`,
-        path: ['description'],
-      });
-    }
+function refineListingBody(
+  data: {
+    category?: string;
+    description?: string;
+    attributes?: Record<string, unknown>;
+  },
+  ctx: z.RefinementCtx,
+) {
+  if (!data.category) return;
+  const descMin = getDescriptionMinLength(data.category);
+  if (data.description !== undefined && (data.description?.length ?? 0) < descMin) {
+    ctx.addIssue({
+      code: 'custom',
+      message: descMin === 0 ? 'Descripción opcional' : `Descripción mínimo ${descMin} caracteres`,
+      path: ['description'],
+    });
+  }
 
-    if (categoryHasStructuredAttributes(data.category)) {
-      try {
-        validateListingAttributes(data.category, data.attributes ?? {});
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Campos de categoría incompletos';
-        ctx.addIssue({ code: 'custom', message: msg, path: ['attributes'] });
-      }
+  if (categoryHasStructuredAttributes(data.category) && data.attributes !== undefined) {
+    try {
+      validateListingAttributes(data.category, data.attributes ?? {});
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Campos de categoría incompletos';
+      ctx.addIssue({ code: 'custom', message: msg, path: ['attributes'] });
     }
-  });
+  }
+}
 
-export const updateListingSchema = listingBodySchema.partial();
+export const createListingSchema = listingBodySchema.superRefine(refineListingBody);
+
+export const updateListingSchema = listingBodySchema.partial().superRefine(refineListingBody);
 
 export const listingFilterSchema = listingAttributeFilterSchema.merge(
   z.object({
@@ -83,10 +93,12 @@ export const createShopSchema = z.object({
   imageUrl: z.string().url().optional(),
 });
 
+export const moneyAmountSchema = z.number().finite().positive().max(10_000_000);
+
 export const createShopProductSchema = z.object({
   name: z.string().min(2).max(120),
   description: z.string().max(1000).optional(),
-  price: z.number().positive(),
+  price: moneyAmountSchema,
   currency: currencySchema,
   stock: z.coerce.number().int().min(0).default(0),
   imageUrl: z.string().url().optional(),
@@ -96,14 +108,22 @@ export const updateShopProductSchema = createShopProductSchema.partial();
 
 export const createOrderSchema = z.object({
   shopId: z.string().uuid(),
-  items: z.array(z.object({
-    name: z.string(),
-    quantity: z.number().positive(),
-    price: z.number().positive(),
-  })).min(1),
+  items: z
+    .array(
+      z.object({
+        productId: z.string().uuid(),
+        quantity: z.number().int().positive().max(999),
+      }),
+    )
+    .min(1)
+    .max(50),
   paymentMethod: z.enum(['cash', 'cash_on_delivery', 'manual_transfer']),
   beneficiaryId: z.string().uuid().optional(),
   notes: z.string().max(500).optional(),
+});
+
+export const updateOrderStatusSchema = z.object({
+  status: z.enum(['pending', 'confirmed', 'delivered', 'cancelled']),
 });
 
 export const createTransportSchema = z.object({
@@ -119,7 +139,7 @@ export const createTransportSchema = z.object({
   seatsAvailable: z.coerce.number().int().min(1).max(50).optional(),
   packageCapacity: z.string().max(120).optional(),
   departureAt: z.string().datetime().optional(),
-  contactPhone: z.string().max(24).optional(),
+  contactPhone: phoneSchema.optional(),
   luggageNote: z.string().max(300).optional(),
 });
 
@@ -141,8 +161,8 @@ export const createDriverProfileSchema = z.object({
 });
 
 export const pinConfirmSchema = z.object({
-  operationCode: z.string(),
-  pin: z.string().length(4),
+  operationCode: z.string().min(1).max(64),
+  pin: z.string().regex(/^\d{4}$/),
 });
 
 export const createCreditEntrySchema = z.object({
@@ -163,7 +183,7 @@ export const createNeedSchema = z.object({
 export const createReviewSchema = z.object({
   targetType: z.enum(['user', 'shop', 'driver', 'service']),
   targetId: z.string().uuid(),
-  rating: z.number().min(1).max(5),
+  rating: z.number().int().min(1).max(5),
   comment: z.string().max(500).optional(),
 });
 

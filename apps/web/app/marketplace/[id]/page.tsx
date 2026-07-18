@@ -13,7 +13,7 @@ import { ReviewsSection } from '@/components/ReviewsSection';
 import { SellerTrustBadge } from '@/components/SellerTrustBadge';
 import { useAuthFetch } from '@/lib/auth-fetch';
 import { useLocale, useT } from '@/lib/locale';
-import { demoListings, fetchWithFallback, mapApiListing } from '@/lib/api';
+import { fetchApi, mapApiListing } from '@/lib/api';
 
 export default function ListingDetailPage() {
   const params = useParams<{ id: string }>();
@@ -22,22 +22,62 @@ export default function ListingDetailPage() {
   const t = useT();
   const { locale } = useLocale();
   const id = params.id;
-  const fallback = demoListings.find((l) => l.id === id) ?? demoListings[0]!;
 
-  const [listing, setListing] = useState<Record<string, unknown>>({
-    ...fallback,
-    description: t('marketplaceExtra.defaultListingDesc'),
-    seller: { displayName: fallback.sellerName, reputationScore: 4.8, id: 'demo' },
-    camp: { nameEs: 'Rabouni' },
-    category: { nameEs: fallback.category, icon: '📦' },
-  });
+  const [listing, setListing] = useState<Record<string, unknown> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [favorited, setFavorited] = useState(false);
   const [contacting, setContacting] = useState(false);
   const [creatingCash, setCreatingCash] = useState(false);
 
   useEffect(() => {
-    fetchWithFallback<Record<string, unknown>>(`/listings/${id}`, listing).then(setListing);
+    let cancelled = false;
+    setLoading(true);
+    setError(false);
+    setListing(null);
+    fetchApi<Record<string, unknown>>(`/listings/${id}`)
+      .then((data) => {
+        if (!cancelled) {
+          setListing(data);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError(true);
+          setListing(null);
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
+
+  if (loading) {
+    return (
+      <>
+        <PageHero icon="tag" title={t('common.loading')} subtitle="" maxWidth={900} />
+        <PageBody maxWidth={900}>
+          <p style={{ color: colors.gray[500] }}>{t('common.loading')}</p>
+        </PageBody>
+      </>
+    );
+  }
+
+  if (error || !listing) {
+    return (
+      <>
+        <PageHero icon="tag" title={t('common.error')} subtitle="" maxWidth={900} />
+        <PageBody maxWidth={900}>
+          <Link href="/marketplace" style={{ color: 'var(--lf-gold)', textDecoration: 'none', fontSize: '0.9rem', display: 'inline-block', marginBottom: 16 }}>
+            ← {t('marketplace.backToMarket')}
+          </Link>
+          <p style={{ color: colors.gray[700] }}>{t('errors.notFoundBody')}</p>
+        </PageBody>
+      </>
+    );
+  }
 
   const summary: ListingSummary =
     'sellerName' in listing && typeof listing.sellerName === 'string'
@@ -92,7 +132,8 @@ export default function ListingDetailPage() {
           }),
         },
       );
-      sessionStorage.setItem('lefrig_new_cash', JSON.stringify(agreement));
+      const { setPendingCashAgreement } = await import('@/lib/cash-pending');
+      setPendingCashAgreement(agreement);
       router.push('/cash');
     } catch {
       alert(t('marketplaceExtra.agreementError'));

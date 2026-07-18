@@ -6,6 +6,11 @@ export interface MeiliHit {
   [key: string]: unknown;
 }
 
+export interface MeiliSearchResult {
+  hits: MeiliHit[];
+  estimatedTotalHits: number;
+}
+
 @Injectable()
 export class MeilisearchAdapter {
   private readonly logger = new Logger(MeilisearchAdapter.name);
@@ -96,8 +101,8 @@ export class MeilisearchAdapter {
   async search(
     index: string,
     q: string,
-    opts: { limit?: number; filter?: string; timeoutMs?: number } = {},
-  ): Promise<MeiliHit[] | null> {
+    opts: { limit?: number; offset?: number; filter?: string; timeoutMs?: number } = {},
+  ): Promise<MeiliSearchResult | null> {
     if (!this.isConfigured() || !q.trim()) return null;
     const timeoutMs = opts.timeoutMs ?? 2500;
     const controller = new AbortController();
@@ -110,12 +115,24 @@ export class MeilisearchAdapter {
         body: JSON.stringify({
           q,
           limit: opts.limit ?? 20,
+          ...(opts.offset !== undefined && { offset: opts.offset }),
           ...(opts.filter && { filter: opts.filter }),
         }),
       });
       if (!res.ok) return null;
-      const json = (await res.json()) as { hits?: MeiliHit[] };
-      return json.hits ?? [];
+      const json = (await res.json()) as {
+        hits?: MeiliHit[];
+        estimatedTotalHits?: number;
+        totalHits?: number;
+      };
+      const hits = json.hits ?? [];
+      const estimatedTotalHits =
+        typeof json.estimatedTotalHits === 'number'
+          ? json.estimatedTotalHits
+          : typeof json.totalHits === 'number'
+            ? json.totalHits
+            : hits.length;
+      return { hits, estimatedTotalHits };
     } catch (e) {
       this.logger.warn(`Meili search failed: ${(e as Error).message}`);
       return null;

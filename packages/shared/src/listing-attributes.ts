@@ -29,16 +29,16 @@ export type ListingAttributeSchema = {
 };
 
 const CAR_BRANDS: AttributeFieldOption[] = [
-  { value: 'toyota', labelEs: 'Toyota', labelAr: 'تويota' },
-  { value: 'renault', labelEs: 'Renault', labelAr: 'رeno' },
+  { value: 'toyota', labelEs: 'Toyota', labelAr: 'تويوتا' },
+  { value: 'renault', labelEs: 'Renault', labelAr: 'رينو' },
   { value: 'peugeot', labelEs: 'Peugeot', labelAr: 'بيجو' },
-  { value: 'dacia', labelEs: 'Dacia', labelAr: 'دacia' },
+  { value: 'dacia', labelEs: 'Dacia', labelAr: 'داسيا' },
   { value: 'hyundai', labelEs: 'Hyundai', labelAr: 'هيونداي' },
   { value: 'kia', labelEs: 'Kia', labelAr: 'كيا' },
   { value: 'mercedes', labelEs: 'Mercedes', labelAr: 'مرسيدس' },
   { value: 'bmw', labelEs: 'BMW', labelAr: 'BMW' },
-  { value: 'nissan', labelEs: 'Nissan', labelAr: 'نissan' },
-  { value: 'ford', labelEs: 'Ford', labelAr: 'فord' },
+  { value: 'nissan', labelEs: 'Nissan', labelAr: 'نيسان' },
+  { value: 'ford', labelEs: 'Ford', labelAr: 'فورد' },
   { value: 'other', labelEs: 'Otra marca', labelAr: 'ماركة أخرى' },
 ];
 
@@ -70,12 +70,12 @@ const PROPERTY_TYPE_COMMERCIAL: AttributeFieldOption[] = [
 const currentYear = new Date().getFullYear();
 
 const PHONE_BRANDS: AttributeFieldOption[] = [
-  { value: 'samsung', labelEs: 'Samsung', labelAr: 'سامسung' },
+  { value: 'samsung', labelEs: 'Samsung', labelAr: 'سامسونج' },
   { value: 'apple', labelEs: 'Apple / iPhone', labelAr: 'آيفون' },
-  { value: 'xiaomi', labelEs: 'Xiaomi', labelAr: 'شاomi' },
+  { value: 'xiaomi', labelEs: 'Xiaomi', labelAr: 'شاومي' },
   { value: 'huawei', labelEs: 'Huawei', labelAr: 'هواوي' },
-  { value: 'oppo', labelEs: 'Oppo', labelAr: 'أoppo' },
-  { value: 'realme', labelEs: 'Realme', labelAr: 'ريalmي' },
+  { value: 'oppo', labelEs: 'Oppo', labelAr: 'أوبو' },
+  { value: 'realme', labelEs: 'Realme', labelAr: 'ريلمي' },
   { value: 'other', labelEs: 'Otra marca', labelAr: 'ماركة أخرى' },
 ];
 

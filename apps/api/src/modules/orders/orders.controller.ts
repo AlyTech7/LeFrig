@@ -30,8 +30,8 @@ export class OrdersController {
   updateStatus(
     @Param('id') id: string,
     @CurrentUser() user: { sub: string },
-    @Body('status') status: string,
+    @Body() body: unknown,
   ) {
-    return this.ordersService.updateStatus(id, user.sub, status);
+    return this.ordersService.updateStatus(id, user.sub, body);
   }
 }

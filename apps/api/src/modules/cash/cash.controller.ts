@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CashService } from './cash.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { RateLimit } from '../../common/decorators/rate-limit.decorator';
 
 @ApiTags('cash')
 @Controller('cash')
@@ -35,6 +36,7 @@ export class CashController {
   }
 
   @Post('confirm')
+  @RateLimit({ limit: 20, windowSec: 900, keyPrefix: 'cash:confirm' })
   confirm(@CurrentUser() user: { sub: string }, @Body() body: unknown) {
     return this.cashService.confirm(user.sub, body);
   }

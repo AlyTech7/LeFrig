@@ -7,6 +7,7 @@ import { Button, Card, colors } from '@lefrig/ui/client';
 import { AppIcon } from '@/components/AppIcon';
 import { useAuthFetch } from '@/lib/auth-fetch';
 import { useT } from '@/lib/locale';
+import { safeInternalPath } from '@/lib/safe-redirect';
 
 type Notification = {
   id: string;
@@ -77,11 +78,12 @@ export default function NotificationsPage() {
       return;
     }
     if (n.type === 'driver_verified' || n.type === 'driver_revoked') {
-      router.push(href || '/me/driver');
+      router.push(safeInternalPath(href, '/me/driver'));
       return;
     }
-    if (href?.startsWith('/')) {
-      router.push(href);
+    if (href) {
+      const safe = safeInternalPath(href, '');
+      if (safe) router.push(safe);
     }
   };
 

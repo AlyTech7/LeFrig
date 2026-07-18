@@ -3,9 +3,14 @@ const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const API_TTL_MS = 5 * 60 * 1000;
 
 function getSecret(): string {
-  const raw = process.env.CLERK_SECRET_KEY?.trim();
-  if (!raw) throw new Error('CLERK_SECRET_KEY no configurada');
-  return raw;
+  const dedicated = process.env.ADMIN_SESSION_SECRET?.trim();
+  if (dedicated) return dedicated;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('ADMIN_SESSION_SECRET debe estar configurado en producción');
+  }
+  const fallback = process.env.CLERK_SECRET_KEY?.trim();
+  if (!fallback) throw new Error('ADMIN_SESSION_SECRET o CLERK_SECRET_KEY no configurada');
+  return fallback;
 }
 
 function toBase64Url(bytes: Uint8Array): string {

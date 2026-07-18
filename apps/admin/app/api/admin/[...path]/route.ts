@@ -7,6 +7,13 @@ import {
   verifyAdminSessionToken,
 } from '@/lib/admin-session';
 
+/** Prefijos de API que el panel admin puede proxificar. */
+const ALLOWED_PREFIXES = ['/admin', '/moderation', '/analytics'];
+
+function isAllowedProxyPath(path: string): boolean {
+  return ALLOWED_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+}
+
 async function resolveBearerToken(req: NextRequest): Promise<string | null> {
   const { getToken } = await auth();
   const clerkToken = await getToken();
@@ -25,6 +32,10 @@ async function proxyRequest(req: NextRequest, pathSegments: string[]) {
   }
 
   const path = `/${pathSegments.join('/')}`;
+  if (!isAllowedProxyPath(path)) {
+    return NextResponse.json({ error: 'Path not allowed' }, { status: 403 });
+  }
+
   const target = `${API_URL}${path}${req.nextUrl.search}`;
 
   const headers: Record<string, string> = {

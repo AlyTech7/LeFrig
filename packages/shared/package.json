@@ -21,7 +21,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "lint": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 9999 && tsc --noEmit",
     "clean": "rimraf dist"
   },
   "dependencies": {

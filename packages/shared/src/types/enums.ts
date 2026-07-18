@@ -36,6 +36,7 @@ export enum ListingStatus {
   DISPUTED = 'disputed',
 }
 
+/** @deprecated Usar categorías de marketplace.ts / LISTING_CATEGORIES */
 export enum ListingCategory {
   MOBILES = 'mobiles',
   ELECTRONICS = 'electronics',
@@ -83,6 +84,7 @@ export enum PaymentStatus {
 // Order
 export enum OrderStatus {
   PENDING = 'pending',
+  CONFIRMED = 'confirmed',
   ACCEPTED = 'accepted',
   PREPARING = 'preparing',
   READY = 'ready',

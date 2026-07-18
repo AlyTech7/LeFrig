@@ -1,5 +1,5 @@
 import type { ListingSummary, PaginatedResponse, TransportRequestSummary } from '@lefrig/shared';
-import { CURRENCY, HOME_ACTIONS } from '@lefrig/shared';
+import { CURRENCY, HOME_ACTIONS, formatAttributeHighlights } from '@lefrig/shared';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
@@ -68,19 +68,47 @@ export function unwrapPaginated<T>(res: T[] | PaginatedResponse<T>): T[] {
 
 export function mapApiListing(raw: Record<string, unknown>): ListingSummary {
   const category = raw.category as { slug?: string } | undefined;
-  const seller = raw.seller as { displayName?: string } | undefined;
+  const seller = raw.seller as {
+    displayName?: string;
+    verificationLevel?: string;
+    reputationScore?: number;
+  } | undefined;
   const images = raw.images as string[] | undefined;
+  const categorySlug = category?.slug ?? String(raw.category ?? 'other');
+  const attributes =
+    raw.attributes && typeof raw.attributes === 'object' && !Array.isArray(raw.attributes)
+      ? (raw.attributes as Record<string, unknown>)
+      : undefined;
+  const hasAttributes = attributes && Object.keys(attributes).length > 0;
+  const attributeLabels = Array.isArray(raw.attributeLabels)
+    ? (raw.attributeLabels as string[])
+    : hasAttributes
+      ? formatAttributeHighlights(categorySlug, attributes)
+      : undefined;
+  const paymentMethods = Array.isArray(raw.paymentMethods)
+    ? (raw.paymentMethods as string[])
+    : undefined;
+  const sellerVerified =
+    Boolean(raw.sellerVerified) ||
+    (typeof seller?.verificationLevel === 'string' &&
+      seller.verificationLevel !== 'unverified' &&
+      seller.verificationLevel !== 'phone') ||
+    (typeof seller?.reputationScore === 'number' && seller.reputationScore >= 4.5);
   return {
     id: String(raw.id),
     title: String(raw.title),
     price: Number(raw.price),
     currency: String(raw.currency ?? CURRENCY),
     status: String(raw.status),
-    category: category?.slug ?? String(raw.category ?? 'other'),
+    category: categorySlug,
     campId: String(raw.campId),
     imageUrl: images?.[0],
     sellerName: seller?.displayName ?? 'Vendedor',
     createdAt: String(raw.createdAt ?? new Date().toISOString()),
+    attributes: hasAttributes ? attributes : undefined,
+    attributeLabels,
+    paymentMethods,
+    sellerVerified,
   };
 }
 

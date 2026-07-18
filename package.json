@@ -2,7 +2,7 @@
   "name": "lefrig",
   "version": "0.1.0",
   "private": true,
-  "description": "Lefrig — Superapp saharaui: marketplace, efectivo, fiado, transporte, diáspora y comunidad",
+  "description": "Lefrig — Superapp saharaui: marketplace, efectivo, transporte, diáspora y comunidad",
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
@@ -21,10 +21,12 @@
   },
   "devDependencies": {
     "@lefrig/config": "workspace:*",
+    "eslint": "^9.17.0",
     "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
     "turbo": "^2.3.3",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.2"
   },
   "packageManager": "pnpm@9.15.0",
   "engines": {

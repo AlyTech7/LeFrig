@@ -16,7 +16,7 @@ export function UsersClient({ initial }: { initial: AdminUserRow[] }) {
         await request(`/admin/users/${id}/verify`, { method: 'PATCH', body: JSON.stringify({ level }) });
         setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, verificationLevel: level } : u)));
       } catch {
-        /* demo */
+        window.alert('No se pudo actualizar la verificación del usuario.');
       }
     },
     [request],

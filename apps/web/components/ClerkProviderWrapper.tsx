@@ -1,7 +1,7 @@
 'use client';
 
 import { ClerkProvider, useAuth } from '@clerk/nextjs';
-import { esES, frFR, enUS } from '@clerk/localizations';
+import { arSA, esES, frFR, enUS } from '@clerk/localizations';
 import { useEffect } from 'react';
 import { CLERK_PUBLISHABLE_KEY, isClerkEnabled } from '@/lib/clerk';
 import { clerkRedirectUrl } from '@/lib/site-url';
@@ -57,6 +57,7 @@ const CLERK_LOCALES: Partial<Record<Locale, typeof esES>> = {
   es: esES,
   fr: frFR,
   en: enUS,
+  ar: arSA,
 };
 
 function ClerkSessionSync() {

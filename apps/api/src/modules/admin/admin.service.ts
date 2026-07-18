@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { paginate, skipTake } from '../../common/utils/pagination';
-import { paginationSchema, TrustBadge } from '@lefrig/shared';
+import { DEFAULT_CURRENCY, paginationSchema, TrustBadge } from '@lefrig/shared';
 
 @Injectable()
 export class AdminService {
@@ -126,7 +126,7 @@ export class AdminService {
           id: o.id,
           type: 'order' as const,
           title: `Pedido ${o.shop.name}`,
-          subtitle: `${o.buyer.displayName} · ${Number(o.totalAmount).toLocaleString()} MRU`,
+          subtitle: `${o.buyer.displayName} · ${Number(o.totalAmount).toLocaleString()} ${DEFAULT_CURRENCY}`,
           status: o.status,
           createdAt: o.createdAt.toISOString(),
         })),
@@ -141,19 +141,31 @@ export class AdminService {
   }
 
   private async getWeeklyOrderTrend() {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - 6);
+
+    const rows = await this.prisma.$queryRaw<Array<{ day: Date; count: bigint }>>`
+      SELECT date_trunc('day', created_at) AS day, COUNT(*)::bigint AS count
+      FROM orders
+      WHERE created_at >= ${start}
+      GROUP BY 1
+      ORDER BY 1
+    `;
+
+    const byDay = new Map(
+      rows.map((r) => [new Date(r.day).toISOString().slice(0, 10), Number(r.count)]),
+    );
+
     const days: { label: string; count: number }[] = [];
     for (let i = 6; i >= 0; i--) {
-      const start = new Date();
-      start.setHours(0, 0, 0, 0);
-      start.setDate(start.getDate() - i);
-      const end = new Date(start);
-      end.setDate(end.getDate() + 1);
-      const count = await this.prisma.order.count({
-        where: { createdAt: { gte: start, lt: end } },
-      });
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
       days.push({
-        label: start.toLocaleDateString('es-ES', { weekday: 'short' }),
-        count,
+        label: d.toLocaleDateString('es-ES', { weekday: 'short' }),
+        count: byDay.get(key) ?? 0,
       });
     }
     return days;

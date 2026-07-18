@@ -124,9 +124,8 @@ export default function ShopDetailPage() {
         body: JSON.stringify({
           shopId: shop.id,
           items: products.slice(0, 5).map((p) => ({
-            name: p.name,
+            productId: p.id,
             quantity: 1,
-            price: Number(p.price),
           })),
           paymentMethod: 'cash',
           notes: 'Pedido desde web Lefrig',

@@ -39,7 +39,7 @@ export class JobsService {
   async findOne(id: string) {
     const job = await this.prisma.job.findUnique({
       where: { id },
-      include: { camp: true, poster: { select: { displayName: true, phone: true } } },
+      include: { camp: true, poster: { select: { displayName: true } } },
     });
     if (!job) throw new NotFoundException('Oferta no encontrada');
     return job;
@@ -55,7 +55,16 @@ export class JobsService {
     contactPhone?: string;
   }) {
     return this.prisma.job.create({
-      data: { posterId, ...data },
+      data: {
+        posterId,
+        campId: data.campId,
+        jobType: data.jobType,
+        category: data.category,
+        title: data.title,
+        description: data.description,
+        salary: data.salary,
+        contactPhone: data.contactPhone,
+      },
       include: { camp: true },
     });
   }

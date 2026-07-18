@@ -22,7 +22,7 @@
 - [x] S3/R2 storage real para imágenes (adapter en `storage.adapter.ts`)
 - [ ] Meilisearch indexación listings/shops
 - [ ] Redis cache + rate limiting
-- [x] CI GitHub Actions (build + migrate + lint web)
+- [x] CI GitHub Actions (ESLint + tsc shared/ui/web/admin/api/mobile + API tests + E2E)
 - [x] Guía deploy Vercel (`docs/deploy-vercel.md`)
 
 ### Auth & confianza
@@ -42,17 +42,17 @@
 - [ ] Recibo PDF/imagen compartible
 - [ ] Sync offline cola real en mobile
 
-### Libreta
-- [ ] UX libreta simplificada para comerciantes
-- [ ] Recibos fiado imprimibles
-- [ ] Disputa libreta con mediador
+### Deuda técnica (follow-up calidad)
+- [ ] Troceo CSS monolítico (`home-noir`, `sovereign`, …) / CSS modules
+- [ ] Home + marketplace como Server Components + islas cliente
+- [ ] Partir ficheros >600 líneas (`admin.service`, pantallas móvil/web)
+- [ ] Adopción opcional de `@lefrig/ui` en admin (hoy CSS-only; paquete documentado web-only)
 
 ## Fase 2 — Expansión multi-campamento (6-10 semanas)
 
 - [ ] Transporte: matching conductor-solicitud
 - [ ] Traer de Tindouf: flujo completo con tracking
 - [ ] Diáspora: integración pago manual verificado
-- [ ] Vouchers ONG: QR offline validation
 - [ ] Empleo: alertas por campamento
 - [ ] Necesidades: SmartMatching v1 (reglas, no ML)
 - [ ] Comunidad: moderación por campamento

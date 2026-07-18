@@ -4,20 +4,16 @@ import type { NextRequest } from 'next/server';
 import { isClerkConfigured } from '@/lib/clerk-config';
 
 /**
- * Rutas públicas o con gate en cliente.
- * No usar auth.protect() en hub de cuenta: el edge a veces no ve la sesión
- * mientras el cliente sí → bucle /sign-in «Redirigiendo…».
+ * Rutas públicas en el edge.
+ * Hub protegido (/me, /orders, /cash, /messages) requiere auth cuando Clerk está activo.
+ * Marketplace/search siguen públicos; cliente + API siguen aplicando auth en mutaciones.
  */
 const isPublicRoute = createRouteMatcher([
   '/',
   '/sign-in(.*)',
   '/sign-up(.*)',
-  '/me(.*)',
   '/notifications(.*)',
-  '/messages(.*)',
-  '/orders(.*)',
   '/favorites(.*)',
-  '/cash(.*)',
   '/disputes(.*)',
   '/diaspora(.*)',
   '/search(.*)',
@@ -30,6 +26,10 @@ const isPublicRoute = createRouteMatcher([
   '/needs(.*)',
   '/community(.*)',
   '/jobs(.*)',
+  '/legal(.*)',
+  '/robots.txt',
+  '/sitemap.xml',
+  '/sitemap(.*)',
 ]);
 
 const protectedMiddleware = clerkMiddleware(async (auth, request) => {

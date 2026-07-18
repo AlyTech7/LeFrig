@@ -61,7 +61,9 @@ export class AuthService {
     if (!otp) throw new UnauthorizedException('OTP no válido o expirado');
 
     const mockCode = this.config.get('OTP_MOCK_CODE', '123456');
-    const valid = code === mockCode || (await bcrypt.compare(code, otp.codeHash));
+    const allowMockBypass =
+      process.env.NODE_ENV !== 'production' && Boolean(mockCode) && code === mockCode;
+    const valid = allowMockBypass || (await bcrypt.compare(code, otp.codeHash));
     if (!valid) throw new UnauthorizedException('Código OTP incorrecto');
 
     await this.prisma.otpCode.update({ where: { id: otp.id }, data: { usedAt: new Date() } });

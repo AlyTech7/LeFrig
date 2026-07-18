@@ -49,7 +49,15 @@ export class CommunityService {
       this.storage.assertOwnedImageUrls(data.images, authorId);
     }
     return this.prisma.communityPost.create({
-      data: { authorId, ...data, images: data.images ?? [] },
+      data: {
+        authorId,
+        campId: data.campId,
+        postType: data.postType,
+        title: data.title,
+        content: data.content,
+        images: data.images ?? [],
+        isPinned: false,
+      },
       include: { camp: true },
     });
   }

@@ -12,6 +12,7 @@ import { AppIcon, type AppIconName } from '@/components/AppIcon';
 import { IconBell, LefrigBrand, LefrigMark } from '@/components/LefrigMark';
 import { useT } from '@/lib/locale';
 import { isClerkEnabled } from '@/lib/clerk';
+import { useAuthFetch } from '@/lib/auth-fetch';
 
 type NavIcon = AppIconName;
 
@@ -210,7 +211,9 @@ function CrownPublish() {
 export function SovereignHeader() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  const [unread, setUnread] = useState(0);
   const t = useT();
+  const { authFetch, isSignedIn, isLoaded } = useAuthFetch();
   const onMarketplace =
     pathname.startsWith('/marketplace') && !pathname.includes('/create');
 
@@ -220,6 +223,24 @@ export function SovereignHeader() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) {
+      setUnread(0);
+      return;
+    }
+    let cancelled = false;
+    authFetch<unknown[]>('/notifications?unreadOnly=true')
+      .then((rows) => {
+        if (!cancelled) setUnread(Array.isArray(rows) ? rows.length : 0);
+      })
+      .catch(() => {
+        if (!cancelled) setUnread(0);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authFetch, isLoaded, isSignedIn, pathname]);
 
   return (
     <header
@@ -252,7 +273,7 @@ export function SovereignHeader() {
           </Link>
           <Link href="/notifications" className="sv-crown__icon sv-crown__icon--bell" aria-label={t('nav.notifications')}>
             <IconBell size={17} />
-            <i className="sv-crown__dot" aria-hidden />
+            {unread > 0 ? <i className="sv-crown__dot" aria-hidden /> : null}
           </Link>
           <CrownAuth />
         </div>

@@ -30,7 +30,13 @@ export default function RegisterShopScreen() {
   const { authFetch, syncUser, isSignedIn } = useAuthApi();
   const [camps, setCamps] = useState<CampSummary[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    name: string;
+    description: string;
+    phone: string;
+    campId: string;
+    acceptsCash: boolean;
+  }>({
     name: '',
     description: '',
     phone: DEFAULT_PHONE_COUNTRY.dial,

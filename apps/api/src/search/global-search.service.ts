@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import {
+  DEFAULT_CURRENCY,
   TRANSPORT_HUBS,
   resolveListingCategoryFromQuery,
   resolveServiceCategoryFromQuery,
@@ -340,13 +341,13 @@ export class GlobalSearchService {
 
   private async searchListings(q: string, take: number): Promise<GlobalSearchHit[]> {
     if (this.meili.isConfigured()) {
-      const hits = await this.meili.search('listings', q, {
+      const result = await this.meili.search('listings', q, {
         limit: take,
         filter: "status = 'active'",
         timeoutMs: 2000,
       });
-      if (hits?.length) {
-        const ids = hits.map((h) => String(h.id));
+      if (result?.hits?.length) {
+        const ids = result.hits.map((h) => String(h.id));
         const rows = await this.prisma.listing.findMany({
           where: { id: { in: ids }, status: 'active' },
           select: {
@@ -364,7 +365,7 @@ export class GlobalSearchService {
           type: 'listing' as const,
           id: l.id,
           title: l.title,
-          subtitle: [l.category?.nameEs, l.camp?.nameEs, `${Number(l.price)} MRU`]
+          subtitle: [l.category?.nameEs, l.camp?.nameEs, `${Number(l.price)} ${DEFAULT_CURRENCY}`]
             .filter(Boolean)
             .join(' · '),
           href: `/marketplace/${l.id}`,
@@ -402,7 +403,7 @@ export class GlobalSearchService {
       type: 'listing' as const,
       id: l.id,
       title: l.title,
-      subtitle: [l.category?.nameEs, l.camp?.nameEs, `${Number(l.price)} MRU`]
+      subtitle: [l.category?.nameEs, l.camp?.nameEs, `${Number(l.price)} ${DEFAULT_CURRENCY}`]
         .filter(Boolean)
         .join(' · '),
       href: `/marketplace/${l.id}`,

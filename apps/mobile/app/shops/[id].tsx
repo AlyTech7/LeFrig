@@ -72,7 +72,7 @@ export default function ShopDetailScreen() {
         method: 'POST',
         body: JSON.stringify({
           shopId: shop!.id,
-          items: products.map((p) => ({ name: p.name, quantity: 1, price: Number(p.price) })),
+          items: products.map((p) => ({ productId: p.id, quantity: 1 })),
           paymentMethod: 'cash',
           notes: 'Pedido desde mobile Lefrig',
         }),

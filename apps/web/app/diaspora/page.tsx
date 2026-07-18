@@ -1,5 +1,6 @@
-import { notFound } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 
+/** Diáspora vive en flujos de tienda/pedidos; la ruta legacy redirige. */
 export default function DiasporaPage() {
-  notFound();
+  permanentRedirect('/shops');
 }

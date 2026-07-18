@@ -29,6 +29,9 @@ ENV NODE_ENV=production
 RUN npm install -g prisma@6.19.3
 
 COPY --from=builder /prod/api ./
+RUN chown -R node:node /app
+
+USER node
 
 EXPOSE 3001
 
