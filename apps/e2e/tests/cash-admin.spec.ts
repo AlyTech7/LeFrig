@@ -6,14 +6,10 @@ const webUrl = process.env.WEB_URL ?? 'http://localhost:3000';
 const adminUrl = process.env.ADMIN_URL ?? 'http://localhost:3002';
 
 test.describe('Cash PIN flow (API)', () => {
-  test('crear acuerdo + confirmar PIN bilateral', async ({ request }) => {
+  test('crear acuerdo + confirmar PIN bilateral + recibo', async ({ request }) => {
     const buyerToken = await legacyLogin(request, apiUrl, '+213555222222');
     const sellerToken = await legacyLogin(request, apiUrl, '+213555333333');
 
-    const sellerMe = await request.get(`${apiUrl}/auth/me`, {
-      headers: { Authorization: `Bearer ${sellerToken}` },
-    });
-    // /auth/me may not exist — resolve seller id via sync
     const sellerSync = await request.post(`${apiUrl}/auth/sync`, {
       headers: { Authorization: `Bearer ${sellerToken}` },
     });
@@ -59,6 +55,21 @@ test.describe('Cash PIN flow (API)', () => {
     expect(sellerConfirm.ok()).toBeTruthy();
     const done = (await sellerConfirm.json()) as { fullyConfirmed?: boolean };
     expect(done.fullyConfirmed).toBe(true);
+
+    const receipt = await request.get(`${apiUrl}/cash/receipt/${agreement.operationCode}`, {
+      headers: { Authorization: `Bearer ${buyerToken}` },
+    });
+    expect(receipt.ok()).toBeTruthy();
+    const body = (await receipt.json()) as {
+      operationCode?: string;
+      amount?: number;
+      shareText?: string;
+      receiptId?: string;
+    };
+    expect(body.operationCode).toBe(agreement.operationCode);
+    expect(body.amount).toBe(1500);
+    expect(body.receiptId).toBeTruthy();
+    expect(body.shareText).toContain(agreement.operationCode);
   });
 });
 

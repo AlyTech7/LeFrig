@@ -61,8 +61,8 @@ describe('createOrderSchema', () => {
     });
   });
 
-  it('rechaza fiado y voucher en pedidos nuevos', () => {
-    for (const paymentMethod of ['fiado', 'voucher'] as const) {
+  it('rechaza fiado, voucher y transferencia manual en pedidos nuevos', () => {
+    for (const paymentMethod of ['fiado', 'voucher', 'manual_transfer'] as const) {
       expect(() =>
         createOrderSchema.parse({
           shopId: '550e8400-e29b-41d4-a716-446655440000',

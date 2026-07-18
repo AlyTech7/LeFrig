@@ -117,7 +117,7 @@ export const createOrderSchema = z.object({
     )
     .min(1)
     .max(50),
-  paymentMethod: z.enum(['cash', 'cash_on_delivery', 'manual_transfer']),
+  paymentMethod: z.enum(['cash', 'cash_on_delivery']),
   beneficiaryId: z.string().uuid().optional(),
   notes: z.string().max(500).optional(),
 });

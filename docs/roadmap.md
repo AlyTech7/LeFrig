@@ -2,6 +2,8 @@
 
 ## Producción piloto — checklist operativa
 
+Ver runbook detallado: [`docs/production-pilot.md`](./production-pilot.md).
+
 Código de seguridad/calidad (B0–B3) está en `master`. Lo que falta para llamar “producción” de verdad es casi todo **operativo**:
 
 ### Bloqueantes absolutos
@@ -13,11 +15,11 @@ Código de seguridad/calidad (B0–B3) está en `master`. Lo que falta para llam
 ### Decisión de alcance (recomendado)
 
 - [x] **Piloto = web mobile-first** (ya desplegable). App nativa (EAS/`eas.json`, FCM real, expo-updates RTL) → **fase 2**, no bloquea lanzar.
-- [ ] UI no promete flujos mock: pago manual diáspora y push FCM son stubs; no ofrecerlos en copy del piloto.
+- [x] UI no promete flujos mock: copy/legal sin fiado/vouchers/diáspora; admin `/diaspora` redirige; push móvil off (`EXPO_PUBLIC_ENABLE_PUSH`); pedidos sin `manual_transfer`.
 
 ### Importante, no bloqueante para piloto
 
-- [ ] E2E cash completo (crear → PIN bilateral → recibo) además del smoke actual
+- [x] E2E cash completo (crear → PIN bilateral → recibo) en `apps/e2e/tests/cash-admin.spec.ts`
 - [ ] Plan de escala (hoy `basic-xxs`; subir instancia si el piloto tira)
 - [ ] Meilisearch / Redis en prod si el volumen lo pide (ver `pilot-infra.md`)
 
