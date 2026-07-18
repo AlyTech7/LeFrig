@@ -1683,3 +1683,29 @@ body.lf-rtl .mkt-toolbar__search,
 body.lf-rtl .sv-dock--bottom {
   direction: rtl;
 }
+
+/* Clerk UserButton — contraste forzado (portal fuera del árbol local) */
+.cl-userButtonPopoverCard,
+.cl-userButtonPopoverMain {
+  background: #faf8f4 !important;
+  color: #1a1612 !important;
+}
+
+.cl-userButtonPopoverActionButton,
+.cl-userButtonPopoverCustomItemButton,
+.cl-userButtonPopoverActionButtonText,
+.cl-menuItem,
+.cl-userPreviewMainIdentifierText,
+.cl-userPreviewSecondaryIdentifier__userButton {
+  color: #1a1612 !important;
+}
+
+.cl-userButtonPopoverActionButtonIcon,
+.cl-userButtonPopoverCustomItemButton svg {
+  color: rgba(26, 22, 18, 0.55) !important;
+}
+
+.cl-userButtonPopoverFooter {
+  background: #f3efe8 !important;
+}
+

@@ -34,6 +34,22 @@ const clerkAppearance = {
       border: '1px solid rgba(255,255,255,0.15)',
       background: 'rgba(255,255,255,0.05)',
     },
+    /* UserButton popover: contraste legible (el tema oscuro global lo dejaba ilegible) */
+    userButtonPopoverCard: {
+      background: '#faf8f4',
+      color: '#1a1612',
+      border: '1px solid rgba(26, 22, 18, 0.12)',
+    },
+    userButtonPopoverMain: {
+      background: '#faf8f4',
+      color: '#1a1612',
+    },
+    userButtonPopoverActionButton: { color: '#1a1612' },
+    userButtonPopoverActionButtonText: { color: '#1a1612' },
+    userButtonPopoverActionButtonIcon: { color: 'rgba(26, 22, 18, 0.55)' },
+    userButtonPopoverCustomItemButton: { color: '#1a1612' },
+    userPreviewMainIdentifier: { color: '#1a1612' },
+    userPreviewSecondaryIdentifier: { color: 'rgba(26, 22, 18, 0.62)' },
   },
 };
 
