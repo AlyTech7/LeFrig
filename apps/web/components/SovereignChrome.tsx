@@ -215,6 +215,8 @@ export function SovereignHeader() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const t = useT();
+  const onMarketplace =
+    pathname.startsWith('/marketplace') && !pathname.includes('/create');
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -224,7 +226,9 @@ export function SovereignHeader() {
   }, []);
 
   return (
-    <header className={`sv-crown ${scrolled ? 'sv-crown--scrolled' : ''}`}>
+    <header
+      className={`sv-crown ${scrolled ? 'sv-crown--scrolled' : ''} ${onMarketplace ? 'sv-crown--mkt' : ''}`}
+    >
       <div className="sv-crown__gold-rim" aria-hidden />
       <div className="sv-crown__deck">
         <div className="sv-crown__brand-row">
@@ -242,7 +246,7 @@ export function SovereignHeader() {
           </span>
         </div>
 
-        <CrownSearch />
+        <CrownSearch defaultScope={onMarketplace ? 'market' : 'all'} />
 
         <div className="sv-crown__actions">
           <LanguageSwitcher compact />
