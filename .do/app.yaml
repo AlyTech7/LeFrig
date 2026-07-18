@@ -53,6 +53,9 @@ services:
       - key: CLERK_SECRET_KEY
         scope: RUN_TIME
         type: SECRET
+      - key: ADMIN_SESSION_SECRET
+        scope: RUN_TIME
+        type: SECRET
       - key: CLERK_WEBHOOK_SECRET
         scope: RUN_TIME
         type: SECRET

@@ -11,7 +11,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { ClerkService, type AuthUserPayload } from '../../modules/auth/clerk.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { JwtPayload } from '@lefrig/shared';
-import { isLegacyAuthEnabled, resolveJwtSecret } from '../config/production-security';
+import { isLegacyAuthEnabled, resolveJwtSecret, resolveAdminSessionSecret } from '../config/production-security';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -93,7 +93,7 @@ export class AuthGuard implements CanActivate {
 
   /** Valida token HMAC emitido por apps/admin tras verifyPassword server-side. */
   private async resolveAdminPanelToken(token: string): Promise<AuthUserPayload | null> {
-    const secretKey = this.config.get<string>('CLERK_SECRET_KEY');
+    const secretKey = resolveAdminSessionSecret(this.config);
     if (!secretKey) return null;
 
     const [body, sig] = token.split('.');

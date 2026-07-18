@@ -46,7 +46,7 @@ export class ServicesService {
       where: { id },
       include: {
         category: true,
-        provider: { select: { id: true, displayName: true, phone: true, reputationScore: true } },
+        provider: { select: { id: true, displayName: true, reputationScore: true } },
         camps: { include: { camp: true } },
       },
     });

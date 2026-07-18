@@ -387,7 +387,7 @@ async function main() {
 
   // Services
   const serviceCat = await prisma.category.findFirst({ where: { slug: 'service-electrician' } });
-  const service = await prisma.service.create({
+  await prisma.service.create({
     data: {
       providerId: users.seller.id,
       categoryId: serviceCat!.id,
@@ -402,7 +402,7 @@ async function main() {
   });
 
   // Transport
-  const transport = await prisma.transportRequest.create({
+  await prisma.transportRequest.create({
     data: {
       requesterId: users.seller.id,
       type: 'shared_ride',

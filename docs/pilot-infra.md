@@ -58,13 +58,13 @@ Ver [staging-setup.md](./staging-setup.md). Spec DO: `.do/app.staging.yaml`.
 
 ## Secrets admin
 
-- `ADMIN_SESSION_SECRET` — firma cookie de sesión del panel (obligatorio en producción; en non-prod puede caer a `CLERK_SECRET_KEY`).
+- `ADMIN_SESSION_SECRET` — mismo valor en **admin (Vercel)** y **API (DigitalOcean)** para firmar/verificar tokens del proxy. Obligatorio en producción en admin; la API lo prefiere y cae a `CLERK_SECRET_KEY` solo si falta.
 - `NEXT_PUBLIC_API_URL` — obligatorio en producción admin/web (sin fallback a host hardcodeado).
 
 ## Pendiente humano
 
 - Crear app DO staging + Vercel staging + DNS
 - Añadir `REDIS_URL` en prod DO
-- Configurar `ADMIN_SESSION_SECRET` en Vercel admin
+- Configurar `ADMIN_SESSION_SECRET` en Vercel admin **y** en el panel DO de la API (mismo valor)
 - Configurar `SENTRY_DSN` en DO y Vercel
 - GitHub Watch en repo para alertas uptime
