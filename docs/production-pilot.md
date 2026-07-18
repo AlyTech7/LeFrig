@@ -28,12 +28,24 @@ Repetir el drill sobre **prod** solo si quieres validar el cluster grande (cuest
 
 ## 2. Clerk live + SMS +213 (bloqueante)
 
-1. Dashboard Clerk → instancia **Production**.
-2. Dominios: `lefrig.com`, `www.lefrig.com`, `admin.lefrig.com` (y previews si aplica).
-3. Copiar `pk_live_*` / `sk_live_*` a Vercel (web + admin) y `CLERK_SECRET_KEY` a DigitalOcean API.
-4. Webhook `user.*` → `https://<API_PUBLIC_URL>/auth/clerk/webhook` con `CLERK_WEBHOOK_SECRET`.
-5. Phone auth: proveedor SMS configurado; **probar con 2–3 números reales +213 en Tindouf** (entrega, latencia, OTP usable).
-6. `CLERK_AUTHORIZED_PARTIES` y `CORS_ORIGINS` en DO deben listar exactamente los orígenes finales HTTPS.
+### Estado 2026-07-18
+- Instancia **production** OK; dominio primario `lefrig.com` (`clerk.lefrig.com`, `accounts.lefrig.com`).
+- Orígenes: `www.lefrig.com`, `lefrig.com`, `admin.lefrig.com`, `staging.lefrig.com`.
+- CLI: `npx clerk login` → `alyelyar@alum.us.es`.
+- `sk_live` sincronizado en DO (prod+staging) y Vercel (`lefrig`, `lefrig-admin`).
+
+### SMS Argelia / Mauritania — bloqueo de plan
+La API `/instance/communication` tiene **DZ** y **MR** en `blocked_country_codes`. Quitarlos responde:
+
+`sms_country_removal_restricted` — *Contact support to activate these countries* / upgraded plan.
+
+**Acción:** en Clerk Dashboard → Support / Billing, pedir activar SMS para **DZ** (y **MR** si aplica). Hasta entonces el piloto debe autenticar por **email/OAuth**, no OTP SMS +213.
+
+### Webhook
+Portal Svix (one-time): generar con `POST /v1/webhooks/svix_url` o Dashboard → Webhooks.
+Endpoint: `https://whale-app-xpe4g.ondigitalocean.app/auth/clerk/webhook`  
+Eventos: `user.created`, `user.updated`, `user.deleted` (mínimo).  
+Copiar Signing Secret → `CLERK_WEBHOOK_SECRET` en DO.
 
 ## 3. `ADMIN_SESSION_SECRET` (bloqueante de sesión admin)
 
