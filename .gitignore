@@ -29,6 +29,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Local ops scratch (pg client for DO probes)
+scripts-tmp/
 npm-debug.log*
 pnpm-debug.log*
 

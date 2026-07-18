@@ -8,7 +8,7 @@ Código de seguridad/calidad (B0–B3) está en `master`. Lo que falta para llam
 
 ### Bloqueantes absolutos
 
-- [ ] **Backup DB verificado** + al menos una restauración de prueba (DO managed DB: backups + restore drill). Sin esto, un fallo borra marketplace, cash y confianza.
+- [x] **Backup DB verificado** (2026-07-18): clusters DO con backups diarios ~7 días; restore drill `lefrig-restore-drill-20260718` desde staging (`2026-07-18 07:26:11 UTC`) → tablas LeFrig OK (users/listings/cash/camps); cluster temporal destruido. Prod (`db-pgsql-fra1-32508`) online con backups diarios.
 - [ ] **Clerk producción** (`pk_live` / `sk_live`, dominio, webhook → API prod con secreto). Prueba real de SMS a **+213** en Tindouf (entregabilidad regional; CI no la detecta).
 - [ ] **`ADMIN_SESSION_SECRET` idéntico** en Vercel (admin) y DigitalOcean (API); `CORS_ORIGINS` / `CLERK_AUTHORIZED_PARTIES` con dominios finales.
 

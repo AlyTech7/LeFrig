@@ -2,19 +2,29 @@
 
 Checklist accionable. El código del piloto web está en `master`; lo bloqueante es operativo.
 
-## 1. Backup Postgres (bloqueante)
+## 1. Backup Postgres (bloqueante) — ✅ hecho 2026-07-18
 
-Si la DB es **DigitalOcean Managed PostgreSQL**:
+| Cluster | Uso | Backups |
+|---------|-----|---------|
+| `db-pgsql-fra1-32508` (`5fd9dfe4-…`) | **Prod** → app `lefrig-api` | Diarios (p. ej. 11–18 jul 2026) |
+| `db-postgresql-fra1-62172` (`6bd19a5b-…`) | **Staging** → app `lefrig-api-staging` (DB `lefrig_staging`) | Diarios |
 
-1. DO → Databases → tu cluster → **Settings → Backups**: activar retención ≥ 7 días.
-2. Crear un **backup manual** (“Create backup”) y anotar timestamp.
-3. **Restore drill** (staging o cluster temporal):
-   - Restore from backup → nuevo cluster o fork.
-   - Apuntar `DATABASE_URL` de un entorno de prueba al restore.
-   - `pnpm --filter @lefrig/api exec prisma migrate status` + smoke `GET /health` + un `SELECT count(*) FROM "User"`.
-4. Documentar en el canal del equipo: fecha del drill, duración, OK/KO.
+**Restore drill:** fork `lefrig-restore-drill-20260718` desde backup staging `2026-07-18 07:26:11 +0000 UTC`.
+Verificado: DB `lefrig_staging` con schema Prisma (53 tablas public) y filas (`users`, `listings`, `cash_agreements`, `camps`). Cluster temporal **destruido** tras la prueba.
 
-Sin restore probado al menos una vez, no llamar “producción”.
+Comandos de referencia:
+
+```bash
+doctl databases backups <cluster-id>
+doctl databases fork lefrig-restore-drill-YYYYMMDD \
+  --restore-from-cluster-id <staging-or-prod-id> \
+  --restore-from-timestamp "YYYY-MM-DD HH:MM:SS +0000 UTC" \
+  --wait
+# verificar schema/filas, luego:
+doctl databases delete <fork-id> --force
+```
+
+Repetir el drill sobre **prod** solo si quieres validar el cluster grande (cuesta un nodo extra mientras exista).
 
 ## 2. Clerk live + SMS +213 (bloqueante)
 
