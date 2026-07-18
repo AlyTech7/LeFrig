@@ -46,6 +46,18 @@ export function resolveJwtSecret(config: ConfigService): string {
   return secret || 'change-me';
 }
 
+/**
+ * Mismo secreto que apps/admin (ADMIN_SESSION_SECRET).
+ * Fallback a CLERK_SECRET_KEY solo fuera de producción o si aún no hay secreto dedicado.
+ */
+export function resolveAdminSessionSecret(config: ConfigService): string | null {
+  const dedicated = (config.get<string>('ADMIN_SESSION_SECRET') ?? '').trim();
+  if (dedicated) return dedicated;
+  const clerk = (config.get<string>('CLERK_SECRET_KEY') ?? '').trim();
+  if (clerk) return clerk;
+  return null;
+}
+
 /** Lanza al arrancar si los secretos de producción no son válidos. */
 export function assertProductionSecrets(config: ConfigService): void {
   if (!isProductionRuntime(config)) return;
