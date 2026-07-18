@@ -83,7 +83,7 @@ function suggestionMatchesScope(s: Suggestion, scope: GlobalSearchScope): boolea
   return true;
 }
 
-export function CrownSearch() {
+export function CrownSearch({ defaultScope = 'all' }: { defaultScope?: GlobalSearchScope }) {
   const t = useT();
   const { dir } = useLocale();
   const router = useRouter();
@@ -95,7 +95,7 @@ export function CrownSearch() {
   const suggestRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const [query, setQuery] = useState('');
-  const [scope, setScope] = useState<GlobalSearchScope>('all');
+  const [scope, setScope] = useState<GlobalSearchScope>(defaultScope);
   const [focused, setFocused] = useState(false);
   const [scopeOpen, setScopeOpen] = useState(false);
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
@@ -119,6 +119,10 @@ export function CrownSearch() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    setScope(defaultScope);
+  }, [defaultScope]);
 
   useEffect(() => {
     if (focused || query) return;

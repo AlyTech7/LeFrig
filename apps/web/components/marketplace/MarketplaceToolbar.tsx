@@ -1,6 +1,6 @@
 'use client';
 
-import type { FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import {
   getListingAttributeFilters,
   hasActiveAttributeFilters,
@@ -45,9 +45,14 @@ export function MarketplaceToolbar({
   resultCount,
 }: Props) {
   const t = useT();
-  const showAttrFilters = category && getListingAttributeFilters(category).length > 0;
-  const hasFilters =
-    !!query.trim() || !!campId || !!category || hasActiveAttributeFilters(attrFilters);
+  const showAttrFilters = Boolean(category && getListingAttributeFilters(category).length > 0);
+  const hasAttrActive = hasActiveAttributeFilters(attrFilters);
+  const hasFilters = !!query.trim() || !!campId || !!category || hasAttrActive;
+  const [attrsOpen, setAttrsOpen] = useState(false);
+
+  useEffect(() => {
+    setAttrsOpen(false);
+  }, [category]);
 
   const chips: ActiveChip[] = [];
   if (categoryLabel) {
@@ -97,6 +102,24 @@ export function MarketplaceToolbar({
     onSearch();
   };
 
+  const campSelect = (
+    <label className="mkt-toolbar__camp">
+      <AppIcon name="map-pin" size={15} color="#0d9488" />
+      <select
+        value={campId}
+        onChange={(e) => onCampChange(e.target.value)}
+        aria-label={t('marketplace.allCamps')}
+      >
+        <option value="">{t('marketplace.allCamps')}</option>
+        {camps.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.nameEs}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+
   return (
     <div className="mkt-toolbar">
       <form className="mkt-toolbar__bar" onSubmit={handleSubmit} role="search">
@@ -126,30 +149,51 @@ export function MarketplaceToolbar({
         </label>
 
         <span className="mkt-toolbar__sep" aria-hidden />
-
-        <label className="mkt-toolbar__camp">
-          <AppIcon name="map-pin" size={15} color="#0d9488" />
-          <select
-            value={campId}
-            onChange={(e) => onCampChange(e.target.value)}
-            aria-label={t('marketplace.allCamps')}
-          >
-            <option value="">{t('marketplace.allCamps')}</option>
-            {camps.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nameEs}
-              </option>
-            ))}
-          </select>
-        </label>
-
+        {campSelect}
         <button type="submit" className="mkt-toolbar__submit" aria-label={t('common.search')}>
           <AppIcon name="search" size={18} color="#1a1612" />
         </button>
       </form>
 
+      <div className="mkt-toolbar__strip">
+        {campSelect}
+        {showAttrFilters ? (
+          <button
+            type="button"
+            className={
+              attrsOpen || hasAttrActive
+                ? 'mkt-toolbar__filter-btn mkt-toolbar__filter-btn--on'
+                : 'mkt-toolbar__filter-btn'
+            }
+            aria-expanded={attrsOpen}
+            onClick={() => setAttrsOpen((o) => !o)}
+          >
+            <AppIcon name="sliders" size={14} color="currentColor" />
+            {t('common.filters')}
+            {hasAttrActive ? <i className="mkt-toolbar__filter-dot" aria-hidden /> : null}
+          </button>
+        ) : null}
+        {resultCount !== undefined ? (
+          <span className="mkt-toolbar__count mkt-toolbar__count--strip">
+            {resultCount}{' '}
+            {t(resultCount === 1 ? 'common.results' : 'common.results_plural', {
+              count: resultCount,
+            })}
+          </span>
+        ) : null}
+        {hasFilters ? (
+          <button type="button" className="mkt-toolbar__clear" onClick={onClearAll}>
+            {t('common.clearAll')}
+          </button>
+        ) : null}
+      </div>
+
       {showAttrFilters ? (
-        <div className="mkt-toolbar__attrs">
+        <div
+          className={
+            attrsOpen ? 'mkt-toolbar__attrs mkt-toolbar__attrs--open' : 'mkt-toolbar__attrs'
+          }
+        >
           <ListingAttributeFilters
             categorySlug={category}
             values={attrFilters}

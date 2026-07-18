@@ -223,18 +223,22 @@ export function MarketplaceHub() {
             {t('marketplace.publishListing')}
           </Link>
         </div>
-
-        {usingDemo && <p className="mkt-demo">{t('common.demo')}</p>}
-        {apiError && (
-          <p
-            className="mkt-demo"
-            role="alert"
-            style={{ borderColor: 'rgba(196, 92, 58, 0.35)', color: 'var(--sv-terracotta, #c45c3a)' }}
-          >
-            {t('errors.apiUnavailable')}
-          </p>
-        )}
       </header>
+
+      {(usingDemo || apiError) && (
+        <div className="mkt-status">
+          {usingDemo && <p className="mkt-demo">{t('common.demo')}</p>}
+          {apiError && (
+            <p
+              className="mkt-demo"
+              role="alert"
+              style={{ borderColor: 'rgba(196, 92, 58, 0.35)', color: 'var(--sv-terracotta, #c45c3a)' }}
+            >
+              {t('errors.apiUnavailable')}
+            </p>
+          )}
+        </div>
+      )}
 
       <section className="mkt-cats" aria-label={t('marketplace.exploreCategories')}>
         <div className="mkt-rail" role="listbox" aria-label={t('marketplace.exploreCategories')} dir={dir}>
@@ -273,6 +277,14 @@ export function MarketplaceHub() {
               </button>
             </div>
             <div className="mkt-subcats__row" dir={dir}>
+              <button
+                type="button"
+                className="mkt-chip mkt-chip--close"
+                onClick={collapseDept}
+                aria-label={t('marketplace.showAll')}
+              >
+                <AppIcon name="x" size={14} color="currentColor" />
+              </button>
               {openDept.items.map((item) => {
                 const isActive = category === item.slug;
                 const label = localizedMarketplaceItem(item.slug, locale);
