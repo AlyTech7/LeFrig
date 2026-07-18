@@ -8,9 +8,9 @@ Código de seguridad/calidad (B0–B3) está en `master`. Lo que falta para llam
 
 ### Bloqueantes absolutos
 
-- [x] **Backup DB verificado** (2026-07-18): clusters DO con backups diarios ~7 días; restore drill `lefrig-restore-drill-20260718` desde staging (`2026-07-18 07:26:11 UTC`) → tablas LeFrig OK (users/listings/cash/camps); cluster temporal destruido. Prod (`db-pgsql-fra1-32508`) online con backups diarios.
-- [ ] **Clerk producción** — instancia ya `production` con `sk_live`/`pk_live` en Vercel (web+admin) y orígenes `lefrig.com` / `admin.lefrig.com`. Pendiente: habilitar **Phone/SMS** en Dashboard (API dice `feature_not_enabled`) y probar +213; confirmar webhook Svix → `https://whale-app-xpe4g.ondigitalocean.app/auth/clerk/webhook` y que `CLERK_WEBHOOK_SECRET` en DO coincida.
-- [x] **`ADMIN_SESSION_SECRET` idéntico** — generado y puesto en DO API (prod+staging) y Vercel `lefrig-admin` (Production); admin redeployed → `admin.lefrig.com` (2026-07-18).
+- [x] **Backup DB verificado** (2026-07-18): clusters DO con backups diarios ~7 días; restore drill OK; cluster temporal destruido.
+- [~] **Clerk producción** — instancia `production`, dominio `lefrig.com` / `clerk.lefrig.com`, CLI logueada (`alyelyar@alum.us.es`), `sk_live` sincronizado en DO+Vercel. **SMS +213 bloqueado por plan Clerk** (`DZ`/`MR` en blocklist; hace falta upgrade/support). Webhook: configurar en portal Svix → `…/auth/clerk/webhook`.
+- [x] **`ADMIN_SESSION_SECRET` idéntico** — DO API + Vercel `lefrig-admin`; admin redeployed.
 
 ### Decisión de alcance (recomendado)
 
