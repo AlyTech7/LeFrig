@@ -30,8 +30,44 @@ export function CrownAuth() {
         <UserButton
           afterSignOutUrl="/"
           appearance={{
+            baseTheme: undefined,
+            variables: {
+              colorBackground: '#faf8f4',
+              colorText: '#1a1612',
+              colorTextSecondary: 'rgba(26, 22, 18, 0.62)',
+              colorNeutral: '#1a1612',
+              colorInputText: '#1a1612',
+              borderRadius: '14px',
+            },
             elements: {
               avatarBox: { width: 34, height: 34 },
+              userButtonPopoverCard: {
+                background: '#faf8f4',
+                border: '1px solid rgba(26, 22, 18, 0.12)',
+                boxShadow: '0 16px 48px rgba(26, 22, 18, 0.14)',
+              },
+              userButtonPopoverMain: {
+                background: '#faf8f4',
+                color: '#1a1612',
+              },
+              userButtonPopoverActionButton: {
+                color: '#1a1612',
+              },
+              userButtonPopoverActionButtonText: {
+                color: '#1a1612',
+              },
+              userButtonPopoverActionButtonIcon: {
+                color: 'rgba(26, 22, 18, 0.55)',
+              },
+              userButtonPopoverCustomItemButton: {
+                color: '#1a1612',
+              },
+              userButtonPopoverFooter: {
+                background: '#f3efe8',
+                borderTop: '1px solid rgba(26, 22, 18, 0.08)',
+              },
+              userPreviewMainIdentifier: { color: '#1a1612' },
+              userPreviewSecondaryIdentifier: { color: 'rgba(26, 22, 18, 0.62)' },
             },
           }}
         >
