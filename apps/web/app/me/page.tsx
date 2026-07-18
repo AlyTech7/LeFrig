@@ -192,7 +192,6 @@ export default function MeHubPage() {
             <header className="me-identity">
               <div className="me-identity__avatar" aria-hidden>
                 {hub.user.avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={hub.user.avatarUrl} alt="" />
                 ) : (
                   <span>{hub.user.displayName?.[0]?.toUpperCase() ?? 'ⵣ'}</span>
