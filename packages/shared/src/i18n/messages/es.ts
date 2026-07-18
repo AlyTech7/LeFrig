@@ -110,7 +110,7 @@ const es = {
     footer: 'ⵣ Lefrig · Efectivo · Comunidad saharaui',
     emptyFeaturedTitle: 'Sé el primero en publicar',
     emptyFeaturedSub: 'Anuncia en 30 segundos · efectivo',
-    communityBannerAr: 'مجتمع ليفريغ',
+    communityBannerAr: 'مجتمع لفريغ',
     communityBannerTitle: 'Tu bazar saharaui, en cualquier campamento',
     communityBannerSub: 'Foro · efectivo · sin comisiones',
     forum: 'Foro',

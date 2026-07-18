@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
+import { storageDelete, storageGet, storageSet } from '@/lib/safeStorage';
 
 const KEY = 'lefrig_new_cash';
 
@@ -12,11 +12,11 @@ export type PendingCashAgreement = {
 };
 
 export async function savePendingCashAgreement(data: PendingCashAgreement): Promise<void> {
-  await SecureStore.setItemAsync(KEY, JSON.stringify(data));
+  await storageSet(KEY, JSON.stringify(data));
 }
 
 export async function loadPendingCashAgreement(): Promise<PendingCashAgreement | null> {
-  const raw = await SecureStore.getItemAsync(KEY);
+  const raw = await storageGet(KEY);
   if (!raw) return null;
   try {
     return JSON.parse(raw) as PendingCashAgreement;
@@ -26,5 +26,5 @@ export async function loadPendingCashAgreement(): Promise<PendingCashAgreement |
 }
 
 export async function clearPendingCashAgreement(): Promise<void> {
-  await SecureStore.deleteItemAsync(KEY);
+  await storageDelete(KEY);
 }
