@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { AppIcon, type AppIconName } from '@/components/AppIcon';
 import { PageBody, PageHero } from '@/components/PageHero';
 import { useAuthFetch } from '@/lib/auth-fetch';
@@ -61,21 +60,39 @@ type Module = {
 export default function MeHubPage() {
   const t = useT();
   const { locale } = useLocale();
-  const router = useRouter();
-  const { authFetch, isSignedIn } = useAuthFetch();
+  const { authFetch, isSignedIn, isLoaded } = useAuthFetch();
   const [hub, setHub] = useState<MeHub | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
+    if (!isLoaded) return;
     if (!isSignedIn) {
-      router.push('/sign-in?redirect_url=/me');
+      setLoading(false);
+      setHub(null);
+      setLoadError(false);
       return;
     }
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(false);
     authFetch<MeHub>('/users/me/hub')
-      .then(setHub)
-      .catch(() => setHub(null))
-      .finally(() => setLoading(false));
-  }, [authFetch, isSignedIn, router]);
+      .then((data) => {
+        if (!cancelled) setHub(data);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setHub(null);
+          setLoadError(true);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authFetch, isLoaded, isSignedIn]);
 
   const campName = hub?.user.camp
     ? locale === 'ar'
@@ -132,6 +149,24 @@ export default function MeHubPage() {
               ? t('me.modules.notificationsSub', { count: hub.stats.unreadNotifications })
               : t('me.modules.notificationsNone'),
         },
+        {
+          href: '/favorites',
+          icon: 'heart',
+          titleKey: 'me.modules.favorites',
+          sub: t('me.modules.favoritesSub'),
+        },
+        {
+          href: '/cash',
+          icon: 'dollar-sign',
+          titleKey: 'me.modules.cash',
+          sub: t('me.modules.cashSub'),
+        },
+        {
+          href: '/shops',
+          icon: 'store',
+          titleKey: 'me.modules.shops',
+          sub: `${t('me.modules.shopsSub')} · ${hub.stats.shops}`,
+        },
       ]
     : [];
 
@@ -139,10 +174,19 @@ export default function MeHubPage() {
     <>
       <PageHero icon="shield" title={t('me.title')} subtitle={t('me.subtitle')} maxWidth={880} />
       <PageBody maxWidth={880}>
-        {loading ? (
+        {!isLoaded || loading ? (
           <p className="me-muted">{t('me.loading')}</p>
+        ) : !isSignedIn ? (
+          <p className="me-muted">
+            {t('me.signInPrompt')}{' '}
+            <Link href="/sign-in?redirect_url=/me" className="me-btn me-btn--ghost">
+              {t('nav.signIn')}
+            </Link>
+          </p>
+        ) : loadError ? (
+          <p className="me-muted">{t('me.loadError')}</p>
         ) : !hub ? (
-          <p className="me-muted">{t('me.signInPrompt')}</p>
+          <p className="me-muted">{t('errors.apiUnavailable')}</p>
         ) : (
           <div className="me-hub">
             <header className="me-identity">

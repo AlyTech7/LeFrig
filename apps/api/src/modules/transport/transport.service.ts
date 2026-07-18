@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ClerkService } from '../auth/clerk.service';
 import {
@@ -202,7 +202,18 @@ export class TransportService {
   async claimAsDriver(tripId: string, driverUserId: string) {
     const profile = await this.prisma.driverProfile.findUnique({ where: { userId: driverUserId } });
     if (!profile?.isVerified) {
-      throw new NotFoundException('Necesitas perfil de conductor verificado');
+      throw new ForbiddenException('Necesitas perfil de conductor verificado');
+    }
+    const trip = await this.prisma.transportRequest.findUnique({ where: { id: tripId } });
+    if (!trip) throw new NotFoundException('Viaje no encontrado');
+    if (trip.requesterId === driverUserId) {
+      throw new ForbiddenException('No puedes aceptar tu propio viaje');
+    }
+    if (trip.driverId) {
+      throw new ForbiddenException('Este viaje ya tiene conductor');
+    }
+    if (trip.status !== 'requested' && trip.status !== 'open') {
+      throw new ForbiddenException('Este viaje no está disponible');
     }
     return this.assignDriver(tripId, driverUserId);
   }

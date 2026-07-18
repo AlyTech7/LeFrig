@@ -13,12 +13,13 @@ type Conversation = {
 };
 
 export default function MessagesPage() {
-  const { authFetch, isSignedIn } = useAuthFetch();
+  const { authFetch, isSignedIn, isLoaded } = useAuthFetch();
   const t = useT();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isLoaded) return;
     if (!isSignedIn) {
       setLoading(false);
       return;
@@ -27,7 +28,17 @@ export default function MessagesPage() {
       .then(setConversations)
       .catch(() => setConversations([]))
       .finally(() => setLoading(false));
-  }, [authFetch, isSignedIn]);
+  }, [authFetch, isLoaded, isSignedIn]);
+
+  if (!isLoaded) {
+    return (
+      <section className="lf-page-hero">
+        <div className="lf-page-hero-inner" style={{ textAlign: 'center' }}>
+          <p className="lf-page-sub">{t('common.loading')}</p>
+        </div>
+      </section>
+    );
+  }
 
   if (!isSignedIn) {
     return (
@@ -37,7 +48,7 @@ export default function MessagesPage() {
             <AppIcon name="message-circle" size={40} color="var(--lf-gold)" />
             <h1 className="lf-page-title" style={{ marginTop: 16 }}>{t('messages.title')}</h1>
             <p className="lf-page-sub">
-              <Link href="/sign-in" style={{ color: 'var(--lf-gold)', fontWeight: 700 }}>
+              <Link href="/sign-in?redirect_url=/messages" style={{ color: 'var(--lf-gold)', fontWeight: 700 }}>
                 {t('nav.signIn')}
               </Link>{' '}
               {t('messages.signInSuffix')}

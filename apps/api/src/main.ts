@@ -8,24 +8,39 @@ import { join } from 'path';
 import { AppModule } from './app.module';
 import { isSwaggerEnabled } from './common/config/production-security';
 
-function parseCorsOrigins(raw: string | undefined): boolean | string[] {
-  if (!raw || raw.trim() === '*') return true;
-  const origins = raw
+function parseCorsOrigins(raw: string | undefined, isProd: boolean): boolean | string[] {
+  const trimmed = raw?.trim();
+  if (isProd) {
+    if (!trimmed || trimmed === '*') {
+      throw new Error(
+        'CORS_ORIGINS must be an explicit comma-separated allowlist in production (refusing * / empty)',
+      );
+    }
+  }
+  if (!trimmed || trimmed === '*') return true;
+  const origins = trimmed
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean);
-  return origins.length > 0 ? origins : true;
+  if (origins.length === 0) {
+    if (isProd) {
+      throw new Error('CORS_ORIGINS parsed to an empty list');
+    }
+    return true;
+  }
+  return origins;
 }
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
   const config = app.get(ConfigService);
+  const isProd = config.get('NODE_ENV') === 'production';
 
   const uploadDir = config.get('UPLOAD_DIR', join(process.cwd(), 'uploads'));
   app.useStaticAssets(uploadDir, { prefix: '/uploads/' });
 
   app.enableCors({
-    origin: parseCorsOrigins(config.get<string>('CORS_ORIGINS')),
+    origin: parseCorsOrigins(config.get<string>('CORS_ORIGINS'), isProd),
     credentials: true,
   });
 

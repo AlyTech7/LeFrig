@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { PageBody, PageHero } from '@/components/PageHero';
 import { useAuthFetch } from '@/lib/auth-fetch';
 import { useT } from '@/lib/locale';
@@ -16,35 +15,70 @@ type OpenTrip = {
   destinationLabel?: string | null;
   originHubSlug?: string | null;
   destinationHubSlug?: string | null;
+  requesterName?: string | null;
+  type?: string;
 };
+
+type PaginatedTrips = { data: OpenTrip[] };
 
 export default function MeDriverPage() {
   const t = useT();
-  const router = useRouter();
-  const { authFetch, isSignedIn } = useAuthFetch();
+  const { authFetch, isSignedIn, isLoaded } = useAuthFetch();
   const [hub, setHub] = useState<MeHub | null>(null);
   const [trips, setTrips] = useState<OpenTrip[]>([]);
+  const [openBoard, setOpenBoard] = useState<OpenTrip[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [claimingId, setClaimingId] = useState<string | null>(null);
+  const [claimMsg, setClaimMsg] = useState('');
 
-  useEffect(() => {
+  const load = useCallback(async () => {
+    if (!isLoaded) return;
     if (!isSignedIn) {
-      router.push('/sign-in?redirect_url=/me/driver');
+      setLoading(false);
+      setHub(null);
       return;
     }
-    Promise.all([
-      authFetch<MeHub>('/users/me/hub'),
-      authFetch<OpenTrip[] | { data: OpenTrip[] }>('/transport/my').catch(() => [] as OpenTrip[]),
-    ])
-      .then(([h, raw]) => {
-        setHub(h);
-        setTrips(Array.isArray(raw) ? raw : raw.data ?? []);
-      })
-      .catch(() => setHub(null))
-      .finally(() => setLoading(false));
-  }, [authFetch, isSignedIn, router]);
+    setLoading(true);
+    setLoadError(false);
+    try {
+      const [h, rawMine, rawOpen] = await Promise.all([
+        authFetch<MeHub>('/users/me/hub'),
+        authFetch<OpenTrip[] | PaginatedTrips>('/transport/my').catch(() => [] as OpenTrip[]),
+        authFetch<PaginatedTrips>('/transport?status=requested&limit=20').catch(() => ({ data: [] as OpenTrip[] })),
+      ]);
+      setHub(h);
+      setTrips(Array.isArray(rawMine) ? rawMine : rawMine.data ?? []);
+      setOpenBoard(Array.isArray(rawOpen) ? rawOpen : rawOpen.data ?? []);
+    } catch {
+      setHub(null);
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [authFetch, isLoaded, isSignedIn]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const claimTrip = async (tripId: string) => {
+    setClaimingId(tripId);
+    setClaimMsg('');
+    try {
+      await authFetch(`/transport/${tripId}/claim`, { method: 'PATCH' });
+      setClaimMsg(t('me.driver.claimSuccess'));
+      await load();
+    } catch (e) {
+      setClaimMsg(e instanceof Error ? e.message : t('me.driver.claimError'));
+    } finally {
+      setClaimingId(null);
+    }
+  };
 
   const status = hub?.driverStatus ?? 'none';
   const driver = hub?.driver;
+  const claimable = status === 'verified' ? openBoard.filter((tr) => tr.status === 'requested' || tr.status === 'open') : [];
 
   return (
     <>
@@ -54,8 +88,17 @@ export default function MeDriverPage() {
           {t('me.driver.backToHub')}
         </Link>
 
-        {loading ? (
+        {!isLoaded || loading ? (
           <p className="me-muted">{t('me.driver.loading')}</p>
+        ) : !isSignedIn ? (
+          <p className="me-muted">
+            {t('me.signInPrompt')}{' '}
+            <Link href="/sign-in?redirect_url=/me/driver" className="me-btn me-btn--ghost">
+              {t('nav.signIn')}
+            </Link>
+          </p>
+        ) : loadError ? (
+          <p className="me-muted">{t('errors.apiUnavailable')}</p>
         ) : (
           <>
             <div className={`me-driver-banner me-driver-banner--${status === 'none' ? '' : status}`.trim()}>
@@ -114,6 +157,38 @@ export default function MeDriverPage() {
                       <li key={r.id}>
                         {r.origin.nameEs} → {r.destination.nameEs}
                         <span style={{ opacity: 0.55, fontWeight: 500 }}> · {r.frequency}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ) : null}
+
+            {status === 'verified' ? (
+              <div className="me-driver-panel">
+                <h3>{t('me.driver.openBoard')}</h3>
+                {claimMsg ? <p className="me-muted">{claimMsg}</p> : null}
+                {claimable.length === 0 ? (
+                  <p className="me-muted">{t('me.driver.noOpenTrips')}</p>
+                ) : (
+                  <ul className="me-route-list">
+                    {claimable.map((tr) => (
+                      <li key={tr.id} style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                        <span style={{ flex: 1 }}>
+                          {(tr.originLabel ?? tr.originHubSlug) ?? '?'} →{' '}
+                          {(tr.destinationLabel ?? tr.destinationHubSlug) ?? '?'}
+                          {tr.requesterName ? (
+                            <span style={{ opacity: 0.55, fontWeight: 500 }}> · {tr.requesterName}</span>
+                          ) : null}
+                        </span>
+                        <button
+                          type="button"
+                          className="me-btn me-btn--primary"
+                          disabled={claimingId === tr.id}
+                          onClick={() => void claimTrip(tr.id)}
+                        >
+                          {claimingId === tr.id ? t('me.driver.claiming') : t('me.driver.claimCta')}
+                        </button>
                       </li>
                     ))}
                   </ul>

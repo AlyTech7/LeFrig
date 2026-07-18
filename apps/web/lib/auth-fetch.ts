@@ -12,11 +12,17 @@ function useGuestAuthFetch() {
 
   const syncUser = useCallback(async () => null, []);
 
-  return { authFetch, syncUser, isSignedIn: false as const, getToken: async () => null as string | null };
+  return {
+    authFetch,
+    syncUser,
+    isSignedIn: false as const,
+    isLoaded: true as const,
+    getToken: async () => null as string | null,
+  };
 }
 
 function useClerkAuthFetch() {
-  const { getToken, isSignedIn } = useAuth();
+  const { getToken, isSignedIn, isLoaded } = useAuth();
 
   const authFetch = useCallback(
     async <T,>(path: string, init?: RequestInit): Promise<T> => {
@@ -51,13 +57,15 @@ function useClerkAuthFetch() {
     return authFetch<{ success: boolean; user: unknown }>('/auth/sync', { method: 'POST' });
   }, [authFetch, isSignedIn]);
 
-  return { authFetch, syncUser, isSignedIn: !!isSignedIn, getToken };
+  return { authFetch, syncUser, isSignedIn: !!isSignedIn, isLoaded, getToken };
 }
 
 type AuthFetchResult = {
   authFetch: <T>(path: string, init?: RequestInit) => Promise<T>;
   syncUser: () => Promise<{ success: boolean; user: unknown } | null>;
   isSignedIn: boolean;
+  /** false mientras Clerk hidrata la sesión — no tratar como “sin sesión” */
+  isLoaded: boolean;
   getToken: () => Promise<string | null>;
 };
 

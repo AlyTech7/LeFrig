@@ -33,11 +33,33 @@ export class ClerkService {
     return !!this.client && !!this.config.get('CLERK_SECRET_KEY');
   }
 
+  private authorizedParties(): string[] | undefined {
+    const raw = this.config.get<string>('CLERK_AUTHORIZED_PARTIES')?.trim();
+    if (raw) {
+      const list = raw
+        .split(',')
+        .map((o) => o.trim().replace(/\/$/, ''))
+        .filter(Boolean);
+      return list.length > 0 ? list : undefined;
+    }
+    const cors = this.config.get<string>('CORS_ORIGINS')?.trim();
+    if (cors && cors !== '*') {
+      const list = cors
+        .split(',')
+        .map((o) => o.trim().replace(/\/$/, ''))
+        .filter(Boolean);
+      return list.length > 0 ? list : undefined;
+    }
+    return undefined;
+  }
+
   async verifyClerkToken(token: string): Promise<{ clerkUserId: string } | null> {
     if (!this.isConfigured()) return null;
     try {
+      const parties = this.authorizedParties();
       const payload = await verifyToken(token, {
         secretKey: this.config.get('CLERK_SECRET_KEY')!,
+        ...(parties ? { authorizedParties: parties } : {}),
       });
       return { clerkUserId: payload.sub };
     } catch (e) {
@@ -110,8 +132,11 @@ export class ClerkService {
         },
       });
     } else if (email) {
+      const emailVerified = clerkUser.emailAddresses.some(
+        (e) => e.emailAddress === email && e.verification?.status === 'verified',
+      );
       const existingByEmail = await this.prisma.user.findUnique({ where: { email } });
-      if (existingByEmail) {
+      if (existingByEmail && emailVerified) {
         user = await this.prisma.user.update({
           where: { id: existingByEmail.id },
           data: {
@@ -122,6 +147,13 @@ export class ClerkService {
             roles: userData.roles,
             campId: userData.campId ?? undefined,
           },
+        });
+      } else if (existingByEmail && !emailVerified) {
+        this.logger.warn(
+          `Omitiendo link por email no verificado: ${email} → clerk ${clerkUser.id}`,
+        );
+        user = await this.prisma.user.create({
+          data: { clerkId: clerkUser.id, ...userData, email: null },
         });
       } else {
         user = await this.prisma.user.create({
