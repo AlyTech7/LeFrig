@@ -59,7 +59,7 @@ export class OrdersService {
         shopId: data.shopId,
         beneficiaryId: data.beneficiaryId,
         paymentMethod: data.paymentMethod,
-        paymentStatus: data.paymentMethod === 'fiado' ? 'fiado' : 'pending',
+        paymentStatus: 'pending',
         totalAmount,
         notes: data.notes,
         items: {

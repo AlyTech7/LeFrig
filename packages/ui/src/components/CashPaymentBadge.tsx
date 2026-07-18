@@ -3,7 +3,7 @@ import type { Locale } from '@lefrig/shared';
 import { Badge } from './Badge';
 
 export interface CashPaymentBadgeProps {
-  method: 'cash' | 'cash_on_delivery' | 'fiado' | 'voucher' | 'manual_transfer';
+  method: 'cash' | 'cash_on_delivery' | 'manual_transfer' | 'fiado' | 'voucher';
   locale?: Locale;
 }
 
@@ -20,6 +20,13 @@ const labels: Record<CashPaymentBadgeProps['method'], Record<Locale, string>> = 
     fr: 'Espèces à la livraison',
     en: 'Cash on delivery',
   },
+  manual_transfer: {
+    ar: 'تحويل يدوي',
+    es: 'Transferencia manual',
+    fr: 'Virement manuel',
+    en: 'Manual transfer',
+  },
+  /** Histórico — no se ofrece en UI nueva */
   fiado: {
     ar: 'fiado / libreta',
     es: 'Fiado / libreta',
@@ -32,16 +39,10 @@ const labels: Record<CashPaymentBadgeProps['method'], Record<Locale, string>> = 
     fr: 'Bon',
     en: 'Voucher',
   },
-  manual_transfer: {
-    ar: 'تحويل يدوي',
-    es: 'Transferencia manual',
-    fr: 'Virement manuel',
-    en: 'Manual transfer',
-  },
 };
 
 export function CashPaymentBadge({ method, locale = 'es' }: CashPaymentBadgeProps) {
-  const variant = method === 'fiado' ? 'info' : method === 'voucher' ? 'warning' : 'success';
+  const variant = method === 'manual_transfer' ? 'info' : 'success';
   return (
     <Badge variant={variant} size="sm">
       💵 {labels[method][locale]}

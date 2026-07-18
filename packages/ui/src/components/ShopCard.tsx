@@ -57,8 +57,6 @@ export function ShopCard({ shop, campName, onClick, tone = 'mirage' }: ShopCardP
           )}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
             {shop.acceptsCash && <Badge variant="success" size="sm">Efectivo</Badge>}
-            {shop.acceptsFiado && <Badge variant="info" size="sm">Fiado</Badge>}
-            {shop.acceptsVouchers && <Badge variant="warning" size="sm">Vouchers</Badge>}
           </div>
         </div>
       </div>
