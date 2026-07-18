@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ListingCard, ListingCardSkeleton, EmptyState } from '@lefrig/ui/client';
@@ -11,13 +11,15 @@ import {
   listingAttributeFilterSchema,
   type MarketplaceItem,
   type ListingAttributeFilterValues,
+  localizedMarketplaceItem,
+  localizedDepartment,
+  resolveMarketplaceSearch,
 } from '@lefrig/shared';
 import type { CampSummary, ListingSummary, PaginatedResponse } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
 import { MarketplaceToolbar } from '@/components/marketplace/MarketplaceToolbar';
 import { demoCamps, demoListingsPage, fetchWithMeta, filterDemoListings, mapListingsResponse } from '@/lib/api';
 import { useT, useLocale } from '@/lib/locale';
-import { localizedMarketplaceItem, resolveMarketplaceSearch } from '@lefrig/shared';
 
 function itemHref(item: MarketplaceItem) {
   const base = getMarketplaceItemHref(item);
@@ -44,7 +46,7 @@ export function MarketplaceHub() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useT();
-  const { locale } = useLocale();
+  const { locale, dir } = useLocale();
   const initialCategory = searchParams.get('category') ?? '';
   const initialQuery = searchParams.get('q') ?? '';
 
@@ -134,7 +136,6 @@ export function MarketplaceHub() {
     setActiveDept(deptId);
     setAttrFilters({});
     router.replace(`/marketplace?category=${slug}`, { scroll: false });
-    document.getElementById('mkt-listings')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const clearFilters = () => {
@@ -164,6 +165,14 @@ export function MarketplaceHub() {
     router.replace(params.toString() ? `/marketplace?${params}` : '/marketplace', { scroll: false });
   };
 
+  const collapseDept = () => {
+    setActiveDept(null);
+  };
+
+  const toggleDept = (deptId: string) => {
+    setActiveDept((prev) => (prev === deptId ? null : deptId));
+  };
+
   const runSearch = () => {
     const resolved = resolveMarketplaceSearch(query);
     const effectiveCategory = category || resolved.category || '';
@@ -190,9 +199,10 @@ export function MarketplaceHub() {
     return null;
   }, [category]);
 
-  const filteredDepts = activeDept
-    ? MARKETPLACE_DEPARTMENTS.filter((d) => d.id === activeDept)
-    : MARKETPLACE_DEPARTMENTS;
+  const openDept = useMemo(
+    () => MARKETPLACE_DEPARTMENTS.find((d) => d.id === activeDept) ?? null,
+    [activeDept],
+  );
 
   return (
     <div className="mkt">
@@ -203,87 +213,96 @@ export function MarketplaceHub() {
               <span className="mkt-live" /> {t('marketplace.kicker')}
             </p>
             <h1>
-              {t('marketplace.title')}
-              <br />
+              {t('marketplace.title')}{' '}
               <span className="mkt-gradient">{t('marketplace.titleAccent')}</span>
             </h1>
             <p className="mkt-lead">{t('marketplace.lead')}</p>
           </div>
           <Link href="/marketplace/create" className="mkt-cta-pub">
-            <AppIcon name="tag" size={20} color="#070b10" />
+            <AppIcon name="tag" size={18} color="#070b10" />
             {t('marketplace.publishListing')}
           </Link>
         </div>
 
-        {usingDemo && (
-          <p className="mkt-demo">{t('common.demo')}</p>
-        )}
+        {usingDemo && <p className="mkt-demo">{t('common.demo')}</p>}
         {apiError && (
-          <p className="mkt-demo" role="alert" style={{ borderColor: 'rgba(196, 92, 58, 0.35)', color: 'var(--sv-terracotta, #c45c3a)' }}>
+          <p
+            className="mkt-demo"
+            role="alert"
+            style={{ borderColor: 'rgba(196, 92, 58, 0.35)', color: 'var(--sv-terracotta, #c45c3a)' }}
+          >
             {t('errors.apiUnavailable')}
           </p>
         )}
       </header>
 
-      <section className="mkt-departments" aria-label={t('marketplace.exploreCategories')}>
-        <div className="mkt-departments__head">
-          <h2>{t('marketplace.exploreCategories')}</h2>
-          {activeDept && (
-            <button type="button" className="mkt-show-all" onClick={() => { setActiveDept(null); }}>
-              {t('marketplace.showAll')}
-            </button>
-          )}
+      <section className="mkt-cats" aria-label={t('marketplace.exploreCategories')}>
+        <div className="mkt-rail" role="listbox" aria-label={t('marketplace.exploreCategories')} dir={dir}>
+          {MARKETPLACE_DEPARTMENTS.map((dept) => {
+            const pressed = activeDept === dept.id;
+            const label = localizedDepartment(dept.id, locale).name;
+            return (
+              <button
+                key={dept.id}
+                type="button"
+                role="option"
+                aria-selected={pressed}
+                aria-pressed={pressed}
+                className={pressed ? 'mkt-rail__item mkt-rail__item--on' : 'mkt-rail__item'}
+                style={{ '--mkt-accent': dept.accent } as CSSProperties}
+                onClick={() => toggleDept(dept.id)}
+              >
+                <span className="mkt-rail__ico" aria-hidden>
+                  {dept.icon}
+                </span>
+                <span className="mkt-rail__label">{label}</span>
+              </button>
+            );
+          })}
         </div>
 
-        <div className="mkt-dept-grid">
-          {filteredDepts.map((dept) => (
-            <article
-              key={dept.id}
-              className={`mkt-dept ${activeDept === dept.id ? 'mkt-dept--focus' : ''}`}
-              style={{ '--mkt-accent': dept.accent } as React.CSSProperties}
-            >
-              <header className="mkt-dept__head">
-                <span className="mkt-dept__icon">{dept.icon}</span>
-                <div>
-                  <h3>{locale === 'ar' ? dept.nameAr : dept.nameEs}</h3>
-                </div>
-              </header>
-              <div className="mkt-dept__items">
-                {dept.items.map((item) => {
-                  const isActive = category === item.slug;
-                  const isListing = item.kind === 'listing';
-                  return isListing ? (
-                    <button
-                      key={item.slug}
-                      type="button"
-                      className={isActive ? 'mkt-chip mkt-chip--on' : 'mkt-chip'}
-                      onClick={() => selectListingCategory(item.slug, dept.id)}
-                    >
-                      <span>{item.icon}</span>
-                      <span>
-                        <strong>{item.nameEs}</strong>
-                        <em>{item.nameAr}</em>
-                      </span>
-                    </button>
-                  ) : (
-                    <Link
-                      key={item.slug}
-                      href={itemHref(item)}
-                      className="mkt-chip mkt-chip--link"
-                    >
-                      <span>{item.icon}</span>
-                      <span>
-                        <strong>{item.nameEs}</strong>
-                        <em>{item.nameAr}</em>
-                      </span>
-                      <AppIcon name="arrow-up-right" size={14} color="var(--lf-gold)" />
-                    </Link>
-                  );
-                })}
-              </div>
-            </article>
-          ))}
-        </div>
+        {openDept ? (
+          <div className="mkt-subcats">
+            <div className="mkt-subcats__head">
+              <p className="mkt-subcats__title">
+                <span aria-hidden>{openDept.icon}</span>
+                {localizedDepartment(openDept.id, locale).name}
+              </p>
+              <button type="button" className="mkt-show-all" onClick={collapseDept}>
+                {t('marketplace.showAll')}
+              </button>
+            </div>
+            <div className="mkt-subcats__row" dir={dir}>
+              {openDept.items.map((item) => {
+                const isActive = category === item.slug;
+                const label = localizedMarketplaceItem(item.slug, locale);
+                const isListing = item.kind === 'listing';
+                return isListing ? (
+                  <button
+                    key={item.slug}
+                    type="button"
+                    className={isActive ? 'mkt-chip mkt-chip--on' : 'mkt-chip'}
+                    aria-current={isActive ? 'true' : undefined}
+                    onClick={() => selectListingCategory(item.slug, openDept.id)}
+                  >
+                    <span aria-hidden>{item.icon}</span>
+                    <span className="mkt-chip__label">{label}</span>
+                  </button>
+                ) : (
+                  <Link
+                    key={item.slug}
+                    href={itemHref(item)}
+                    className="mkt-chip mkt-chip--link"
+                  >
+                    <span aria-hidden>{item.icon}</span>
+                    <span className="mkt-chip__label">{label}</span>
+                    <AppIcon name="arrow-up-right" size={12} color="var(--lf-gold)" />
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section id="mkt-listings" className="mkt-listings">
@@ -295,7 +314,11 @@ export function MarketplaceHub() {
           onCampChange={setCampId}
           camps={camps}
           category={category}
-          categoryLabel={activeItem ? `${activeItem.item.icon} ${localizedMarketplaceItem(activeItem.item.slug, locale)}` : undefined}
+          categoryLabel={
+            activeItem
+              ? `${activeItem.item.icon} ${localizedMarketplaceItem(activeItem.item.slug, locale)}`
+              : undefined
+          }
           attrFilters={attrFilters}
           onAttrFiltersChange={applyAttrFilters}
           onClearAll={clearFilters}
