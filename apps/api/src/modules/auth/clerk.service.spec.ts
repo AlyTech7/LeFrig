@@ -13,7 +13,13 @@ function mockClerkUser(overrides: Partial<ClerkUser> = {}): ClerkUser {
     imageUrl: 'https://example.com/avatar.png',
     primaryEmailAddressId: 'email_1',
     primaryPhoneNumberId: 'phone_1',
-    emailAddresses: [{ id: 'email_1', emailAddress: 'fatima@example.com' }],
+    emailAddresses: [
+      {
+        id: 'email_1',
+        emailAddress: 'fatima@example.com',
+        verification: { status: 'verified' },
+      },
+    ],
     phoneNumbers: [{ id: 'phone_1', phoneNumber: '+213555123456' }],
     publicMetadata: { roles: ['citizen'], campId: 'camp-1' },
     ...overrides,
@@ -77,7 +83,7 @@ describe('ClerkService', () => {
     expect(result.roles).toEqual(['citizen']);
   });
 
-  it('upsertFromClerkUser vincula usuario existente por email', async () => {
+  it('upsertFromClerkUser vincula usuario existente por email verificado', async () => {
     prisma.user.findUnique
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce({ id: 'uuid-existing', email: 'fatima@example.com' });
@@ -101,6 +107,43 @@ describe('ClerkService', () => {
       }),
     );
     expect(result.sub).toBe('uuid-existing');
+  });
+
+  it('upsertFromClerkUser no vincula por email no verificado', async () => {
+    prisma.user.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: 'uuid-existing', email: 'fatima@example.com' });
+    prisma.user.create.mockResolvedValue({
+      id: 'uuid-new',
+      clerkId: 'user_clerk_abc',
+      phone: '+213555123456',
+      email: null,
+      roles: ['citizen'],
+      campId: 'camp-1',
+    });
+
+    const result = await service.upsertFromClerkUser(
+      mockClerkUser({
+        emailAddresses: [
+          {
+            id: 'email_1',
+            emailAddress: 'fatima@example.com',
+            verification: { status: 'unverified' },
+          },
+        ] as ClerkUser['emailAddresses'],
+      }),
+    );
+
+    expect(prisma.user.update).not.toHaveBeenCalled();
+    expect(prisma.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          clerkId: 'user_clerk_abc',
+          email: null,
+        }),
+      }),
+    );
+    expect(result.sub).toBe('uuid-new');
   });
 
   it('handleWebhookEvent user.deleted desactiva usuario local', async () => {
