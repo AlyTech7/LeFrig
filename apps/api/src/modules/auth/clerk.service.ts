@@ -12,6 +12,49 @@ export interface AuthUserPayload {
   campId?: string;
 }
 
+type EmailLike = {
+  id: string;
+  emailAddress?: string;
+  email_address?: string;
+  verification?: { status?: string } | null;
+};
+
+type PhoneLike = {
+  id: string;
+  phoneNumber?: string;
+  phone_number?: string;
+};
+
+/** Normaliza payload webhook Svix (snake_case) al shape del SDK (camelCase). */
+export function normalizeClerkUserPayload(data: Record<string, unknown>): ClerkUser {
+  const rawEmails = (data.emailAddresses ?? data.email_addresses ?? []) as EmailLike[];
+  const rawPhones = (data.phoneNumbers ?? data.phone_numbers ?? []) as PhoneLike[];
+
+  return {
+    id: String(data.id),
+    firstName: (data.firstName ?? data.first_name ?? null) as string | null,
+    lastName: (data.lastName ?? data.last_name ?? null) as string | null,
+    username: (data.username ?? null) as string | null,
+    imageUrl: String(data.imageUrl ?? data.image_url ?? ''),
+    primaryEmailAddressId: (data.primaryEmailAddressId ??
+      data.primary_email_address_id ??
+      null) as string | null,
+    primaryPhoneNumberId: (data.primaryPhoneNumberId ??
+      data.primary_phone_number_id ??
+      null) as string | null,
+    emailAddresses: rawEmails.map((e) => ({
+      id: e.id,
+      emailAddress: e.emailAddress ?? e.email_address ?? '',
+      verification: e.verification ?? null,
+    })),
+    phoneNumbers: rawPhones.map((p) => ({
+      id: p.id,
+      phoneNumber: p.phoneNumber ?? p.phone_number ?? '',
+    })),
+    publicMetadata: (data.publicMetadata ?? data.public_metadata ?? {}) as Record<string, unknown>,
+  } as ClerkUser;
+}
+
 @Injectable()
 export class ClerkService {
   private readonly logger = new Logger(ClerkService.name);
@@ -86,13 +129,16 @@ export class ClerkService {
   }
 
   async upsertFromClerkUser(clerkUser: ClerkUser): Promise<AuthUserPayload> {
+    const emailAddresses = clerkUser.emailAddresses ?? [];
+    const phoneNumbers = clerkUser.phoneNumbers ?? [];
+
     const email =
-      clerkUser.emailAddresses.find((e) => e.id === clerkUser.primaryEmailAddressId)?.emailAddress ??
-      clerkUser.emailAddresses[0]?.emailAddress;
+      emailAddresses.find((e) => e.id === clerkUser.primaryEmailAddressId)?.emailAddress ??
+      emailAddresses[0]?.emailAddress;
 
     const phone =
-      clerkUser.phoneNumbers.find((p) => p.id === clerkUser.primaryPhoneNumberId)?.phoneNumber ??
-      clerkUser.phoneNumbers[0]?.phoneNumber;
+      phoneNumbers.find((p) => p.id === clerkUser.primaryPhoneNumberId)?.phoneNumber ??
+      phoneNumbers[0]?.phoneNumber;
 
     const meta = clerkUser.publicMetadata as { roles?: string[]; campId?: string };
     const roles = Array.isArray(meta?.roles) && meta.roles.length > 0 ? meta.roles : ['citizen'];
@@ -108,7 +154,7 @@ export class ClerkService {
       email: email ?? null,
       phone: phone ?? null,
       displayName,
-      avatarUrl: clerkUser.imageUrl,
+      avatarUrl: clerkUser.imageUrl || null,
       roles,
       campId: meta?.campId ?? null,
       verificationLevel: phone ? 'phone' : email ? 'community' : 'unverified',
@@ -132,7 +178,7 @@ export class ClerkService {
         },
       });
     } else if (email) {
-      const emailVerified = clerkUser.emailAddresses.some(
+      const emailVerified = emailAddresses.some(
         (e) => e.emailAddress === email && e.verification?.status === 'verified',
       );
       const existingByEmail = await this.prisma.user.findUnique({ where: { email } });
@@ -178,11 +224,11 @@ export class ClerkService {
 
   async handleWebhookEvent(type: string, data: Record<string, unknown>) {
     if (type === 'user.created' || type === 'user.updated') {
-      const clerkUser = data as unknown as ClerkUser;
-      if (clerkUser?.id) {
-        await this.upsertFromClerkUser(clerkUser);
-        this.logger.log(`Usuario sincronizado desde webhook: ${clerkUser.id}`);
-      }
+      const id = data.id as string | undefined;
+      if (!id) return;
+      const clerkUser = (await this.fetchClerkUser(id)) ?? normalizeClerkUserPayload(data);
+      await this.upsertFromClerkUser(clerkUser);
+      this.logger.log(`Usuario sincronizado desde webhook: ${id}`);
     }
     if (type === 'user.deleted') {
       const id = data.id as string;
