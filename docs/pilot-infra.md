@@ -68,8 +68,9 @@ Ver checklist completa: [production-pilot.md](./production-pilot.md).
 - Crear app DO staging + Vercel staging + DNS
 - Añadir `REDIS_URL` en prod DO
 - Configurar `ADMIN_SESSION_SECRET` en Vercel admin **y** en el panel DO de la API (mismo valor)
-- Activar **backup automático** de Postgres (DO) y hacer un restore de prueba antes del piloto
+- Activar **backup automático** de Postgres (DO) y hacer un restore de prueba antes del piloto → **hecho 2026-07-18** (ver `production-pilot.md`)
 - Clerk **live**: keys, dominio, webhook prod; validar SMS +213 en campo
 - Confirmar `CORS_ORIGINS` / `CLERK_AUTHORIZED_PARTIES` con dominios finales
+- Configurar `ADMIN_SESSION_SECRET` en Vercel admin **y** en el panel DO de la API (mismo valor)
 - Configurar `SENTRY_DSN` en DO y Vercel
 - GitHub Watch en repo para alertas uptime
