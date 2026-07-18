@@ -328,7 +328,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
     id: 'pagos',
     title: 'Pagos y transacciones',
     titleAr: 'المدفوعات والمعاملات',
-    summary: 'Efectivo, fiado, vouchers y rol de Lefrig en las operaciones entre usuarios.',
+    summary: 'Efectivo como método principal del piloto y rol de Lefrig en las operaciones entre usuarios.',
     blocks: [
       {
         type: 'note',
@@ -338,19 +338,14 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
       { type: 'h3', text: '1. Efectivo (نقداً)' },
       {
         type: 'p',
-        text: 'El pago en efectivo es el método principal en campamentos y entornos con banca limitada. Lefrig solo facilita contacto y acuerdo de precio; la entrega del dinero es presencial o según acordéis fuera de la app.',
+        text: 'El pago en efectivo es el método principal en campamentos y entornos con banca limitada. Lefrig facilita contacto, acuerdo de precio y confirmación con PIN bilateral; la entrega del dinero es presencial o según acordéis fuera de la app.',
       },
-      { type: 'h3', text: '2. Fiado / libreta (آجل)' },
+      { type: 'h3', text: '2. Fiado, vouchers y diáspora' },
       {
         type: 'p',
-        text: 'La libreta comunitaria registra acuerdos de crédito entre vecinos de confianza. Lefrig documenta el acuerdo; no es una entidad crediticia regulada. El cobro y la devolución son responsabilidad exclusiva de las partes.',
+        text: 'Fiado/libreta, vouchers ONG y pedidos diáspora con transferencia manual no están disponibles en el piloto actual. Si se reactivan en el futuro, se actualizará esta sección.',
       },
-      { type: 'h3', text: '3. Vouchers y diáspora' },
-      {
-        type: 'p',
-        text: 'Los vouchers pueden ser emitidos por programas comunitarios o la diáspora para apoyo material. Cada programa tiene sus propias reglas de canje. Lefrig muestra saldo y estado; la validez final la determina el emisor del voucher.',
-      },
-      { type: 'h3', text: '4. Disputas' },
+      { type: 'h3', text: '3. Disputas' },
       {
         type: 'ul',
         items: [
@@ -360,12 +355,12 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
           'Para fraudes graves, contactad también con autoridades locales competentes.',
         ],
       },
-      { type: 'h3', text: '5. Precios y comisiones' },
+      { type: 'h3', text: '4. Precios y comisiones' },
       {
         type: 'p',
         text: 'Publicar anuncios, tiendas y servicios en Lefrig no implica comisión sobre ventas entre usuarios salvo que se indique expresamente en un plan futuro. Cualquier tarifa de plataforma se comunicará con antelación.',
       },
-      { type: 'h3', text: '6. Impuestos y facturación' },
+      { type: 'h3', text: '5. Impuestos y facturación' },
       {
         type: 'p',
         text: 'Vendedores y profesionales son responsables de declarar ingresos e IVA/impuestos según su país. Lefrig no emite facturas en nombre de usuarios por transacciones P2P.',
@@ -380,7 +375,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
     blocks: [
       {
         type: 'p',
-        text: 'Lefrig existe para servir al pueblo saharaui con dignidad, confianza y utilidad práctica. Estas normas complementan los Términos y aplican a mercado, chat, foro, necesidades urgentes y diáspora.',
+        text: 'Lefrig existe para servir al pueblo saharaui con dignidad, confianza y utilidad práctica. Estas normas complementan los Términos y aplican a mercado, chat, foro y necesidades urgentes.',
       },
       { type: 'h3', text: '1. Respeto y dignidad' },
       {

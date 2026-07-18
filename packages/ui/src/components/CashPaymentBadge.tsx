@@ -42,10 +42,12 @@ const labels: Record<CashPaymentBadgeProps['method'], Record<Locale, string>> = 
 };
 
 export function CashPaymentBadge({ method, locale = 'es' }: CashPaymentBadgeProps) {
-  const variant = method === 'manual_transfer' ? 'info' : 'success';
+  if (method !== 'cash' && method !== 'cash_on_delivery') {
+    return null;
+  }
   return (
-    <Badge variant={variant} size="sm">
-      💵 {labels[method][locale]}
+    <Badge variant="success" size="sm">
+      {labels[method][locale]}
     </Badge>
   );
 }

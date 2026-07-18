@@ -16,11 +16,11 @@ export const metadata: Metadata = {
     template: '%s | Lefrig',
   },
   description:
-    'Lefrig conecta los campamentos, Tindouf y la diáspora. Mercado, servicios, transporte, tiendas y comunidad con pagos en efectivo.',
-  keywords: ['saharaui', 'Tindouf', 'mercado', 'transporte', 'diáspora', 'Lefrig'],
+    'Lefrig conecta los campamentos y Tindouf. Mercado, servicios, transporte, tiendas y comunidad con pagos en efectivo.',
+  keywords: ['saharaui', 'Tindouf', 'mercado', 'transporte', 'efectivo', 'Lefrig'],
   openGraph: {
     title: 'Lefrig — Superapp saharaui',
-    description: 'Mercado, transporte, tiendas y diáspora unidos en una sola plataforma.',
+    description: 'Mercado, transporte y tiendas en los campamentos — efectivo con confianza.',
     locale: 'es_ES',
     type: 'website',
   },
