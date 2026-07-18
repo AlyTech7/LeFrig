@@ -154,11 +154,6 @@ export default function ShopDetailScreen() {
               <Text style={styles.badgeText}>{t('common.cash')}</Text>
             </View>
           )}
-          {shop.acceptsFiado && (
-            <View style={[styles.badge, styles.badgeMuted]}>
-              <Text style={styles.badgeTextMuted}>{t('payment.fiado')}</Text>
-            </View>
-          )}
         </View>
 
         <Text style={styles.section}>{t('shops.catalog')}</Text>

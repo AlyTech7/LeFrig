@@ -79,9 +79,9 @@ export const demoAnalytics = {
 };
 
 export const demoShops = [
-  { id: '1', name: 'Marsa Al-Khair', slug: 'marsa', camp: 'Rabouni', owner: 'Mohamed L.', verified: true, acceptsCash: true, acceptsFiado: true, acceptsVouchers: true, productsCount: 48, isActive: true },
+  { id: '1', name: 'Marsa Al-Khair', slug: 'marsa', camp: 'Rabouni', owner: 'Mohamed L.', verified: true, acceptsCash: true, acceptsFiado: false, acceptsVouchers: false, productsCount: 48, isActive: true },
   { id: '2', name: 'Electro Smara', slug: 'electro', camp: 'Smara', owner: 'Fatima S.', verified: true, acceptsCash: true, acceptsFiado: false, acceptsVouchers: false, productsCount: 31, isActive: true },
-  { id: '3', name: 'Dakhla Fresh', slug: 'dakhla-fresh', camp: 'Dakhla', owner: 'Hassan M.', verified: false, acceptsCash: true, acceptsFiado: true, acceptsVouchers: true, productsCount: 22, isActive: true },
+  { id: '3', name: 'Dakhla Fresh', slug: 'dakhla-fresh', camp: 'Dakhla', owner: 'Hassan M.', verified: false, acceptsCash: true, acceptsFiado: false, acceptsVouchers: false, productsCount: 22, isActive: true },
 ];
 
 export const demoTransport = [

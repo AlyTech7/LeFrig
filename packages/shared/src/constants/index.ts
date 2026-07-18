@@ -53,7 +53,5 @@ export const DEFAULT_LOCALE = 'es';
 export const PAYMENT_LABELS = {
   cash: { ar: 'ادفع نقداً عند الاستلام', es: 'Paga en efectivo al recibir' },
   cash_on_delivery: { ar: 'نقداً عند التسليم', es: 'Efectivo contra entrega' },
-  fiado: { ar: 'شراء بال fiado', es: 'Comprar fiado' },
   manual_transfer: { ar: 'تحويل يدوي', es: 'Transferencia manual' },
-  voucher: { ar: 'قسيمة', es: 'Voucher' },
 } as const;

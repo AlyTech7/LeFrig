@@ -32,8 +32,6 @@ export function ShopsClient({ initial }: { initial: AdminShopRow[] }) {
             render: (r) => (
               <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                 {r.acceptsCash ? <StatusBadge status="cash" /> : null}
-                {r.acceptsFiado ? <span className="adm-badge adm-badge--gold">fiado</span> : null}
-                {r.acceptsVouchers ? <span className="adm-badge adm-badge--info">voucher</span> : null}
               </div>
             ),
           },

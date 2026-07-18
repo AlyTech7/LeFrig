@@ -50,21 +50,28 @@ export enum ListingCategory {
   OTHER = 'other',
 }
 
-// Payment
+// Payment — fiado/voucher conservados solo para datos históricos; no se aceptan en altas nuevas
 export enum PaymentMethod {
   CASH = 'cash',
   CASH_ON_DELIVERY = 'cash_on_delivery',
+  /** @deprecated No aceptado en nuevos pedidos */
   FIADO = 'fiado',
   MANUAL_TRANSFER = 'manual_transfer',
+  /** @deprecated No aceptado en nuevos pedidos */
   VOUCHER = 'voucher',
   FUTURE_ONLINE = 'future_online',
 }
+
+/** Métodos permitidos al crear pedidos / listados */
+export const ACTIVE_PAYMENT_METHODS = ['cash', 'cash_on_delivery', 'manual_transfer'] as const;
+export type ActivePaymentMethod = (typeof ACTIVE_PAYMENT_METHODS)[number];
 
 export enum PaymentStatus {
   PENDING = 'pending',
   AGREED = 'agreed',
   PAID_CASH = 'paid_cash',
   PARTIAL_PAID = 'partial_paid',
+  /** @deprecated Solo histórico */
   FIADO = 'fiado',
   MANUAL_PENDING = 'manual_pending',
   CONFIRMED = 'confirmed',

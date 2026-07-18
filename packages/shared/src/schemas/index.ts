@@ -32,7 +32,7 @@ const listingBodySchema = z.object({
   campId: z.string().uuid(),
   dairaId: z.string().uuid().optional(),
   images: z.array(z.string().url()).max(8).optional(),
-  paymentMethods: z.array(z.enum(['cash', 'cash_on_delivery', 'fiado'])).default(['cash']),
+  paymentMethods: z.array(z.enum(['cash', 'cash_on_delivery'])).default(['cash']),
   attributes: z.record(z.unknown()).optional(),
 });
 
@@ -79,8 +79,6 @@ export const createShopSchema = z.object({
   phone: phoneSchema,
   whatsapp: phoneSchema.optional(),
   acceptsCash: z.boolean().default(true),
-  acceptsFiado: z.boolean().default(false),
-  acceptsVouchers: z.boolean().default(false),
   shopType: z.enum(['individual', 'cooperative', 'association', 'workshop']).default('individual'),
   imageUrl: z.string().url().optional(),
 });
@@ -103,7 +101,7 @@ export const createOrderSchema = z.object({
     quantity: z.number().positive(),
     price: z.number().positive(),
   })).min(1),
-  paymentMethod: z.enum(['cash', 'cash_on_delivery', 'fiado', 'voucher', 'manual_transfer']),
+  paymentMethod: z.enum(['cash', 'cash_on_delivery', 'manual_transfer']),
   beneficiaryId: z.string().uuid().optional(),
   notes: z.string().max(500).optional(),
 });

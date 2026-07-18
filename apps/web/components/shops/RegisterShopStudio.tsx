@@ -131,8 +131,6 @@ export function RegisterShopStudio() {
           campId,
           shopType,
           acceptsCash: true,
-          acceptsFiado: false,
-          acceptsVouchers: false,
           imageUrl: imageUrls[0],
         }),
       });

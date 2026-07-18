@@ -36,8 +36,6 @@ export default function RegisterShopScreen() {
     phone: DEFAULT_PHONE_COUNTRY.dial,
     campId: '',
     acceptsCash: true,
-    acceptsFiado: false,
-    acceptsVouchers: false,
   });
 
   useEffect(() => {
@@ -67,8 +65,6 @@ export default function RegisterShopScreen() {
           phone: form.phone.trim(),
           campId: form.campId,
           acceptsCash: form.acceptsCash,
-          acceptsFiado: form.acceptsFiado,
-          acceptsVouchers: form.acceptsVouchers,
           shopType: 'individual',
         }),
       });
@@ -122,14 +118,6 @@ export default function RegisterShopScreen() {
         <View style={styles.switchRow}>
           <Text style={styles.switchLabel}>{t('shops.acceptsCash')}</Text>
           <Switch value={form.acceptsCash} onValueChange={(acceptsCash) => setForm({ ...form, acceptsCash })} trackColor={{ true: theme.emeraldDeep }} />
-        </View>
-        <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>{t('shops.acceptsFiado')}</Text>
-          <Switch value={form.acceptsFiado} onValueChange={(acceptsFiado) => setForm({ ...form, acceptsFiado })} trackColor={{ true: theme.emeraldDeep }} />
-        </View>
-        <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>{t('shops.acceptsVouchers')}</Text>
-          <Switch value={form.acceptsVouchers} onValueChange={(acceptsVouchers) => setForm({ ...form, acceptsVouchers })} trackColor={{ true: theme.emeraldDeep }} />
         </View>
 
         <Pressable style={[styles.cta, submitting && styles.ctaDisabled]} onPress={submit} disabled={submitting}>

@@ -311,8 +311,8 @@ async function main() {
       shopType: 'individual',
       phone: '+213555222222',
       acceptsCash: true,
-      acceptsFiado: true,
-      acceptsVouchers: true,
+      acceptsFiado: false,
+      acceptsVouchers: false,
       verified: true,
     },
   });
@@ -341,7 +341,7 @@ async function main() {
       price: 8500,
       status: 'active',
       images: ['https://picsum.photos/seed/phone1/400/300'],
-      paymentMethods: ['cash', 'fiado'],
+      paymentMethods: ['cash'],
       attributes: { brand: 'samsung', storage: '128', condition: 'like_new' },
     },
   });
@@ -459,8 +459,8 @@ async function main() {
       shopId: shop.id,
       beneficiaryId: users.seller.id,
       status: 'accepted',
-      paymentMethod: 'fiado',
-      paymentStatus: 'fiado',
+      paymentMethod: 'cash',
+      paymentStatus: 'pending',
       totalAmount: 630,
       notes: 'Para mi familia en Smara',
       items: {
@@ -492,61 +492,6 @@ async function main() {
       confirmedById: users.seller.id,
       role: 'seller',
       pinVerified: true,
-    },
-  });
-
-  // Credit ledger
-  const creditAccount = await prisma.creditAccount.create({
-    data: {
-      debtorId: users.seller.id,
-      creditorId: users.shopOwner.id,
-      shopId: shop.id,
-      balance: 1200,
-    },
-  });
-
-  await prisma.creditEntry.create({
-    data: {
-      accountId: creditAccount.id,
-      type: 'debt',
-      amount: 1200,
-      balanceAfter: 1200,
-      notes: 'Compra fiado demo',
-    },
-  });
-
-  await prisma.creditAgreement.create({
-    data: {
-      accountId: creditAccount.id,
-      amount: 1200,
-      terms: 'Pago en 30 días',
-      status: 'accepted',
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-    },
-  });
-
-  // Voucher program
-  const voucherProgram = await prisma.voucherProgram.create({
-    data: {
-      name: 'Programa ONG Alimentos',
-      description: 'Vouchers de ayuda alimentaria',
-      sponsor: 'ONG Solidaridad',
-      totalBudget: 50000,
-      startsAt: new Date(),
-      endsAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-    },
-  });
-
-  await prisma.voucher.create({
-    data: {
-      programId: voucherProgram.id,
-      userId: users.seller.id,
-      code: 'VOUCHER-DEMO-001',
-      balance: 500,
-      expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
-      transactions: {
-        create: { amount: 500, type: 'issue', reference: 'initial' },
-      },
     },
   });
 

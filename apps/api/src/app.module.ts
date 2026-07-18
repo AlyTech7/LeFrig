@@ -10,14 +10,12 @@ import { LocationsModule } from './modules/locations/locations.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { ListingsModule } from './modules/listings/listings.module';
 import { CashModule } from './modules/cash/cash.module';
-import { LedgerModule } from './modules/ledger/ledger.module';
 import { ServicesModule } from './modules/services/services.module';
 import { ShopsModule } from './modules/shops/shops.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { TransportModule } from './modules/transport/transport.module';
 import { JobsModule } from './modules/jobs/jobs.module';
 import { DiasporaModule } from './modules/diaspora/diaspora.module';
-import { VouchersModule } from './modules/vouchers/vouchers.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
@@ -52,14 +50,12 @@ import { RateLimitModule } from './common/rate-limit/rate-limit.module';
     CategoriesModule,
     ListingsModule,
     CashModule,
-    LedgerModule,
     ServicesModule,
     ShopsModule,
     OrdersModule,
     TransportModule,
     JobsModule,
     DiasporaModule,
-    VouchersModule,
     MessagesModule,
     NotificationsModule,
     ReviewsModule,
