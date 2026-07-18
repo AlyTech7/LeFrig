@@ -9,10 +9,9 @@ import {
 import type { CampSummary } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
 import { ListingAttributeFilters } from '@/components/marketplace/ListingAttributeFilters';
+import { useT } from '@/lib/locale';
 
 type ActiveChip = { key: string; label: string; onRemove: () => void };
-
-import { useT } from '@/lib/locale';
 
 type Props = {
   query: string;
@@ -100,41 +99,40 @@ export function MarketplaceToolbar({
 
   return (
     <div className="mkt-toolbar">
-      <form className="mkt-toolbar__search" onSubmit={handleSubmit}>
+      <form className="mkt-toolbar__bar" onSubmit={handleSubmit} role="search">
         <label className="mkt-search-box">
-          <AppIcon name="search" size={18} color="var(--lf-gold)" />
+          <span className="mkt-search-box__ico" aria-hidden>
+            <AppIcon name="search" size={16} color="#a8842d" />
+          </span>
           <input
             type="search"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder={t('marketplace.searchPlaceholder')}
-            aria-label="Buscar en el mercado"
+            aria-label={t('marketplace.searchPlaceholder')}
+            autoComplete="off"
+            enterKeyHint="search"
           />
           {query ? (
             <button
               type="button"
               className="mkt-search-box__clear"
-              aria-label="Borrar búsqueda"
-              onClick={() => {
-                onQueryChange('');
-              }}
+              aria-label={t('common.clearAll')}
+              onClick={() => onQueryChange('')}
             >
-              <AppIcon name="x" size={16} color="var(--lf-text-muted)" />
+              <AppIcon name="x" size={14} color="#5c6570" />
             </button>
           ) : null}
         </label>
-        <button type="submit" className="mkt-toolbar__submit">
-          {t('common.search')}
-        </button>
-      </form>
 
-      <div className="mkt-toolbar__filters">
+        <span className="mkt-toolbar__sep" aria-hidden />
+
         <label className="mkt-toolbar__camp">
-          <AppIcon name="map-pin" size={16} color="var(--lf-emerald)" />
+          <AppIcon name="map-pin" size={15} color="#0d9488" />
           <select
             value={campId}
             onChange={(e) => onCampChange(e.target.value)}
-            aria-label="Campamento"
+            aria-label={t('marketplace.allCamps')}
           >
             <option value="">{t('marketplace.allCamps')}</option>
             {camps.map((c) => (
@@ -145,33 +143,39 @@ export function MarketplaceToolbar({
           </select>
         </label>
 
-        {showAttrFilters ? (
-          <>
-            <span className="mkt-toolbar__divider" aria-hidden />
-            <ListingAttributeFilters
-              categorySlug={category}
-              values={attrFilters}
-              onChange={onAttrFiltersChange}
-              variant="inline"
-            />
-          </>
-        ) : null}
-      </div>
+        <button type="submit" className="mkt-toolbar__submit" aria-label={t('common.search')}>
+          <AppIcon name="search" size={18} color="#1a1612" />
+        </button>
+      </form>
 
-      {(hasFilters || resultCount !== undefined) && (
+      {showAttrFilters ? (
+        <div className="mkt-toolbar__attrs">
+          <ListingAttributeFilters
+            categorySlug={category}
+            values={attrFilters}
+            onChange={onAttrFiltersChange}
+            variant="inline"
+          />
+        </div>
+      ) : null}
+
+      {(chips.length > 0 || resultCount !== undefined) && (
         <div className="mkt-toolbar__foot">
           <div className="mkt-toolbar__chips">
             {chips.map((chip) => (
               <button key={chip.key} type="button" className="mkt-chip-active" onClick={chip.onRemove}>
                 {chip.label}
-                <AppIcon name="x" size={12} color="var(--lf-gold)" />
+                <AppIcon name="x" size={12} color="#a8842d" />
               </button>
             ))}
           </div>
           <div className="mkt-toolbar__meta-row">
             {resultCount !== undefined && (
               <span className="mkt-toolbar__count">
-                {resultCount} {t(resultCount === 1 ? 'common.results' : 'common.results_plural', { count: resultCount })}
+                {resultCount}{' '}
+                {t(resultCount === 1 ? 'common.results' : 'common.results_plural', {
+                  count: resultCount,
+                })}
               </span>
             )}
             {hasFilters && (
