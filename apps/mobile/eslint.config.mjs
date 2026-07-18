@@ -1,8 +1,8 @@
 import base from '@lefrig/config/eslint/base.mjs';
 
 export default [
-  ...base,
   {
-    ignores: ['.expo/**', 'dist/**'],
+    ignores: ['.expo/**', '.expo-web-test/**', 'dist/**', 'android/**', 'ios/**'],
   },
+  ...base,
 ];

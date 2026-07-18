@@ -6,6 +6,7 @@ node_modules/
 dist/
 .next/
 .expo/
+.expo-web-test/
 .turbo/
 out/
 build/
