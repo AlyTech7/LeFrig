@@ -22,6 +22,7 @@ const isPublicRoute = createRouteMatcher([
   '/ledger(.*)',
   '/vouchers(.*)',
   '/diaspora(.*)',
+  '/search(.*)',
   '/marketplace(.*)',
   '/shops(.*)',
   '/services(.*)',

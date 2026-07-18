@@ -159,7 +159,7 @@ export function TransportConnect() {
     initialScope === 'international' ? INTL_DEFAULT.destZone : LOCAL_DEFAULT.destZone,
   );
   const [activeField, setActiveField] = useState<Field>(null);
-  const [originQuery, setOriginQuery] = useState(searchParams.get('q') ?? '');
+  const [originQuery, setOriginQuery] = useState('');
   const [destQuery, setDestQuery] = useState('');
 
   const [tripType, setTripType] = useState('shared_ride');
@@ -174,6 +174,33 @@ export function TransportConnect() {
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState('');
   const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const raw = (searchParams.get('q') ?? '').trim();
+    if (!raw) return;
+    const norm = raw.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '');
+    const match = TRANSPORT_HUBS.find((h) => {
+      const blob = `${h.slug} ${h.nameEs} ${h.nameAr}`.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '');
+      return blob.includes(norm) || norm.includes(h.slug);
+    });
+    if (!match) {
+      setOriginQuery(raw);
+      setActiveField('origin');
+      return;
+    }
+    const scope = hubScope(match.zone);
+    setRouteScope(scope);
+    setOriginHub(match.slug);
+    setOriginZone(match.zone);
+    setOriginQuery(pickLocalized(match, locale));
+    const preferredDest =
+      TRANSPORT_HUBS.find((h) => h.slug !== match.slug && hubsInScope(scope).some((x) => x.slug === h.slug) && h.popular) ??
+      hubsInScope(scope).find((h) => h.slug !== match.slug);
+    if (preferredDest) {
+      setDestHub(preferredDest.slug);
+      setDestZone(preferredDest.zone);
+    }
+  }, [searchParams, locale]);
 
   const hubName = (slug: string) => {
     const h = getTransportHub(slug);
