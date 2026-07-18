@@ -66,5 +66,7 @@ Ver [staging-setup.md](./staging-setup.md). Spec DO: `.do/app.staging.yaml`.
 - Crear app DO staging + Vercel staging + DNS
 - Añadir `REDIS_URL` en prod DO
 - Configurar `ADMIN_SESSION_SECRET` en Vercel admin **y** en el panel DO de la API (mismo valor)
-- Configurar `SENTRY_DSN` en DO y Vercel
+- Activar **backup automático** de Postgres (DO) y hacer un restore de prueba antes del piloto
+- Clerk **live**: keys, dominio, webhook prod; validar SMS +213 en campo
+- Confirmar `CORS_ORIGINS` / `CLERK_AUTHORIZED_PARTIES` con dominios finales
 - GitHub Watch en repo para alertas uptime

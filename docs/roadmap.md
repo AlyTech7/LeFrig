@@ -1,5 +1,36 @@
 # Lefrig — Roadmap
 
+## Producción piloto — checklist operativa
+
+Código de seguridad/calidad (B0–B3) está en `master`. Lo que falta para llamar “producción” de verdad es casi todo **operativo**:
+
+### Bloqueantes absolutos
+
+- [ ] **Backup DB verificado** + al menos una restauración de prueba (DO managed DB: backups + restore drill). Sin esto, un fallo borra marketplace, cash y confianza.
+- [ ] **Clerk producción** (`pk_live` / `sk_live`, dominio, webhook → API prod con secreto). Prueba real de SMS a **+213** en Tindouf (entregabilidad regional; CI no la detecta).
+- [ ] **`ADMIN_SESSION_SECRET` idéntico** en Vercel (admin) y DigitalOcean (API); `CORS_ORIGINS` / `CLERK_AUTHORIZED_PARTIES` con dominios finales.
+
+### Decisión de alcance (recomendado)
+
+- [x] **Piloto = web mobile-first** (ya desplegable). App nativa (EAS/`eas.json`, FCM real, expo-updates RTL) → **fase 2**, no bloquea lanzar.
+- [ ] UI no promete flujos mock: pago manual diáspora y push FCM son stubs; no ofrecerlos en copy del piloto.
+
+### Importante, no bloqueante para piloto
+
+- [ ] E2E cash completo (crear → PIN bilateral → recibo) además del smoke actual
+- [ ] Plan de escala (hoy `basic-xxs`; subir instancia si el piloto tira)
+- [ ] Meilisearch / Redis en prod si el volumen lo pide (ver `pilot-infra.md`)
+
+### Deuda técnica conocida (no bloquea piloto)
+
+- [ ] Troceo CSS monolítico / CSS modules
+- [ ] Home + marketplace RSC + islas
+- [ ] Partir ficheros >600 líneas (`admin.service`, pantallas móvil/web)
+- [ ] Adopción opcional de `@lefrig/ui` en admin (paquete web-only)
+- [ ] Cobertura de tests más amplia (hoy ~seguridad crítica + humo e2e)
+
+---
+
 ## Fase 0 — Fundación ✅ (actual)
 
 - [x] Monorepo Turborepo + pnpm
@@ -43,13 +74,12 @@
 - [ ] Sync offline cola real en mobile
 
 ### Deuda técnica (follow-up calidad)
-- [ ] Troceo CSS monolítico (`home-noir`, `sovereign`, …) / CSS modules
-- [ ] Home + marketplace como Server Components + islas cliente
-- [ ] Partir ficheros >600 líneas (`admin.service`, pantallas móvil/web)
-- [ ] Adopción opcional de `@lefrig/ui` en admin (hoy CSS-only; paquete documentado web-only)
+
+Movida a la sección **Producción piloto** arriba (no bloquea piloto web).
 
 ## Fase 2 — Expansión multi-campamento (6-10 semanas)
 
+- [ ] App nativa tiendas (EAS, FCM real, expo-updates)
 - [ ] Transporte: matching conductor-solicitud
 - [ ] Traer de Tindouf: flujo completo con tracking
 - [ ] Diáspora: integración pago manual verificado
