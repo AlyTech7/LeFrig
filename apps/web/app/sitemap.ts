@@ -8,6 +8,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/shops',
     '/services',
     '/transport',
+    '/search',
     '/community',
     '/jobs',
     '/needs',

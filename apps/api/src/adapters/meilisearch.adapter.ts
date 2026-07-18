@@ -96,13 +96,17 @@ export class MeilisearchAdapter {
   async search(
     index: string,
     q: string,
-    opts: { limit?: number; filter?: string } = {},
+    opts: { limit?: number; filter?: string; timeoutMs?: number } = {},
   ): Promise<MeiliHit[] | null> {
     if (!this.isConfigured() || !q.trim()) return null;
+    const timeoutMs = opts.timeoutMs ?? 2500;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const res = await fetch(`${this.host}/indexes/${index}/search`, {
         method: 'POST',
         headers: this.headers(),
+        signal: controller.signal,
         body: JSON.stringify({
           q,
           limit: opts.limit ?? 20,
@@ -115,6 +119,8 @@ export class MeilisearchAdapter {
     } catch (e) {
       this.logger.warn(`Meili search failed: ${(e as Error).message}`);
       return null;
+    } finally {
+      clearTimeout(timer);
     }
   }
 }

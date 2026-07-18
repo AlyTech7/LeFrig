@@ -1,7 +1,7 @@
 import { LISTING_CATEGORIES, MARKETPLACE_DEPARTMENTS, SERVICE_CATEGORIES } from '../constants/index.js';
 import type { Locale } from '../i18n/index.js';
 
-export type GlobalSearchScope = 'all' | 'market' | 'transport' | 'services';
+export type GlobalSearchScope = 'all' | 'market' | 'transport' | 'services' | 'shops' | 'jobs';
 
 export type ResolvedMarketplaceSearch = {
   category?: string;
@@ -114,13 +114,28 @@ export function buildGlobalSearchHref(
   if (!trimmed) {
     if (scope === 'transport') return '/transport';
     if (scope === 'services') return '/services';
+    if (scope === 'shops') return '/shops';
+    if (scope === 'jobs') return '/jobs';
+    if (scope === 'all') return '/search';
     return '/marketplace';
   }
 
   const encoded = encodeURIComponent(trimmed);
 
+  if (scope === 'all') {
+    return `/search?q=${encoded}`;
+  }
+
   if (scope === 'transport') {
     return `/transport?q=${encoded}`;
+  }
+
+  if (scope === 'shops') {
+    return `/shops?q=${encoded}`;
+  }
+
+  if (scope === 'jobs') {
+    return `/jobs?q=${encoded}`;
   }
 
   if (scope === 'services') {

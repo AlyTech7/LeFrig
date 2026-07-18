@@ -1,0 +1,215 @@
+.lf-search-muted {
+  color: var(--lf-text-muted, rgba(26, 22, 18, 0.55));
+  margin: 0;
+}
+
+.lf-search-empty {
+  padding: 1.5rem 0;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.lf-search-empty p {
+  margin: 0;
+  color: var(--lf-text-muted, rgba(26, 22, 18, 0.62));
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
+.lf-search-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.lf-search-shortcuts a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(26, 22, 18, 0.12);
+  background: #fff;
+  color: #1a1612;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
+.lf-search-shortcuts a:hover {
+  border-color: rgba(168, 132, 45, 0.45);
+  background: rgba(168, 132, 45, 0.08);
+}
+
+.lf-search-groups {
+  display: grid;
+  gap: 1.75rem;
+}
+
+.lf-search-group h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sv-dune, #a8842d);
+  font-weight: 800;
+}
+
+.lf-search-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.lf-search-hit {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(26, 22, 18, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.lf-search-hit:hover {
+  border-color: rgba(168, 132, 45, 0.4);
+  background: #fff;
+}
+
+.lf-search-hit__ico {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(168, 132, 45, 0.1);
+  color: var(--sv-dune, #a8842d);
+}
+
+.lf-search-hit__copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.lf-search-hit__copy strong {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #1a1612;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lf-search-hit__copy small {
+  font-size: 0.82rem;
+  color: rgba(26, 22, 18, 0.55);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Crown live suggestions */
+.sv-crown__suggest {
+  background: #faf8f4;
+  border: 1px solid rgba(26, 22, 18, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 18px 48px rgba(26, 22, 18, 0.14);
+  overflow: hidden;
+  max-height: min(70vh, 420px);
+  display: flex;
+  flex-direction: column;
+}
+
+.sv-crown__suggest-muted {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  color: rgba(26, 22, 18, 0.55);
+  font-size: 0.9rem;
+}
+
+.sv-crown__suggest-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.35rem;
+  overflow: auto;
+}
+
+.sv-crown__suggest-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  text-align: left;
+  border: none;
+  background: transparent;
+  border-radius: 12px;
+  padding: 0.7rem 0.75rem;
+  cursor: pointer;
+  color: #1a1612;
+  font: inherit;
+}
+
+.sv-crown__suggest-item:hover,
+.sv-crown__suggest-item--on {
+  background: rgba(168, 132, 45, 0.12);
+}
+
+.sv-crown__suggest-ico {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: rgba(26, 22, 18, 0.05);
+  color: #a8842d;
+}
+
+.sv-crown__suggest-copy {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.sv-crown__suggest-copy strong {
+  font-size: 0.92rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sv-crown__suggest-copy small {
+  font-size: 0.78rem;
+  color: rgba(26, 22, 18, 0.55);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sv-crown__suggest-all {
+  border: none;
+  border-top: 1px solid rgba(26, 22, 18, 0.08);
+  background: #f3efe8;
+  color: #1a1612;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 0.85rem 1.1rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sv-crown__suggest-all:hover {
+  background: rgba(168, 132, 45, 0.16);
+}
