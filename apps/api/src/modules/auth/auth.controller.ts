@@ -97,7 +97,11 @@ export class AuthController {
 
     const wh = new Webhook(secret);
     const body = req.rawBody ?? req.body;
-    const payload = typeof body === 'string' ? body : JSON.stringify(body);
+    const payload = Buffer.isBuffer(body)
+      ? body.toString('utf8')
+      : typeof body === 'string'
+        ? body
+        : JSON.stringify(body);
 
     let event: { type: string; data: Record<string, unknown> };
     try {
