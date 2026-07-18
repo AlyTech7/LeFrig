@@ -166,4 +166,40 @@ describe('ClerkService', () => {
 
     expect(upsertSpy).toHaveBeenCalled();
   });
+
+  it('handleWebhookEvent acepta payload Svix snake_case sin fetch', async () => {
+    vi.spyOn(service, 'fetchClerkUser').mockResolvedValue(null);
+    prisma.user.create.mockResolvedValue({
+      id: 'uuid-snake',
+      clerkId: 'user_snake',
+      phone: null,
+      email: 'snake@example.com',
+      roles: ['citizen'],
+      campId: null,
+    });
+
+    await service.handleWebhookEvent('user.updated', {
+      id: 'user_snake',
+      first_name: 'Snake',
+      last_name: 'Case',
+      email_addresses: [
+        {
+          id: 'idn_1',
+          email_address: 'snake@example.com',
+          verification: { status: 'verified' },
+        },
+      ],
+      primary_email_address_id: 'idn_1',
+      phone_numbers: [],
+      public_metadata: { roles: ['citizen'] },
+    });
+
+    expect(prisma.user.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        clerkId: 'user_snake',
+        email: 'snake@example.com',
+        displayName: 'Snake Case',
+      }),
+    });
+  });
 });
