@@ -32,6 +32,9 @@ Thumbs.db
 
 # Local ops scratch (pg client for DO probes)
 scripts-tmp/
+.tmp-do-*.yaml
+.tmp-ADMIN_SESSION_SECRET.txt
+.tmp-signin.json
 npm-debug.log*
 pnpm-debug.log*
 
