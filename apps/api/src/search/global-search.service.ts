@@ -259,6 +259,15 @@ export class GlobalSearchService {
       ),
     ]);
 
+    const zoneLabel: Record<string, string> = {
+      wilaya: 'Sahara',
+      tindouf: 'Tindouf',
+      mauritania: 'Mauritania',
+      argelia: 'Argelia',
+      espana: 'España',
+      francia: 'Francia',
+    };
+
     const hubs = TRANSPORT_HUBS.filter((h) => textMatch(`${h.slug} ${h.nameEs} ${h.nameAr}`, q))
       .slice(0, perGroup)
       .map(
@@ -266,7 +275,7 @@ export class GlobalSearchService {
           type: 'hub',
           id: h.slug,
           title: h.nameEs,
-          subtitle: h.zone,
+          subtitle: zoneLabel[h.zone] ?? h.zone,
           href: `/transport?q=${encodeURIComponent(h.slug)}`,
         }),
       );
@@ -277,7 +286,7 @@ export class GlobalSearchService {
       categories.push({
         type: 'category',
         id: `listing-${listingCat}`,
-        title: listingCat.replace(/-/g, ' '),
+        title: listingCat.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
         subtitle: 'Mercado',
         href: `/marketplace?category=${encodeURIComponent(listingCat)}`,
       });
@@ -287,7 +296,7 @@ export class GlobalSearchService {
       categories.push({
         type: 'category',
         id: `service-${serviceCat}`,
-        title: serviceCat.replace(/-/g, ' '),
+        title: serviceCat.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
         subtitle: 'Servicios',
         href: `/services?category=${encodeURIComponent(serviceCat)}`,
       });
