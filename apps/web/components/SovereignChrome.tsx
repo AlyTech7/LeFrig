@@ -115,24 +115,19 @@ function DockItems({ variant }: { variant: 'bottom' | 'rail' }) {
 export function WebDock() {
   const pathname = usePathname();
   const items = useNavItems();
-  const [left, right] = [items.slice(0, 2), items.slice(2)];
 
   return (
     <>
       <nav className="sv-dock sv-dock--bottom" aria-label="Navegación principal">
         <div className="sv-dock__surface" aria-hidden />
         <div className="sv-dock__inner">
-          <div className="sv-dock__side">
-            {left.map((item) => (
-              <DockLink key={item.href} item={item} pathname={pathname} showLabel iconSize={20} />
-            ))}
-          </div>
+          {items.slice(0, 2).map((item) => (
+            <DockLink key={item.href} item={item} pathname={pathname} showLabel iconSize={20} />
+          ))}
           <DockSell showLabel />
-          <div className="sv-dock__side">
-            {right.map((item) => (
-              <DockLink key={item.href} item={item} pathname={pathname} showLabel iconSize={20} />
-            ))}
-          </div>
+          {items.slice(2).map((item) => (
+            <DockLink key={item.href} item={item} pathname={pathname} showLabel iconSize={20} />
+          ))}
         </div>
       </nav>
       <nav className="sv-dock sv-dock--rail" aria-label="Navegación lateral">
