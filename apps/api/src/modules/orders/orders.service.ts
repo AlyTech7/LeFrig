@@ -9,11 +9,9 @@ import {
   createOrderSchema,
   updateOrderStatusSchema,
   paginationSchema,
-  DEFAULT_CURRENCY,
   OrderStatus,
 } from '@lefrig/shared';
 import { paginate, skipTake } from '../../common/utils/pagination';
-import { ManualPaymentAdapter } from '../../adapters/payment.adapter';
 
 const BUYER_TRANSITIONS: Record<string, string[]> = {
   [OrderStatus.PENDING]: [OrderStatus.CANCELLED],
@@ -26,10 +24,7 @@ const SHOP_TRANSITIONS: Record<string, string[]> = {
 
 @Injectable()
 export class OrdersService {
-  constructor(
-    private prisma: PrismaService,
-    private paymentAdapter: ManualPaymentAdapter,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   async findAll(userId: string, query: unknown) {
     const { page, limit } = paginationSchema.parse(query);
@@ -151,19 +146,6 @@ export class OrdersService {
         include: { items: true, shop: { select: { name: true } } },
       });
     });
-
-    if (data.paymentMethod === 'manual_transfer') {
-      const ref = `MAN-${order.id.slice(0, 8).toUpperCase()}`;
-      await this.paymentAdapter.initiate({
-        orderId: order.id,
-        amount: Number(totalAmount),
-        currency: DEFAULT_CURRENCY,
-        reference: ref,
-      });
-      await this.prisma.manualPayment.create({
-        data: { orderId: order.id, reference: ref, amount: totalAmount },
-      });
-    }
 
     return order;
   }

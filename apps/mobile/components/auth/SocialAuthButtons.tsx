@@ -11,6 +11,8 @@ type Variant = 'hero' | 'perla';
 type Props = {
   variant?: Variant;
   disabled?: boolean;
+  /** Defaults to all providers; pass `['google']` for email/Google-only auth. */
+  providers?: SocialProviderId[];
   onError?: (message: string) => void;
 };
 
@@ -36,13 +38,21 @@ function ProviderGlyph({ id }: { id: SocialProviderId }) {
   );
 }
 
-export function SocialAuthButtons({ variant = 'perla', disabled = false, onError }: Props) {
+export function SocialAuthButtons({
+  variant = 'perla',
+  disabled = false,
+  providers,
+  onError,
+}: Props) {
   const { signInWith, loadingProvider } = useSocialAuth();
   const t = useT();
   const [localError, setLocalError] = useState('');
 
   const isHero = variant === 'hero';
   const busy = disabled || loadingProvider !== null;
+  const visibleProviders = providers?.length
+    ? SOCIAL_PROVIDERS.filter((p) => providers.includes(p.id))
+    : SOCIAL_PROVIDERS;
 
   const handlePress = async (provider: (typeof SOCIAL_PROVIDERS)[number]) => {
     setLocalError('');
@@ -55,7 +65,7 @@ export function SocialAuthButtons({ variant = 'perla', disabled = false, onError
 
   return (
     <View style={styles.wrap}>
-      {SOCIAL_PROVIDERS.map((provider) => {
+      {visibleProviders.map((provider) => {
         const loading = loadingProvider === provider.id;
         return (
           <Pressable
