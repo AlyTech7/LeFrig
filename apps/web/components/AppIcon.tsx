@@ -13,6 +13,7 @@ import {
   Globe,
   Heart,
   HelpCircle,
+  Home,
   Image,
   Lock,
   MapPin,
@@ -72,6 +73,7 @@ const iconMap = {
   'chevron-down': ChevronDown,
   'message-circle': MessageCircle,
   'help-circle': HelpCircle,
+  home: Home,
   x: X,
 } as const;
 

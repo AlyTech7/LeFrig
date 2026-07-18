@@ -42,7 +42,7 @@ const en: Messages = {
   },
   nav: {
     home: 'Home',
-    marketplace: 'Marketplace',
+    marketplace: 'Market',
     transport: 'Transport',
     messages: 'Messages',
     chat: 'Chat',
