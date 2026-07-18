@@ -13,7 +13,7 @@ import { IconBell, LefrigBrand, LefrigMark } from '@/components/LefrigMark';
 import { useT } from '@/lib/locale';
 import { isClerkEnabled } from '@/lib/clerk';
 
-type NavIcon = 'mark' | AppIconName;
+type NavIcon = AppIconName;
 
 type NavItem = {
   href: string;
@@ -25,7 +25,7 @@ type NavItem = {
 function useNavItems(): NavItem[] {
   const t = useT();
   return [
-    { href: '/', label: t('nav.home'), match: (p) => p === '/', icon: 'mark' },
+    { href: '/', label: t('nav.home'), match: (p) => p === '/', icon: 'home' },
     {
       href: '/marketplace',
       label: t('nav.marketplace'),
@@ -48,8 +48,7 @@ function useNavItems(): NavItem[] {
 }
 
 function DockIcon({ icon, active, size }: { icon: NavIcon; active: boolean; size: number }) {
-  if (icon === 'mark') return <LefrigMark size={size} showOrbit={false} />;
-  return <AppIcon name={icon} size={size} strokeWidth={active ? 2.35 : 1.9} />;
+  return <AppIcon name={icon} size={size} strokeWidth={active ? 2.4 : 1.85} />;
 }
 
 function DockLink({
@@ -71,7 +70,6 @@ function DockLink({
       className={`sv-dock__item ${active ? 'sv-dock__item--active' : ''}`}
       aria-current={active ? 'page' : undefined}
     >
-      <span className="sv-dock__item-glow" aria-hidden />
       <span className="sv-dock__icon-wrap">
         <DockIcon icon={item.icon} active={active} size={iconSize} />
       </span>
@@ -85,9 +83,8 @@ function DockSell({ showLabel }: { showLabel: boolean }) {
 
   return (
     <Link href="/marketplace/create" className="sv-dock__sell" aria-label={t('nav.sell')}>
-      <span className="sv-dock__sell-halo" aria-hidden />
       <span className="sv-dock__sell-btn">
-        <Plus size={24} strokeWidth={2.4} aria-hidden />
+        <Plus size={22} strokeWidth={2.5} aria-hidden />
       </span>
       {showLabel ? <small>{t('nav.sell')}</small> : null}
     </Link>
@@ -124,7 +121,6 @@ export function WebDock() {
     <>
       <nav className="sv-dock sv-dock--bottom" aria-label="Navegación principal">
         <div className="sv-dock__surface" aria-hidden />
-        <div className="sv-dock__rim" aria-hidden />
         <div className="sv-dock__inner">
           <div className="sv-dock__side">
             {left.map((item) => (
@@ -140,7 +136,12 @@ export function WebDock() {
         </div>
       </nav>
       <nav className="sv-dock sv-dock--rail" aria-label="Navegación lateral">
-        <Link href="/" className="sv-mark" style={{ marginBottom: '1.25rem', textDecoration: 'none', width: 40, height: 40 }} aria-label="Lefrig inicio">
+        <Link
+          href="/"
+          className="sv-mark"
+          style={{ marginBottom: '1.25rem', textDecoration: 'none', width: 40, height: 40 }}
+          aria-label="Lefrig inicio"
+        >
           <LefrigMark size={36} showOrbit={false} />
         </Link>
         <DockItems variant="rail" />
