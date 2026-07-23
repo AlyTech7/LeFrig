@@ -171,8 +171,9 @@ export function PublishListingStudio() {
         }),
       });
       router.push('/marketplace');
-    } catch {
-      setError(t('publish.publishError'));
+    } catch (err) {
+      const detail = err instanceof Error ? err.message.trim() : '';
+      setError(detail && !detail.startsWith('API 5') ? detail.replace(/^API \d+:\s*/, '') : t('publish.publishError'));
     } finally {
       setLoading(false);
     }
