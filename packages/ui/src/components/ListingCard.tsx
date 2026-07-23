@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from './Card';
 import { Badge } from './Badge';
 import { colors } from '../tokens';
@@ -8,6 +8,7 @@ export interface ListingCardProps {
   listing: ListingSummary;
   onClick?: () => void;
   locale?: 'ar' | 'es';
+  /** Default light: marketplace pages use light backgrounds. */
   tone?: 'light' | 'mirage';
 }
 
@@ -16,19 +17,23 @@ function acceptsCash(listing: ListingSummary): boolean {
   return listing.paymentMethods.includes('cash') || listing.paymentMethods.includes('cash_on_delivery');
 }
 
-export function ListingCard({ listing, onClick, locale = 'es', tone = 'mirage' }: ListingCardProps) {
+export function ListingCard({ listing, onClick, locale = 'es', tone = 'light' }: ListingCardProps) {
   const dark = tone === 'mirage';
   const showCash = acceptsCash(listing);
   const showVerified = Boolean(listing.sellerVerified);
+  const [imgFailed, setImgFailed] = useState(false);
+  const showImage = Boolean(listing.imageUrl) && !imgFailed;
 
   return (
     <Card padding="sm" hover onClick={onClick} tone={tone}>
       <div
         style={{
           height: '160px',
-          background: listing.imageUrl
-            ? `url(${listing.imageUrl}) center/cover`
-            : 'linear-gradient(135deg, #020306 0%, #0bb87a 45%, #d4a853 100%)',
+          background: showImage
+            ? colors.sand[200]
+            : dark
+              ? 'linear-gradient(135deg, #020306 0%, #0bb87a 45%, #d4a853 100%)'
+              : `linear-gradient(135deg, ${colors.sand[200]}, ${colors.sand[400]})`,
           borderRadius: '16px',
           marginBottom: '14px',
           display: 'flex',
@@ -39,7 +44,22 @@ export function ListingCard({ listing, onClick, locale = 'es', tone = 'mirage' }
           overflow: 'hidden',
         }}
       >
-        {!listing.imageUrl && (
+        {showImage ? (
+          <img
+            src={listing.imageUrl}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            onError={() => setImgFailed(true)}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+          />
+        ) : (
           <span
             style={{
               fontSize: '3rem',
@@ -55,9 +75,11 @@ export function ListingCard({ listing, onClick, locale = 'es', tone = 'mirage' }
           </span>
         )}
         {showCash ? (
-          <Badge variant="gold" size="sm">
-            {locale === 'ar' ? 'نقداً' : '💵 Efectivo'}
-          </Badge>
+          <span style={{ position: 'relative', zIndex: 1 }}>
+            <Badge variant="gold" size="sm">
+              {locale === 'ar' ? 'نقداً' : '💵 Efectivo'}
+            </Badge>
+          </span>
         ) : null}
       </div>
       <h3

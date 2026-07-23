@@ -63,6 +63,14 @@ Debe mostrar:
 
 Sube una foto desde [lefrig.com/marketplace/create](https://www.lefrig.com/marketplace/create). La URL devuelta debe empezar por `STORAGE_PUBLIC_URL`, no por `ondigitalocean.app/uploads`.
 
+La API sube con `ACL: public-read`. Si fotos antiguas dan 403:
+
+```bash
+cd apps/api
+# Exporta STORAGE_* de producción (no localhost), luego:
+pnpm db:fix-image-acl
+```
+
 ## Alternativa: DigitalOcean Spaces (configurado en prod)
 
 LeFrig usa **DO Spaces** en `fra1` (misma región que la API):

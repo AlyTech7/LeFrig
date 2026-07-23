@@ -1,6 +1,12 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectCommand,
+  PutObjectAclCommand,
+  PutObjectCommand,
+  ListObjectsV2Command,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { mkdir, writeFile, unlink } from 'fs/promises';
 import { dirname, join } from 'path';
 import { randomUUID } from 'crypto';
@@ -90,6 +96,8 @@ export class StorageAdapter {
           Body: buffer,
           ContentType: contentType,
           CacheControl: 'public, max-age=31536000, immutable',
+          // Spaces/S3: sin ACL las URLs públicas del bucket responden 403.
+          ACL: 'public-read',
         }),
       );
       const url = this.buildPublicUrl(fullKey);
@@ -173,6 +181,42 @@ export class StorageAdapter {
       const key = this.keyFromUrl(url);
       if (key) await this.delete(key);
     }
+  }
+
+  /** Marca un objeto como público (necesario en Spaces tras uploads sin ACL). */
+  async makeObjectPublic(key: string): Promise<void> {
+    if (!this.s3Client || !this.s3Bucket) return;
+    await this.s3Client.send(
+      new PutObjectAclCommand({
+        Bucket: this.s3Bucket,
+        Key: key,
+        ACL: 'public-read',
+      }),
+    );
+  }
+
+  /** Idempotente: publica todos los objetos bajo un prefijo (p.ej. listings/). */
+  async makePrefixPublic(prefix = 'listings/'): Promise<number> {
+    if (!this.s3Client || !this.s3Bucket) return 0;
+    let token: string | undefined;
+    let count = 0;
+    do {
+      const page = await this.s3Client.send(
+        new ListObjectsV2Command({
+          Bucket: this.s3Bucket,
+          Prefix: prefix,
+          ContinuationToken: token,
+        }),
+      );
+      for (const obj of page.Contents ?? []) {
+        if (!obj.Key) continue;
+        await this.makeObjectPublic(obj.Key);
+        count += 1;
+      }
+      token = page.IsTruncated ? page.NextContinuationToken : undefined;
+    } while (token);
+    this.logger.log(`Made ${count} objects public under ${prefix}`);
+    return count;
   }
 
   buildPublicUrl(key: string): string {
