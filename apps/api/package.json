@@ -9,6 +9,7 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed-camps": "tsx prisma/seed-camps.ts",
+    "db:seed-categories": "tsx prisma/seed-categories.ts",
     "db:studio": "prisma studio",
     "test": "vitest run",
     "lint": "eslint . --max-warnings 9999",

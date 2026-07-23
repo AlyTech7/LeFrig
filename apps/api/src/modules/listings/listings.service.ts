@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MeilisearchAdapter } from '../../adapters/meilisearch.adapter';
 import { StorageAdapter } from '../../adapters/storage.adapter';
@@ -14,6 +14,19 @@ import {
   type ListingAttributeFilterValues,
 } from '@lefrig/shared';
 import { Prisma } from '@prisma/client';
+import { ZodError } from 'zod';
+
+function parseOrBadRequest<T>(schema: { parse: (input: unknown) => T }, input: unknown): T {
+  try {
+    return schema.parse(input);
+  } catch (err) {
+    if (err instanceof ZodError) {
+      const msg = err.issues.map((i) => i.message).join('; ') || 'Datos inválidos';
+      throw new BadRequestException(msg);
+    }
+    throw err;
+  }
+}
 
 @Injectable()
 export class ListingsService {
@@ -202,7 +215,7 @@ export class ListingsService {
   }
 
   async create(sellerId: string, input: unknown) {
-    const data = createListingSchema.parse(input);
+    const data = parseOrBadRequest(createListingSchema, input);
     const category = await this.prisma.category.findFirst({
       where: { slug: data.category, type: 'listing' },
     });
@@ -243,7 +256,7 @@ export class ListingsService {
     if (!listing) throw new NotFoundException('Anuncio no encontrado');
     if (listing.sellerId !== userId) throw new ForbiddenException('No autorizado');
 
-    const data = updateListingSchema.parse(input);
+    const data = parseOrBadRequest(updateListingSchema, input);
     const { category, attributes, ...rest } = data;
     const updateData: Prisma.ListingUpdateInput = { ...rest };
 
