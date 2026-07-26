@@ -11,6 +11,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { pinConfirmSchema, ListingStatus } from '@lefrig/shared';
 import { randomBytes, randomInt } from 'crypto';
 import { RateLimitService } from '../../common/rate-limit/rate-limit.service';
+import { buildCashReceiptPdf } from './cash-receipt-pdf';
 
 const PIN_FAIL_LIMIT = 5;
 const PIN_FAIL_WINDOW_SEC = 15 * 60;
@@ -213,6 +214,29 @@ export class CashService {
   }
 
   async getReceipt(operationCode: string, userId: string) {
+    const data = await this.loadReceiptData(operationCode, userId);
+    const shareText = [
+      'ⵣ Lefrig — Recibo efectivo',
+      `Código: ${data.operationCode}`,
+      `Importe: ${data.amount.toLocaleString()} ${data.currency}`,
+      data.listingTitle ? `Artículo: ${data.listingTitle}` : null,
+      `Comprador: ${data.buyerName}`,
+      `Vendedor: ${data.sellerName}`,
+      `Fecha: ${data.issuedAt.toISOString().slice(0, 10)}`,
+      'Confirmado con PIN bilateral · lefrig.com',
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    return { ...data, shareText };
+  }
+
+  async getReceiptPdf(operationCode: string, userId: string): Promise<Buffer> {
+    const data = await this.loadReceiptData(operationCode, userId);
+    return buildCashReceiptPdf(data);
+  }
+
+  private async loadReceiptData(operationCode: string, userId: string) {
     const agreement = await this.prisma.cashAgreement.findUnique({
       where: { operationCode },
       include: {
@@ -231,30 +255,15 @@ export class CashService {
     }
 
     const receipt = agreement.receipts[0];
-    const amount = Number(agreement.amount);
-    const shareText = [
-      'ⵣ Lefrig — Recibo efectivo',
-      `Código: ${agreement.operationCode}`,
-      `Importe: ${amount.toLocaleString()} ${agreement.currency}`,
-      agreement.listing?.title ? `Artículo: ${agreement.listing.title}` : null,
-      `Comprador: ${agreement.buyer.displayName}`,
-      `Vendedor: ${agreement.seller.displayName}`,
-      `Fecha: ${receipt.issuedAt.toISOString().slice(0, 10)}`,
-      'Confirmado con PIN bilateral · lefrig.com',
-    ]
-      .filter(Boolean)
-      .join('\n');
-
     return {
       receiptId: receipt.id,
       operationCode: agreement.operationCode,
-      amount,
+      amount: Number(agreement.amount),
       currency: agreement.currency,
       issuedAt: receipt.issuedAt,
       listingTitle: agreement.listing?.title ?? null,
       buyerName: agreement.buyer.displayName,
       sellerName: agreement.seller.displayName,
-      shareText,
     };
   }
 
