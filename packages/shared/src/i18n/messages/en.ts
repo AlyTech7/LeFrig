@@ -498,6 +498,8 @@ const en: Messages = {
         intlScope: 'On international routes, at least one end must be outside Sahrawi wilayas and Tindouf.',
         published: 'Trip published on the network.',
         signIn: 'Sign in to publish.',
+        invalidPhone: 'Invalid phone. Use international format (+213, +34…).',
+        publishFailed: 'Could not publish the trip. Please try again.',
       },
       priceOptional: 'Estimated price (optional)',
       openTrip: 'Open my trip',

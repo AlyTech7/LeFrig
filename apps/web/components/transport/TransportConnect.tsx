@@ -8,10 +8,12 @@ import {
   TRANSPORT_HUB_ZONES,
   assertRouteMatchesScope,
   corridorsForScope,
+  formatPhone,
   getTransportHub,
   hubScope,
   hubsInScope,
   hubsInZone,
+  isValidPhoneE164,
   zonesForScope,
   pickLocalized,
   type TransportHub,
@@ -322,6 +324,12 @@ export function TransportConnect() {
     try {
       await authFetch('/auth/sync', { method: 'POST' });
       const price = priceEstimate.trim() ? Number(priceEstimate) : undefined;
+      const phoneNormalized = phone.trim() ? formatPhone(phone.trim()) : undefined;
+      if (phone.trim() && !isValidPhoneE164(phoneNormalized!)) {
+        setToast(t('transport.connect.errors.invalidPhone'));
+        setSubmitting(false);
+        return;
+      }
       const created = await authFetch<{ id: string }>('/transport', {
         method: 'POST',
         body: JSON.stringify({
@@ -331,7 +339,7 @@ export function TransportConnect() {
           destinationHubSlug: destHub,
           seatsRequested: seats,
           description: note.trim() || routeLabel,
-          contactPhone: phone.trim() || undefined,
+          contactPhone: phoneNormalized,
           departureAt: departureDate ? new Date(departureDate).toISOString() : undefined,
           priceEstimate: price && Number.isFinite(price) && price > 0 ? price : undefined,
         }),
@@ -341,8 +349,15 @@ export function TransportConnect() {
       setNote('');
       setPriceEstimate('');
       loadMatches();
-    } catch {
-      setToast(t('transport.connect.errors.signIn'));
+    } catch (e) {
+      const detail = e instanceof Error ? e.message : '';
+      if (/401|403|sesión|session|Token|Inicia sesión/i.test(detail)) {
+        setToast(t('transport.connect.errors.signIn'));
+      } else if (detail) {
+        setToast(detail.replace(/^API \d+:\s*/, ''));
+      } else {
+        setToast(t('transport.connect.errors.publishFailed'));
+      }
     } finally {
       setSubmitting(false);
     }

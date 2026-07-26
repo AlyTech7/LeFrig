@@ -497,6 +497,8 @@ const es = {
         intlScope: 'En rutas internacionales, al menos un extremo debe estar fuera de wilayas saharauis y Tindouf.',
         published: 'Viaje publicado en la red.',
         signIn: 'Inicia sesión para publicar.',
+        invalidPhone: 'Teléfono inválido. Usa formato internacional (+213, +34…).',
+        publishFailed: 'No se pudo publicar el viaje. Inténtalo de nuevo.',
       },
       priceOptional: 'Precio estimado (opcional)',
       openTrip: 'Abrir mi viaje',
