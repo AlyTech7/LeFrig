@@ -47,7 +47,7 @@ const ar: Messages = {
     transport: 'النقل',
     messages: 'الرسائل',
     chat: 'الدردشة',
-    sell: 'بيع',
+    sell: 'نشر',
     publish: 'نشر',
     shops: 'المتاجر',
     services: 'الخدمات',
