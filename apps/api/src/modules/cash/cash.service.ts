@@ -83,7 +83,14 @@ export class CashService {
 
     // Creator is always buyer — never return PIN on create
     const { pin: _pin, ...safe } = agreement;
-    return { ...safe, hasPin: true };
+    return {
+      ...safe,
+      hasPin: true,
+      role: 'buyer' as const,
+      myConfirmed: false,
+      canConfirm: true,
+      confirmationCount: 0,
+    };
   }
 
   async findByCode(operationCode: string, userId?: string) {
@@ -99,14 +106,26 @@ export class CashService {
     });
     if (!agreement) throw new NotFoundException('Operación no encontrada');
 
-    const isSeller = userId && agreement.sellerId === userId;
-    const showPin = isSeller && agreement.status === 'agreed';
+    const role =
+      userId && agreement.buyerId === userId
+        ? ('buyer' as const)
+        : userId && agreement.sellerId === userId
+          ? ('seller' as const)
+          : null;
+    const myConfirmed = Boolean(
+      userId && agreement.confirmations.some((c) => c.confirmedById === userId),
+    );
+    const canConfirm = Boolean(role && agreement.status === 'agreed' && !myConfirmed);
+    const showPin = role === 'seller' && agreement.status === 'agreed';
 
     const { pin, ...safe } = agreement;
     return {
       ...safe,
       hasPin: !!pin,
       pin: showPin ? pin : undefined,
+      role,
+      myConfirmed,
+      canConfirm,
       confirmationCount: agreement.confirmations.length,
       receipt: agreement.receipts[0] ?? null,
     };
@@ -251,13 +270,19 @@ export class CashService {
         },
       })
       .then((rows) =>
-        rows.map(({ pin, receipts, confirmations, ...a }) => ({
-          ...a,
-          pin: a.sellerId === userId && a.status === 'agreed' ? pin : undefined,
-          hasReceipt: receipts.length > 0,
-          confirmationCount: confirmations.length,
-          myConfirmed: confirmations.some((c) => c.confirmedById === userId),
-        })),
+        rows.map(({ pin, receipts, confirmations, ...a }) => {
+          const role = a.buyerId === userId ? ('buyer' as const) : ('seller' as const);
+          const myConfirmed = confirmations.some((c) => c.confirmedById === userId);
+          return {
+            ...a,
+            pin: role === 'seller' && a.status === 'agreed' ? pin : undefined,
+            hasReceipt: receipts.length > 0,
+            confirmationCount: confirmations.length,
+            myConfirmed,
+            role,
+            canConfirm: a.status === 'agreed' && !myConfirmed,
+          };
+        }),
       );
   }
 }

@@ -120,20 +120,37 @@ export default function ListingDetailPage() {
     if (!seller?.id) return;
     setCreatingCash(true);
     try {
-      const agreement = await authFetch<{ operationCode: string; pin: string; id: string; amount: number | string; status: string; method: string; createdAt: string }>(
-        '/cash/agreements',
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            listingId: id,
-            sellerId: seller.id,
-            amount: summary.price,
-            method: 'cash',
-          }),
-        },
-      );
+      const agreement = await authFetch<{
+        operationCode: string;
+        id: string;
+        amount: number | string;
+        currency?: string;
+        status: string;
+        method: string;
+        createdAt: string;
+        role?: 'buyer';
+        listing?: { title: string };
+      }>('/cash/agreements', {
+        method: 'POST',
+        body: JSON.stringify({
+          listingId: id,
+          sellerId: seller.id,
+          amount: summary.price,
+          method: 'cash',
+        }),
+      });
       const { setPendingCashAgreement } = await import('@/lib/cash-pending');
-      setPendingCashAgreement(agreement);
+      setPendingCashAgreement({
+        id: agreement.id,
+        operationCode: agreement.operationCode,
+        amount: agreement.amount,
+        currency: agreement.currency,
+        status: agreement.status,
+        method: agreement.method,
+        createdAt: agreement.createdAt,
+        listingTitle: agreement.listing?.title ?? summary.title,
+        role: 'buyer',
+      });
       router.push('/cash');
     } catch {
       alert(t('marketplaceExtra.agreementError'));
