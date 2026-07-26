@@ -125,6 +125,9 @@ describe('CashService', () => {
     expect(result.operationCode).toMatch(/^CASH-/);
     expect(result.hasPin).toBe(true);
     expect((result as { pin?: string }).pin).toBeUndefined();
+    expect(result.role).toBe('buyer');
+    expect(result.canConfirm).toBe(true);
+    expect(result.myConfirmed).toBe(false);
   });
 
   it('createAgreement rechaza buyerId === sellerId', async () => {
@@ -304,12 +307,20 @@ describe('CashService', () => {
     const publicView = await service.findByCode('CASH-VIEW');
     expect(publicView.pin).toBeUndefined();
     expect(publicView.hasPin).toBe(true);
+    expect(publicView.role).toBeNull();
+    expect(publicView.canConfirm).toBe(false);
 
     const buyerView = await service.findByCode('CASH-VIEW', buyerId);
     expect(buyerView.pin).toBeUndefined();
+    expect(buyerView.role).toBe('buyer');
+    expect(buyerView.canConfirm).toBe(true);
+    expect(buyerView.myConfirmed).toBe(false);
 
     const sellerView = await service.findByCode('CASH-VIEW', sellerId);
     expect(sellerView.pin).toBe('4321');
+    expect(sellerView.role).toBe('seller');
+    expect(sellerView.canConfirm).toBe(true);
+    expect(sellerView.confirmationCount).toBe(0);
   });
 
   it('findByCode lanza NotFound si no existe', async () => {
