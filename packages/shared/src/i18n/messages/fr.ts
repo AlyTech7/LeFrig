@@ -498,6 +498,8 @@ const fr: Messages = {
         intlScope: 'Sur les itinéraires internationaux, au moins une extrémité doit être hors wilayas sahraouies et Tindouf.',
         published: 'Trajet publié sur le réseau.',
         signIn: 'Connectez-vous pour publier.',
+        invalidPhone: 'Téléphone invalide. Utilisez le format international (+213, +34…).',
+        publishFailed: 'Impossible de publier le trajet. Réessayez.',
       },
       priceOptional: 'Prix estimé (optionnel)',
       openTrip: 'Ouvrir mon trajet',
