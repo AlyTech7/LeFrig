@@ -622,6 +622,12 @@ model TransportRequest {
   departureAt        DateTime? @map("departure_at")
   contactPhone       String?   @map("contact_phone")
   luggageNote        String?   @map("luggage_note")
+  /** local | international — derivado de hubs al crear */
+  scope              String?
+  /** PIN 4 dígitos generado al claim/assign; solo visible al conductor */
+  completionPin      String?   @map("completion_pin")
+  requesterConfirmedAt DateTime? @map("requester_confirmed_at")
+  driverConfirmedAt    DateTime? @map("driver_confirmed_at")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
@@ -636,6 +642,7 @@ model TransportRequest {
   @@index([requesterId])
   @@index([driverId])
   @@index([status])
+  @@index([scope])
   @@index([originHubSlug, destinationHubSlug])
   @@map("transport_requests")
 }
@@ -650,6 +657,8 @@ model DriverProfile {
   isVerified      Boolean  @default(false) @map("is_verified")
   rating          Float    @default(0)
   totalTrips      Int      @default(0) @map("total_trips")
+  /** Hubs preferidos (slugs) para matching más allá de camps */
+  preferredHubSlugs String[] @default([]) @map("preferred_hub_slugs")
   createdAt       DateTime @default(now()) @map("created_at")
 
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)

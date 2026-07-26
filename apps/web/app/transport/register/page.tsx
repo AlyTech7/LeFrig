@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, Card, Input, colors } from '@lefrig/ui/client';
 import type { CampSummary } from '@lefrig/shared';
-import { localizedCampFromSummary } from '@lefrig/shared';
+import { TRANSPORT_HUBS, localizedCampFromSummary, pickLocalized } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
 import { fetchApi } from '@/lib/api';
 import { PageBody, PageHero } from '@/components/PageHero';
@@ -14,6 +14,7 @@ import { useLocale, useT } from '@/lib/locale';
 
 const VEHICLE_TYPES = ['car', 'pickup', 'van', 'truck', 'motorcycle'] as const;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const POPULAR_HUBS = TRANSPORT_HUBS.filter((h) => h.popular).slice(0, 16);
 
 function isUuid(value: string) {
   return UUID_RE.test(value);
@@ -29,6 +30,7 @@ export default function DriverRegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [preferredHubs, setPreferredHubs] = useState<string[]>([]);
   const [form, setForm] = useState({
     vehicleType: 'pickup',
     vehiclePlate: '',
@@ -93,6 +95,7 @@ export default function DriverRegisterPage() {
           vehiclePlate: form.vehiclePlate.trim() || undefined,
           licenseNumber: form.licenseNumber.trim() || undefined,
           seatsCapacity: Number(form.seatsCapacity) || 4,
+          preferredHubSlugs: preferredHubs.length ? preferredHubs : undefined,
           routes,
         }),
       });
@@ -190,6 +193,45 @@ export default function DriverRegisterPage() {
               </p>
             ) : (
               <>
+                <div>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600, display: 'block', marginBottom: 8 }}>
+                    {t('transport.connect.preferredHubs')}
+                  </span>
+                  <p style={{ margin: '0 0 8px', fontSize: '0.8rem', color: colors.gray[600] }}>
+                    {t('transport.connect.preferredHubsHint')}
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {POPULAR_HUBS.map((h) => {
+                      const on = preferredHubs.includes(h.slug);
+                      return (
+                        <button
+                          key={h.slug}
+                          type="button"
+                          onClick={() =>
+                            setPreferredHubs((prev) =>
+                              on
+                                ? prev.filter((s) => s !== h.slug)
+                                : prev.length >= 12
+                                  ? prev
+                                  : [...prev, h.slug],
+                            )
+                          }
+                          style={{
+                            padding: '6px 10px',
+                            borderRadius: 999,
+                            border: `1.5px solid ${on ? colors.deepGreen[600] : colors.sand[300]}`,
+                            background: on ? colors.deepGreen[50] : '#fff',
+                            fontSize: '0.8rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {h.flag} {pickLocalized(h, locale)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
                 <label>
                   <span style={{ fontSize: '0.875rem', fontWeight: 600, display: 'block', marginBottom: 8 }}>
                     {t('transport.driver.routeOrigin')}

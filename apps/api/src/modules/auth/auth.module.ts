@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { ClerkService } from './clerk.service';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthGuard } from '../../common/guards/auth.guard';
+import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard';
 import { resolveJwtSecret } from '../../common/config/production-security';
 
 @Global()
@@ -23,7 +24,7 @@ import { resolveJwtSecret } from '../../common/config/production-security';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, ClerkService, JwtStrategy, AuthGuard],
-  exports: [AuthService, ClerkService, AuthGuard, JwtModule],
+  providers: [AuthService, ClerkService, JwtStrategy, AuthGuard, OptionalJwtAuthGuard],
+  exports: [AuthService, ClerkService, AuthGuard, OptionalJwtAuthGuard, JwtModule],
 })
 export class AuthModule {}

@@ -9,6 +9,8 @@ export default function TransportLayout() {
       <Stack.Screen name="request" options={{ title: t('layouts.request'), headerShown: false }} />
       <Stack.Screen name="tindouf" options={{ title: t('layouts.tindoufRoute') }} />
       <Stack.Screen name="register" options={{ title: t('layouts.driverRegister'), headerShown: false }} />
+      <Stack.Screen name="garage" options={{ title: t('me.driver.title'), headerShown: false }} />
+      <Stack.Screen name="[id]" options={{ title: t('transport.trip.title'), headerShown: false }} />
     </Stack>
   );
 }

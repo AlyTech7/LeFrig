@@ -130,11 +130,14 @@ export const createTransportSchema = z.object({
   type: z.enum(['collective_taxi', 'delivery', 'tindouf_import', 'errand', 'shared_ride', 'package', 'person']),
   originHubSlug: z.string().min(1),
   destinationHubSlug: z.string().min(1),
+  /** Preferencia de pestaña UI; el servidor deriva y valida el scope real */
+  scope: z.enum(['local', 'international']).optional(),
   originCampId: z.string().uuid().optional(),
   destinationCampId: z.string().uuid().optional(),
   pickupPointId: z.string().uuid().optional(),
   dropoffPointId: z.string().uuid().optional(),
   description: z.string().max(500).optional(),
+  priceEstimate: z.coerce.number().positive().max(1_000_000).optional(),
   seatsRequested: z.coerce.number().int().min(1).max(50).default(1),
   seatsAvailable: z.coerce.number().int().min(1).max(50).optional(),
   packageCapacity: z.string().max(120).optional(),
@@ -148,6 +151,7 @@ export const createDriverProfileSchema = z.object({
   vehiclePlate: z.string().min(2).max(20).optional(),
   licenseNumber: z.string().min(2).max(40).optional(),
   seatsCapacity: z.coerce.number().int().min(1).max(50).default(4),
+  preferredHubSlugs: z.array(z.string().min(1).max(64)).max(40).optional(),
   routes: z
     .array(
       z.object({
@@ -158,6 +162,10 @@ export const createDriverProfileSchema = z.object({
     )
     .max(5)
     .optional(),
+});
+
+export const transportCompleteSchema = z.object({
+  pin: z.string().regex(/^\d{4}$/, 'PIN de 4 dígitos'),
 });
 
 export const pinConfirmSchema = z.object({

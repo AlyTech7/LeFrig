@@ -34,9 +34,13 @@ export type TransportCorridor = {
   scope: TransportRouteScope;
 };
 
+/**
+ * Local = solo wilayas saharauis + Tindouf.
+ * Internacional = Argelia (58), Mauritania, España, Francia.
+ */
 export const TRANSPORT_SCOPE_ZONES: Record<TransportRouteScope, TransportHubZone[]> = {
-  local: ['wilaya', 'tindouf', 'argelia', 'mauritania'],
-  international: ['espana', 'francia', 'mauritania'],
+  local: ['wilaya', 'tindouf'],
+  international: ['argelia', 'mauritania', 'espana', 'francia'],
 };
 
 export const TRANSPORT_HUB_ZONES: { id: TransportHubZone; labelEs: string; labelAr: string; icon: string }[] = [
@@ -58,7 +62,7 @@ const CORE_HUBS: TransportHub[] = [
   { slug: '27-febrero', zone: 'wilaya', nameEs: '27 de Febrero / Boujdour', nameAr: '27 فبراير', campSlug: '27-febrero', country: 'EH', flag: 'ⵣ' },
   { slug: 'tindouf', zone: 'tindouf', nameEs: 'Tindouf (Argelia)', nameAr: 'تندوف', campSlug: 'tindouf', country: 'DZ', flag: '🇩🇿', popular: true },
 
-  // Mauritania — corredor saharaui
+  // Mauritania — internacional
   { slug: 'nouakchott', zone: 'mauritania', nameEs: 'Nuakchott', nameAr: 'نواكشوط', country: 'MR', flag: '🇲🇷', popular: true },
   { slug: 'nouadhibou', zone: 'mauritania', nameEs: 'Nuadibú', nameAr: 'نواذيبو', country: 'MR', flag: '🇲🇷', popular: true },
   { slug: 'zouerate', zone: 'mauritania', nameEs: 'Zouérate', nameAr: 'ازويرات', country: 'MR', flag: '🇲🇷', popular: true },
@@ -91,24 +95,27 @@ export const TRANSPORT_HUBS: TransportHub[] = [
 
 /** Rutas estrella — un toque y listo */
 export const TRANSPORT_CORRIDORS: TransportCorridor[] = [
-  // Local — Mauritania
-  { origin: 'rabouni', destination: 'nouakchott', labelEs: 'Rabouni → Nuakchott', tag: 'mauritania', scope: 'local' },
-  { origin: 'rabouni', destination: 'zouerate', labelEs: 'Rabouni → Zouérate', tag: 'mauritania', scope: 'local' },
-  { origin: 'rabouni', destination: 'bir-moghrein', labelEs: 'Rabouni → Bir Moghrein', tag: 'mauritania', scope: 'local' },
-  { origin: 'rabouni', destination: 'nouadhibou', labelEs: 'Rabouni → Nuadibú', tag: 'mauritania', scope: 'local' },
-  // Local — Tindouf / wilayas
+  // Local — wilayas + Tindouf
   { origin: 'tindouf', destination: 'rabouni', labelEs: 'Tindouf → Rabouni', tag: 'tindouf', scope: 'local' },
   { origin: 'tindouf', destination: 'smara', labelEs: 'Tindouf → Smara', tag: 'tindouf', scope: 'local' },
+  { origin: 'tindouf', destination: 'aaiun', labelEs: 'Tindouf → Aaiún', tag: 'tindouf', scope: 'local' },
   { origin: 'smara', destination: 'aaiun', labelEs: 'Smara → Aaiún', tag: 'wilaya', scope: 'local' },
   { origin: 'dakhla', destination: 'aaiun', labelEs: 'Dakhla → Aaiún', tag: 'wilaya', scope: 'local' },
-  // Local — Argelia (todas las wilayas)
-  { origin: 'tindouf', destination: 'dz-alger', labelEs: 'Tindouf → Argel', tag: 'argelia', scope: 'local' },
-  { origin: 'rabouni', destination: 'dz-oran', labelEs: 'Rabouni → Orán', tag: 'argelia', scope: 'local' },
-  { origin: 'rabouni', destination: 'dz-constantine', labelEs: 'Rabouni → Constantina', tag: 'argelia', scope: 'local' },
-  { origin: 'dz-alger', destination: 'dz-annaba', labelEs: 'Argel → Annaba', tag: 'argelia', scope: 'local' },
-  { origin: 'dz-oran', destination: 'dz-tlemcen', labelEs: 'Orán → Tlemcen', tag: 'argelia', scope: 'local' },
-  { origin: 'dz-setif', destination: 'dz-alger', labelEs: 'Sétif → Argel', tag: 'argelia', scope: 'local' },
-  // Internacional — diáspora
+  { origin: 'rabouni', destination: 'auserd', labelEs: 'Rabouni → Auserd', tag: 'wilaya', scope: 'local' },
+  { origin: 'aaiun', destination: '27-febrero', labelEs: 'Aaiún → 27 Febrero', tag: 'wilaya', scope: 'local' },
+  // Internacional — Mauritania
+  { origin: 'rabouni', destination: 'nouakchott', labelEs: 'Rabouni → Nuakchott', tag: 'mauritania', scope: 'international' },
+  { origin: 'rabouni', destination: 'zouerate', labelEs: 'Rabouni → Zouérate', tag: 'mauritania', scope: 'international' },
+  { origin: 'rabouni', destination: 'bir-moghrein', labelEs: 'Rabouni → Bir Moghrein', tag: 'mauritania', scope: 'international' },
+  { origin: 'rabouni', destination: 'nouadhibou', labelEs: 'Rabouni → Nuadibú', tag: 'mauritania', scope: 'international' },
+  // Internacional — Argelia
+  { origin: 'tindouf', destination: 'dz-alger', labelEs: 'Tindouf → Argel', tag: 'argelia', scope: 'international' },
+  { origin: 'rabouni', destination: 'dz-oran', labelEs: 'Rabouni → Orán', tag: 'argelia', scope: 'international' },
+  { origin: 'rabouni', destination: 'dz-constantine', labelEs: 'Rabouni → Constantina', tag: 'argelia', scope: 'international' },
+  { origin: 'dz-alger', destination: 'dz-annaba', labelEs: 'Argel → Annaba', tag: 'argelia', scope: 'international' },
+  { origin: 'dz-oran', destination: 'dz-tlemcen', labelEs: 'Orán → Tlemcen', tag: 'argelia', scope: 'international' },
+  { origin: 'dz-setif', destination: 'dz-alger', labelEs: 'Sétif → Argel', tag: 'argelia', scope: 'international' },
+  // Internacional — diáspora Europa
   { origin: 'madrid', destination: 'rabouni', labelEs: 'Madrid → Rabouni', tag: 'europa', scope: 'international' },
   { origin: 'barcelona', destination: 'tindouf', labelEs: 'Barcelona → Tindouf', tag: 'europa', scope: 'international' },
   { origin: 'paris', destination: 'rabouni', labelEs: 'París → Rabouni', tag: 'europa', scope: 'international' },
@@ -118,7 +125,6 @@ export const TRANSPORT_CORRIDORS: TransportCorridor[] = [
   { origin: 'valencia', destination: 'tindouf', labelEs: 'Valencia → Tindouf', tag: 'europa', scope: 'international' },
   { origin: 'fr-59-nord', destination: 'rabouni', labelEs: 'Nord → Rabouni', tag: 'europa', scope: 'international' },
   { origin: 'fr-31-haute-garonne', destination: 'tindouf', labelEs: 'Toulouse → Tindouf', tag: 'europa', scope: 'international' },
-  // Internacional — Mauritania
   { origin: 'las-palmas', destination: 'nouadhibou', labelEs: 'Canarias → Nuadibú', tag: 'mauritania', scope: 'international' },
   { origin: 'madrid', destination: 'nouakchott', labelEs: 'Madrid → Nuakchott', tag: 'mauritania', scope: 'international' },
   { origin: 'paris', destination: 'nouakchott', labelEs: 'París → Nuakchott', tag: 'mauritania', scope: 'international' },
@@ -132,13 +138,58 @@ export function hubsInZone(zone: TransportHubZone): TransportHub[] {
   return TRANSPORT_HUBS.filter((h) => h.zone === zone);
 }
 
+export function isLocalHubZone(zone: TransportHubZone): boolean {
+  return TRANSPORT_SCOPE_ZONES.local.includes(zone);
+}
+
 /**
- * Ámbito "natural" de una zona. Mauritania pertenece a ambos ámbitos
- * (corredor saharaui local y rutas internacionales), así que se resuelve
- * como local primero para no romper los corredores Rabouni ↔ Mauritania.
+ * Ámbito natural de una zona de hub.
+ * Local solo wilaya + tindouf; el resto es internacional.
  */
 export function hubScope(zone: TransportHubZone): TransportRouteScope {
-  return TRANSPORT_SCOPE_ZONES.local.includes(zone) ? 'local' : 'international';
+  return isLocalHubZone(zone) ? 'local' : 'international';
+}
+
+/**
+ * Clasifica una ruta origen→destino.
+ * - local: ambos extremos en wilaya|tindouf
+ * - international: al menos un extremo fuera
+ * - invalid: hub desconocido o mismo punto
+ */
+export function routeScopeForHubs(
+  originSlug: string,
+  destinationSlug: string,
+): TransportRouteScope | 'invalid' {
+  if (!originSlug || !destinationSlug || originSlug === destinationSlug) return 'invalid';
+  const origin = getTransportHub(originSlug);
+  const dest = getTransportHub(destinationSlug);
+  if (!origin || !dest) return 'invalid';
+  if (isLocalHubZone(origin.zone) && isLocalHubZone(dest.zone)) return 'local';
+  return 'international';
+}
+
+export function assertRouteMatchesScope(
+  scope: TransportRouteScope,
+  originSlug: string,
+  destinationSlug: string,
+): { ok: true; resolved: TransportRouteScope } | { ok: false; reason: string } {
+  const resolved = routeScopeForHubs(originSlug, destinationSlug);
+  if (resolved === 'invalid') {
+    return { ok: false, reason: 'Origen y destino deben ser puntos distintos y válidos' };
+  }
+  if (scope === 'local' && resolved !== 'local') {
+    return {
+      ok: false,
+      reason: 'El transporte local solo conecta wilayas saharauis y Tindouf',
+    };
+  }
+  if (scope === 'international' && resolved !== 'international') {
+    return {
+      ok: false,
+      reason: 'Para rutas solo entre wilayas/Tindouf usa la pestaña Local',
+    };
+  }
+  return { ok: true, resolved };
 }
 
 export function hubsInScope(scope: TransportRouteScope): TransportHub[] {
