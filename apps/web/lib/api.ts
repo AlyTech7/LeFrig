@@ -79,11 +79,11 @@ export const demoCamps: CampSummary[] = CAMPS.map((c, i) => ({
 export const demoListings: ListingSummary[] = [
   {
     id: 'demo-1',
-    title: 'Panel solar 200W — Rabouni',
+    title: 'Generador 3kVA — Rabouni',
     price: 12500,
     currency: CURRENCY,
     status: 'active',
-    category: 'electronics',
+    category: 'generators',
     campId: campIds[4]!,
     sellerName: 'Mohamed L.',
     createdAt: new Date().toISOString(),
