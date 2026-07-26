@@ -25,56 +25,59 @@ export class CategoriesService implements OnModuleInit {
     const existing = await this.prisma.category.count({ where: { isActive: true } });
     if (existing < expected) {
       this.logger.log(`Catálogo de categorías incompleto (${existing}/${expected}) — sincronizando…`);
+    }
 
-      for (const [i, cat] of LISTING_CATEGORIES.entries()) {
-        await this.prisma.category.upsert({
-          where: { slug: cat.slug },
-          update: {
-            nameAr: cat.nameAr,
-            nameEs: cat.nameEs,
-            nameEn: cat.nameEs,
-            icon: cat.icon,
-            type: 'listing',
-            sortOrder: i,
-            isActive: true,
-          },
-          create: {
-            slug: cat.slug,
-            nameAr: cat.nameAr,
-            nameEs: cat.nameEs,
-            nameEn: cat.nameEs,
-            icon: cat.icon,
-            type: 'listing',
-            sortOrder: i,
-          },
-        });
-      }
+    // Siempre sincroniza nombres/iconos del catálogo compartido (corrige copy i18n en prod).
+    for (const [i, cat] of LISTING_CATEGORIES.entries()) {
+      await this.prisma.category.upsert({
+        where: { slug: cat.slug },
+        update: {
+          nameAr: cat.nameAr,
+          nameEs: cat.nameEs,
+          nameEn: cat.nameEs,
+          icon: cat.icon,
+          type: 'listing',
+          sortOrder: i,
+          isActive: true,
+        },
+        create: {
+          slug: cat.slug,
+          nameAr: cat.nameAr,
+          nameEs: cat.nameEs,
+          nameEn: cat.nameEs,
+          icon: cat.icon,
+          type: 'listing',
+          sortOrder: i,
+        },
+      });
+    }
 
-      for (const [i, cat] of SERVICE_CATEGORIES.entries()) {
-        const slug = `service-${cat.slug}`;
-        await this.prisma.category.upsert({
-          where: { slug },
-          update: {
-            nameAr: cat.nameAr,
-            nameEs: cat.nameEs,
-            nameEn: cat.nameEs,
-            icon: cat.icon,
-            type: 'service',
-            sortOrder: i,
-            isActive: true,
-          },
-          create: {
-            slug,
-            nameAr: cat.nameAr,
-            nameEs: cat.nameEs,
-            nameEn: cat.nameEs,
-            icon: cat.icon,
-            type: 'service',
-            sortOrder: i,
-          },
-        });
-      }
+    for (const [i, cat] of SERVICE_CATEGORIES.entries()) {
+      const slug = `service-${cat.slug}`;
+      await this.prisma.category.upsert({
+        where: { slug },
+        update: {
+          nameAr: cat.nameAr,
+          nameEs: cat.nameEs,
+          nameEn: cat.nameEs,
+          icon: cat.icon,
+          type: 'service',
+          sortOrder: i,
+          isActive: true,
+        },
+        create: {
+          slug,
+          nameAr: cat.nameAr,
+          nameEs: cat.nameEs,
+          nameEn: cat.nameEs,
+          icon: cat.icon,
+          type: 'service',
+          sortOrder: i,
+        },
+      });
+    }
 
+    if (existing < expected) {
       this.logger.log(
         `Catálogo de categorías listo (listing ${LISTING_CATEGORIES.length}, service ${SERVICE_CATEGORIES.length})`,
       );
