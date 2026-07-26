@@ -29,7 +29,6 @@ export const SERVICE_CATEGORIES = [
   { slug: 'catering', nameAr: 'طبخ', nameEs: 'Cocina/catering', icon: '🍲' },
   { slug: 'masonry', nameAr: 'بناء', nameEs: 'Albañilería', icon: '🧱' },
   { slug: 'plumbing', nameAr: 'سباكة', nameEs: 'Fontanería', icon: '🚿' },
-  { slug: 'solar_install', nameAr: 'تركيب شمسي', nameEs: 'Instalación solar', icon: '🌞' },
   { slug: 'translation', nameAr: 'ترجمة', nameEs: 'Traducción', icon: '🌐' },
   { slug: 'henna', nameAr: 'حناء', nameEs: 'Henna', icon: '🌺' },
   { slug: 'agua-potable', nameAr: 'ماء صالح للشرب', nameEs: 'Agua potable', icon: '💧' },

@@ -14,7 +14,7 @@ import { AppIcon } from '@/components/AppIcon';
 import { atlasVisStyle, categoryVisStyle, visClass } from '@/lib/home-visuals';
 import { useLocale, useT } from '@/lib/locale';
 
-const PULSE_SLUGS = ['mobiles', 'cars', 'food', 'solar', 'camels', 'job-vacancies'] as const;
+const PULSE_SLUGS = ['mobiles', 'cars', 'food', 'generators', 'camels', 'job-vacancies'] as const;
 const DEFAULT_DEPT = 'vehicles';
 const GRID_CAP = 8;
 

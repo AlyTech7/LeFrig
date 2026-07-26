@@ -83,7 +83,7 @@ export const demoListings: ListingSummary[] = [
     price: 12500,
     currency: CURRENCY,
     status: 'active',
-    category: 'solar',
+    category: 'electronics',
     campId: campIds[4]!,
     sellerName: 'Mohamed L.',
     createdAt: new Date().toISOString(),
