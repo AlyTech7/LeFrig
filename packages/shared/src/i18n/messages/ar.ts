@@ -99,7 +99,7 @@ const ar: Messages = {
     yourSpaceEyebrow: 'مساحتك',
     yourSpaceSub: 'طلبات، مفضّلة والمزيد',
     atlasQuestion: 'ماذا تريد؟',
-    atlasIntro: 'الأطلس · 10 أروقة السوق',
+    atlasIntro: 'المحتوى : 10 أروقة للتسوق',
     atlasIntroSub: 'عشر قاعات للسوق الصحراوي — ادخل واختر فئتك فوراً',
     atlasRoomsBadge: '{{count}} أروقة السوق',
     atlasQuickAria: 'وصول سريع للأروقة العشرة',

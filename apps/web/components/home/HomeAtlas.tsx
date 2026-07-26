@@ -20,10 +20,6 @@ export function HomeAtlas() {
 
         <header className="lf-atlas__head lf-atlas__head--home">
           <p className="lf-atlas__kicker">
-            <span lang="ar" dir="rtl">
-              الأطلس
-            </span>
-            <em aria-hidden>·</em>
             <span>{t('home.atlasIntro')}</span>
           </p>
           <h1 id="home-atlas-title">{t('home.atlasQuestion')}</h1>
