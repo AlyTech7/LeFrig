@@ -620,6 +620,7 @@ const es = {
     tagCash: '💵 Efectivo',
     tagFiado: '📒 Fiado',
     tagVoucher: '🎫 Vouchers',
+    registerCta: 'Registrar tienda',
     studio: {
       back: 'Volver a tiendas',
       badge: 'Tiendas Lefrig',

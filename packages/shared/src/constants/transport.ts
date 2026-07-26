@@ -58,8 +58,8 @@ const CORE_HUBS: TransportHub[] = [
   { slug: 'smara', zone: 'wilaya', nameEs: 'Smara', nameAr: 'السمارة', campSlug: 'smara', country: 'EH', flag: 'ⵣ', popular: true },
   { slug: 'auserd', zone: 'wilaya', nameEs: 'Auserd', nameAr: 'أوسرد', campSlug: 'auserd', country: 'EH', flag: 'ⵣ' },
   { slug: 'dakhla', zone: 'wilaya', nameEs: 'Dakhla', nameAr: 'الداخلة', campSlug: 'dakhla', country: 'EH', flag: 'ⵣ', popular: true },
-  { slug: 'rabouni', zone: 'wilaya', nameEs: 'Rabouni', nameAr: 'ربوني', campSlug: 'rabouni', country: 'EH', flag: 'ⵣ', popular: true },
-  { slug: '27-febrero', zone: 'wilaya', nameEs: '27 de Febrero / Boujdour', nameAr: '27 فبراير', campSlug: '27-febrero', country: 'EH', flag: 'ⵣ' },
+  { slug: 'rabouni', zone: 'wilaya', nameEs: 'Rabouni', nameAr: 'الرابوني', campSlug: 'rabouni', country: 'EH', flag: 'ⵣ', popular: true },
+  { slug: '27-febrero', zone: 'wilaya', nameEs: '27 de Febrero / Boujdour', nameAr: 'فبراير27 - ولاية بوجدور', campSlug: '27-febrero', country: 'EH', flag: 'ⵣ' },
   { slug: 'tindouf', zone: 'tindouf', nameEs: 'Tindouf (Argelia)', nameAr: 'تندوف', campSlug: 'tindouf', country: 'DZ', flag: '🇩🇿', popular: true },
 
   // Mauritania — internacional

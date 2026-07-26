@@ -17,7 +17,7 @@ export default function OnboardingScreen() {
     await setCachedUser({
       displayName: lang === 'ar' ? 'صديق' : lang === 'fr' ? 'Ami' : lang === 'en' ? 'Friend' : 'Amigo',
       preferredLanguage: lang,
-      campName: lang === 'ar' ? 'ربوني' : 'Rabouni',
+      campName: lang === 'ar' ? 'الرابوني' : 'Rabouni',
     });
     router.replace('/');
   };

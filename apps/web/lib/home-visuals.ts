@@ -38,7 +38,7 @@ export const ATLAS_VISUALS: Record<string, AtlasVisual> = {
     src: img('/gate/shops.jpg', U('photo-1441986300917-64674bd600d8')),
     position: 'center 38%',
   },
-  /** حيوانات — camellos, corderos, ovejas */
+  /** مواشي — camellos, corderos, ovejas */
   animals: {
     src: img('/atlas/animals.jpg', U('photo-1719689831010-be9fe130e88b')),
     position: 'center 58%',

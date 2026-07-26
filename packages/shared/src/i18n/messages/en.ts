@@ -621,6 +621,7 @@ const en: Messages = {
     tagCash: '💵 Cash',
     tagFiado: '📒 Fiado',
     tagVoucher: '🎫 Vouchers',
+    registerCta: 'Register shop',
     studio: {
       back: 'Back to shops',
       badge: 'Lefrig Shops',
