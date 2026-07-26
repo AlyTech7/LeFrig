@@ -991,7 +991,7 @@ const en: Messages = {
     stripMediationDesc: 'Disputes and community mediation between neighbors',
     stripDiaspora: 'Connected community',
     stripDiasporaDesc: 'Camps and Tindouf on one platform',
-    rightsDignity: '© {{year}} Lefrig. Made with dignity for the Sahrawi people.',
+    rightsDignity: '© {{year}} Lefrig. Made with dignity for Western Sahara.',
     legalCommunity: 'Community',
     legalAria: 'Legal',
   },

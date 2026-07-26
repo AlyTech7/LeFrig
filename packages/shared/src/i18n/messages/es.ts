@@ -990,7 +990,7 @@ const es = {
     stripMediationDesc: 'Disputas y mediación entre vecinos',
     stripDiaspora: 'Comunidad conectada',
     stripDiasporaDesc: 'Campamentos y Tindouf en una sola plataforma',
-    rightsDignity: '© {{year}} Lefrig. Hecho con dignidad para el pueblo saharaui.',
+    rightsDignity: '© {{year}} Lefrig. Hecho con dignidad para el Sáhara Occidental.',
     legalCommunity: 'Comunidad',
     legalAria: 'Legal',
   },

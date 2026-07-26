@@ -989,7 +989,7 @@ const ar: Messages = {
     stripMediationDesc: 'نزاعات ووساطة بين الجيران',
     stripDiaspora: 'مجتمع متصل',
     stripDiasporaDesc: 'المخيمات وتندوف على منصّة واحدة',
-    rightsDignity: '© {{year}} لفريغ. صُنع بكرامة لشعب الصحراء.',
+    rightsDignity: '© {{year}} لفريغ. صُنع بكرامة للصحراء الغربية.',
     legalCommunity: 'المجتمع',
     legalAria: 'قانوني',
   },
