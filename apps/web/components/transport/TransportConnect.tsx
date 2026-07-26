@@ -8,12 +8,10 @@ import {
   TRANSPORT_HUB_ZONES,
   assertRouteMatchesScope,
   corridorsForScope,
-  formatPhone,
   getTransportHub,
   hubScope,
   hubsInScope,
   hubsInZone,
-  isValidPhoneE164,
   zonesForScope,
   pickLocalized,
   type TransportHub,
@@ -25,6 +23,14 @@ import { AppIcon } from '@/components/AppIcon';
 import { fetchApi, mapApiTransport, unwrapPaginated } from '@/lib/api';
 import { useAuthFetch } from '@/lib/auth-fetch';
 import { useLocale, useT } from '@/lib/locale';
+import {
+  DEFAULT_TRANSPORT_PHONE_DIAL,
+  TRANSPORT_PHONE_LOCAL_DIGITS,
+  TRANSPORT_PHONE_PREFIXES,
+  buildTransportContactPhone,
+  sanitizeTransportLocalPhone,
+  type TransportPhoneDial,
+} from './transport-phone';
 
 type DriverRow = {
   id: string;
@@ -184,7 +190,8 @@ export function TransportConnect() {
   const [tripType, setTripType] = useState('shared_ride');
   const [seats, setSeats] = useState(1);
   const [departureDate, setDepartureDate] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phoneDial, setPhoneDial] = useState<TransportPhoneDial>(DEFAULT_TRANSPORT_PHONE_DIAL);
+  const [phoneLocal, setPhoneLocal] = useState('');
   const [note, setNote] = useState('');
   const [priceEstimate, setPriceEstimate] = useState('');
   const [publishedTripId, setPublishedTripId] = useState<string | null>(null);
@@ -324,9 +331,11 @@ export function TransportConnect() {
     try {
       await authFetch('/auth/sync', { method: 'POST' });
       const price = priceEstimate.trim() ? Number(priceEstimate) : undefined;
-      const phoneNormalized = phone.trim() ? formatPhone(phone.trim()) : undefined;
-      if (phone.trim() && !isValidPhoneE164(phoneNormalized!)) {
-        setToast(t('transport.connect.errors.invalidPhone'));
+      let contactPhone: string | undefined;
+      try {
+        contactPhone = buildTransportContactPhone(phoneDial, phoneLocal);
+      } catch {
+        setToast(t('transport.connect.errors.phoneDigits', { count: TRANSPORT_PHONE_LOCAL_DIGITS }));
         setSubmitting(false);
         return;
       }
@@ -339,7 +348,7 @@ export function TransportConnect() {
           destinationHubSlug: destHub,
           seatsRequested: seats,
           description: note.trim() || routeLabel,
-          contactPhone: phoneNormalized,
+          contactPhone,
           departureAt: departureDate ? new Date(departureDate).toISOString() : undefined,
           priceEstimate: price && Number.isFinite(price) && price > 0 ? price : undefined,
         }),
@@ -348,6 +357,7 @@ export function TransportConnect() {
       setToast(t('transport.connect.errors.published'));
       setNote('');
       setPriceEstimate('');
+      setPhoneLocal('');
       loadMatches();
     } catch (e) {
       const detail = e instanceof Error ? e.message : '';
@@ -493,7 +503,34 @@ export function TransportConnect() {
             </label>
             <label className="lx-wide">
               {t('transport.connect.phone')}
-              <input type="tel" placeholder={t('transport.connect.phonePlaceholder')} value={phone} onChange={(e) => setPhone(e.target.value)} />
+              <div className="lx-phone">
+                <select
+                  className="lx-phone__dial"
+                  value={phoneDial}
+                  onChange={(e) => setPhoneDial(e.target.value as TransportPhoneDial)}
+                  aria-label={t('transport.connect.phoneDialAria')}
+                >
+                  {TRANSPORT_PHONE_PREFIXES.map((p) => (
+                    <option key={p.dial} value={p.dial}>
+                      {p.flag} {p.dial}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel-national"
+                  className="lx-phone__local"
+                  placeholder={t('transport.connect.phonePlaceholder')}
+                  value={phoneLocal}
+                  maxLength={TRANSPORT_PHONE_LOCAL_DIGITS}
+                  onChange={(e) => setPhoneLocal(sanitizeTransportLocalPhone(e.target.value))}
+                  aria-describedby="lx-phone-hint"
+                />
+              </div>
+              <span id="lx-phone-hint" className="lx-phone__hint">
+                {t('transport.connect.phoneDigitsHint', { count: TRANSPORT_PHONE_LOCAL_DIGITS })}
+              </span>
             </label>
             <label className="lx-wide">
               {t('transport.connect.note')}

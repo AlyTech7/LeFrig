@@ -565,6 +565,52 @@
   background: var(--lx-surface);
 }
 
+.lx-phone {
+  display: flex;
+  gap: 0.45rem;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.lx-phone__dial {
+  flex: 0 0 auto;
+  min-width: 7.25rem;
+  padding: 0.68rem 0.55rem;
+  border-radius: var(--lx-r);
+  border: 1px solid var(--lx-line);
+  background: var(--lx-surface-up);
+  color: var(--lx-ink);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.lx-phone__dial:focus {
+  outline: none;
+  border-color: var(--lx-line-hover);
+  box-shadow: 0 0 0 3px var(--lx-gold-glow);
+}
+
+.lx-phone__local {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em !important;
+}
+
+.lx-phone__hint {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--lx-ink-faint);
+  text-transform: none;
+  letter-spacing: normal;
+  margin-top: 0.15rem;
+}
+
 .lx-toast {
   margin: 0 0 0.75rem;
   padding: 0.62rem 0.85rem;

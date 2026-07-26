@@ -7,3 +7,4 @@ export * from './schemas/index.js';
 export * from './listing-attributes.js';
 export * from './search/index.js';
 export * from './i18n/index.js';
+export * from './transport-phone.js';

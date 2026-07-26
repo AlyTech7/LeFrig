@@ -18,6 +18,12 @@ import {
   getTransportHub,
   type TransportRouteScope,
   hubLabel,
+  DEFAULT_TRANSPORT_PHONE_DIAL,
+  TRANSPORT_PHONE_LOCAL_DIGITS,
+  TRANSPORT_PHONE_PREFIXES,
+  buildTransportContactPhone,
+  sanitizeTransportLocalPhone,
+  type TransportPhoneDial,
 } from '@lefrig/shared';
 import { fetchApi, unwrapPaginated } from '@/lib/api';
 import { useAuthApi } from '@/lib/useAuthApi';
@@ -64,7 +70,8 @@ export default function TransportScreen() {
   const [destHub, setDestHub] = useState(destParam || (initialScope === 'international' ? 'rabouni' : 'tindouf'));
   const [seats, setSeats] = useState(1);
   const [note, setNote] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phoneDial, setPhoneDial] = useState<TransportPhoneDial>(DEFAULT_TRANSPORT_PHONE_DIAL);
+  const [phoneLocal, setPhoneLocal] = useState('');
   const [priceEstimate, setPriceEstimate] = useState('');
   const [publishedId, setPublishedId] = useState<string | null>(null);
   const [drivers, setDrivers] = useState<DriverRow[]>([]);
@@ -123,6 +130,17 @@ export default function TransportScreen() {
     }
     setSubmitting(true);
     try {
+      let contactPhone: string | undefined;
+      try {
+        contactPhone = buildTransportContactPhone(phoneDial, phoneLocal);
+      } catch {
+        Alert.alert(
+          t('common.error'),
+          t('transport.connect.errors.phoneDigits', { count: TRANSPORT_PHONE_LOCAL_DIGITS }),
+        );
+        setSubmitting(false);
+        return;
+      }
       const price = priceEstimate.trim() ? Number(priceEstimate) : undefined;
       const created = await authFetch<{ id: string }>('/transport', {
         method: 'POST',
@@ -133,7 +151,7 @@ export default function TransportScreen() {
           destinationHubSlug: destHub,
           seatsRequested: seats,
           description: note.trim() || `${hubLabel(originHub)} → ${hubLabel(destHub)}`,
-          contactPhone: phone.trim() || undefined,
+          contactPhone,
           priceEstimate: price && Number.isFinite(price) && price > 0 ? price : undefined,
         }),
       });
@@ -141,6 +159,7 @@ export default function TransportScreen() {
       Alert.alert(t('transport.tripPublished'), t('transport.tripPublished'));
       setNote('');
       setPriceEstimate('');
+      setPhoneLocal('');
       load();
     } catch {
       Alert.alert(t('common.error'), t('transport.sessionError'));
@@ -279,16 +298,36 @@ export default function TransportScreen() {
 
           <View style={styles.detailSeparator} />
 
-          <View style={styles.inputRow}>
-            <AppIcon name="phone" size={16} color={theme.inkMuted} />
+          <View style={styles.phoneBlock}>
+            <View style={styles.phoneLabelRow}>
+              <AppIcon name="phone" size={16} color={theme.inkMuted} />
+              <Text style={styles.phoneLabel}>{t('transport.connect.phone')}</Text>
+            </View>
+            <View style={styles.dialWrap}>
+              {TRANSPORT_PHONE_PREFIXES.map((p) => (
+                <Pressable
+                  key={p.dial}
+                  style={[styles.dialChip, phoneDial === p.dial && styles.dialChipOn]}
+                  onPress={() => setPhoneDial(p.dial)}
+                >
+                  <Text style={[styles.dialChipText, phoneDial === p.dial && styles.dialChipTextOn]}>
+                    {p.flag} {p.dial}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
             <TextInput
-              style={styles.inputInner}
-              value={phone}
-              onChangeText={setPhone}
-              placeholder={`${t('auth.phonePlaceholder')} (${t('common.optional')})`}
+              style={styles.phoneLocal}
+              value={phoneLocal}
+              onChangeText={(v) => setPhoneLocal(sanitizeTransportLocalPhone(v))}
+              placeholder={t('transport.connect.phonePlaceholder')}
               placeholderTextColor={theme.inkSoft}
-              keyboardType="phone-pad"
+              keyboardType="number-pad"
+              maxLength={TRANSPORT_PHONE_LOCAL_DIGITS}
             />
+            <Text style={styles.phoneHint}>
+              {t('transport.connect.phoneDigitsHint', { count: TRANSPORT_PHONE_LOCAL_DIGITS })}
+            </Text>
           </View>
 
           <View style={styles.detailSeparator} />
@@ -646,6 +685,34 @@ const styles = StyleSheet.create({
   detailSeparator: { height: 1, backgroundColor: theme.border },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 },
   inputInner: { flex: 1, paddingVertical: 12, fontSize: 14, color: theme.ink, fontWeight: '500' },
+  phoneBlock: { gap: 8, paddingVertical: 4 },
+  phoneLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  phoneLabel: { fontSize: 13, fontWeight: '700', color: theme.inkMuted },
+  dialWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  dialChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: theme.border,
+    backgroundColor: theme.surface,
+  },
+  dialChipOn: { borderColor: theme.gold, backgroundColor: 'rgba(168,132,45,0.12)' },
+  dialChipText: { fontSize: 13, fontWeight: '700', color: theme.inkMuted },
+  dialChipTextOn: { color: theme.ink },
+  phoneLocal: {
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: radii.md,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.ink,
+    letterSpacing: 1.5,
+    backgroundColor: theme.surface,
+  },
+  phoneHint: { fontSize: 12, color: theme.inkSoft },
 
   publishBtn: {
     flexDirection: 'row',
