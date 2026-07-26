@@ -53,7 +53,6 @@ export const MARKETPLACE_DEPARTMENTS: MarketplaceDepartment[] = [
       { slug: 'plumbing', nameEs: 'Fontanería', nameAr: 'سباكة', icon: '🚿', kind: 'service' },
       { slug: 'electrician', nameEs: 'Electricista', nameAr: 'كهربائي', icon: '⚡', kind: 'service' },
       { slug: 'mechanic', nameEs: 'Mecánico', nameAr: 'ميكانيكي', icon: '🔧', kind: 'service' },
-      { slug: 'solar_install', nameEs: 'Instalación solar', nameAr: 'تركيب شمسي', icon: '🌞', kind: 'service' },
       { slug: 'henna', nameEs: 'Henna', nameAr: 'حناء', icon: '🌺', kind: 'service' },
       { slug: 'classes', nameEs: 'Clases y formación', nameAr: 'دروس', icon: '📚', kind: 'service' },
       { slug: 'education', nameEs: 'Educación', nameAr: 'تعليم', icon: '🎓', kind: 'service' },
@@ -138,7 +137,6 @@ export const MARKETPLACE_DEPARTMENTS: MarketplaceDepartment[] = [
       { slug: 'mobiles', nameEs: 'Móviles', nameAr: 'هواتف', icon: '📱', kind: 'listing' },
       { slug: 'electronics', nameEs: 'Electrónica', nameAr: 'إلكترونيات', icon: '💻', kind: 'listing' },
       { slug: 'pos', nameEs: 'TPV / POS', nameAr: 'نقاط بيع', icon: '🖥️', kind: 'listing' },
-      { slug: 'solar', nameEs: 'Material solar', nameAr: 'طاقة شمسية', icon: '☀️', kind: 'listing' },
     ],
   },
   {

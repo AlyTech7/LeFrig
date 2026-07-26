@@ -26,7 +26,7 @@ const SERVICES_GROUPS = [
   {
     key: 'pros',
     labelKey: 'atlas.groups.pros',
-    slugs: ['electrician', 'mechanic', 'solar_install', 'henna', 'classes', 'education', 'furniture-moving', 'hairdressing', 'phone_repair'],
+    slugs: ['electrician', 'mechanic', 'henna', 'classes', 'education', 'furniture-moving', 'hairdressing', 'phone_repair'],
   },
 ] as const;
 

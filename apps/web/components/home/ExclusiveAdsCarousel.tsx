@@ -7,12 +7,12 @@ import { useT } from '@/lib/locale';
 
 const ADS = [
   {
-    id: 'solar',
-    titleKey: 'promo.solar',
-    sponsor: 'Sahara Solar',
-    href: '/services?category=solar_install',
-    image: HOME_VISUALS.curated.solar,
-    position: 'center 55%',
+    id: 'generators',
+    titleKey: 'promo.generators',
+    sponsor: 'Generadores Camp',
+    href: '/services?category=generators',
+    image: HOME_VISUALS.pillars.services,
+    position: 'center 45%',
     accent: '#c9a24d',
   },
   {

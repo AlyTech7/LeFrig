@@ -69,7 +69,8 @@ export class AiService {
     const lower = `${title} ${description}`.toLowerCase();
     let category = 'other';
     if (/phone|móvil|galaxy|iphone|هاتف/.test(lower)) category = 'mobiles';
-    else if (/solar|panel|شمس/.test(lower)) category = 'solar';
+    else if (/generador|generator|مولد/.test(lower)) category = 'generators';
+    else if (/solar|panel|شمس/.test(lower)) category = 'electronics';
     else if (/vehículo|car|سيارة/.test(lower)) category = 'vehicles';
 
     return {
@@ -97,7 +98,8 @@ export class AiService {
     this.logger.log(`[MOCK AI] price suggest ${category} @ ${campId}`);
     const basePrices: Record<string, number> = {
       mobiles: 7500,
-      solar: 11000,
+      generators: 85000,
+      electronics: 25000,
       vehicles: 85000,
       food: 200,
     };
