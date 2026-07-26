@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Header, Param, Post, Res, StreamableFile, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiProduces, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { CashService } from './cash.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -15,6 +16,23 @@ export class CashController {
   @Get('my')
   myOperations(@CurrentUser() user: { sub: string }) {
     return this.cashService.findByUser(user.sub);
+  }
+
+  @Get('receipt/:code/pdf')
+  @ApiProduces('application/pdf')
+  @Header('Content-Type', 'application/pdf')
+  async getReceiptPdf(
+    @CurrentUser() user: { sub: string },
+    @Param('code') code: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const normalized = code.trim().toUpperCase();
+    const pdf = await this.cashService.getReceiptPdf(normalized, user.sub);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="lefrig-recibo-${normalized}.pdf"`,
+    );
+    return new StreamableFile(pdf);
   }
 
   @Get('receipt/:code')

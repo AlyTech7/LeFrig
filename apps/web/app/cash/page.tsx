@@ -7,6 +7,7 @@ import { PageBody, PageHero } from '@/components/PageHero';
 import { useAuthFetch } from '@/lib/auth-fetch';
 import { takePendingCashAgreement, type PendingCashAgreement } from '@/lib/cash-pending';
 import { useT } from '@/lib/locale';
+import { API_URL } from '@/lib/api';
 
 type CashRole = 'buyer' | 'seller' | null;
 
@@ -51,7 +52,7 @@ function formatAmount(amount: number | string, currency?: string) {
 }
 
 export default function CashPage() {
-  const { authFetch, isSignedIn, isLoaded } = useAuthFetch();
+  const { authFetch, isSignedIn, isLoaded, getToken } = useAuthFetch();
   const t = useT();
   const [agreements, setAgreements] = useState<CashAgreement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,6 +60,7 @@ export default function CashPage() {
   const [lookup, setLookup] = useState<LookupResult | null>(null);
   const [pin, setPin] = useState('');
   const [confirming, setConfirming] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [message, setMessage] = useState('');
   const [messageOk, setMessageOk] = useState(false);
   const [newAgreement, setNewAgreement] = useState<PendingCashAgreement | null>(null);
@@ -133,14 +135,40 @@ export default function CashPage() {
   };
 
   const shareReceipt = async (code: string) => {
+    setDownloadingPdf(true);
+    setMessage('');
     try {
-      const receipt = await authFetch<{ shareText: string }>(`/cash/receipt/${code}`);
-      await navigator.clipboard.writeText(receipt.shareText);
+      const token = await getToken();
+      const res = await fetch(`${API_URL}/cash/receipt/${encodeURIComponent(code)}/pdf`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) {
+        throw new Error(`API ${res.status}`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `lefrig-recibo-${code}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
       setMessageOk(true);
-      setMessage(t('cash.receiptCopied'));
+      setMessage(t('cash.receiptPdfDownloaded'));
     } catch {
-      setMessageOk(false);
-      setMessage(t('cash.notFound'));
+      // Fallback: texto compartible
+      try {
+        const receipt = await authFetch<{ shareText: string }>(`/cash/receipt/${code}`);
+        await navigator.clipboard.writeText(receipt.shareText);
+        setMessageOk(true);
+        setMessage(t('cash.receiptCopied'));
+      } catch {
+        setMessageOk(false);
+        setMessage(t('cash.notFound'));
+      }
+    } finally {
+      setDownloadingPdf(false);
     }
   };
 
@@ -314,8 +342,12 @@ export default function CashPage() {
                   )}
 
                   {lookup.status === 'confirmed' && lookup.receipt && (
-                    <Button variant="secondary" onClick={() => shareReceipt(lookup.operationCode)}>
-                      {t('cash.shareReceipt')}
+                    <Button
+                      variant="secondary"
+                      onClick={() => shareReceipt(lookup.operationCode)}
+                      disabled={downloadingPdf}
+                    >
+                      {downloadingPdf ? t('cash.downloadingPdf') : t('cash.downloadReceiptPdf')}
                     </Button>
                   )}
 
@@ -423,8 +455,9 @@ export default function CashPage() {
                         variant="secondary"
                         style={{ marginTop: 10 }}
                         onClick={() => shareReceipt(a.operationCode)}
+                        disabled={downloadingPdf}
                       >
-                        {t('cash.shareReceipt')}
+                        {downloadingPdf ? t('cash.downloadingPdf') : t('cash.downloadReceiptPdf')}
                       </Button>
                     ) : null}
                   </div>
