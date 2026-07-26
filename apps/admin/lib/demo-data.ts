@@ -91,7 +91,7 @@ export const demoTransport = [
 ];
 
 export const demoCamps = [
-  { id: 'c1', slug: 'rabouni', nameEs: 'Rabouni', nameAr: 'الربوني', isTindouf: true, users: 412, listings: 98, shops: 14 },
+  { id: 'c1', slug: 'rabouni', nameEs: 'Rabouni', nameAr: 'الرابوني', isTindouf: true, users: 412, listings: 98, shops: 14 },
   { id: 'c2', slug: 'smara', nameEs: 'Smara', nameAr: 'السمارة', isTindouf: true, users: 356, listings: 76, shops: 11 },
   { id: 'c3', slug: 'dakhla', nameEs: 'Dakhla', nameAr: 'الداخلة', isTindouf: false, users: 289, listings: 54, shops: 9 },
   { id: 'c4', slug: 'aaiun', nameEs: 'Aaiún', nameAr: 'العيون', isTindouf: false, users: 190, listings: 41, shops: 8 },

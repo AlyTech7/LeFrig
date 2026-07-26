@@ -119,7 +119,7 @@ export function ShopsHub() {
           </div>
           <Link href="/shops/register" className="shp-cta">
             <AppIcon name="store" size={18} color="#1a1612" />
-            {t('shops.register')}
+            {t('shops.registerCta')}
           </Link>
         </div>
 
@@ -189,7 +189,7 @@ export function ShopsHub() {
           <h3>{t('shops.emptyTitle')}</h3>
           <p>{t('shops.emptyHint')}</p>
           <Link href="/shops/register" className="shp-cta">
-            {t('shops.register')}
+            {t('shops.registerCta')}
           </Link>
         </div>
       ) : (

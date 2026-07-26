@@ -3,8 +3,8 @@ export const CAMPS = [
   { slug: 'smara', nameAr: 'السمارة', nameEs: 'Smara', nameEn: 'Smara', isTindouf: false },
   { slug: 'auserd', nameAr: 'أوسرد', nameEs: 'Auserd', nameEn: 'Auserd', isTindouf: false },
   { slug: 'dakhla', nameAr: 'الداخلة', nameEs: 'Dakhla', nameEn: 'Dakhla', isTindouf: false },
-  { slug: 'rabouni', nameAr: 'ربوني', nameEs: 'Rabouni', nameEn: 'Rabouni', isTindouf: false },
-  { slug: '27-febrero', nameAr: '27 فبراير', nameEs: '27 de Febrero / Boujdour', nameEn: '27 February / Boujdour', isTindouf: false },
+  { slug: 'rabouni', nameAr: 'الرابوني', nameEs: 'Rabouni', nameEn: 'Rabouni', isTindouf: false },
+  { slug: '27-febrero', nameAr: 'فبراير27 - ولاية بوجدور', nameEs: '27 de Febrero / Boujdour', nameEn: '27 February / Boujdour', isTindouf: false },
   { slug: 'tindouf', nameAr: 'تندوف', nameEs: 'Tindouf', nameEn: 'Tindouf', isTindouf: true },
 ] as const;
 

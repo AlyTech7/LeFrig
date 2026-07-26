@@ -26,9 +26,11 @@ export class CampsService implements OnModuleInit {
   /** Upsert idempotente del catálogo compartido (wilayas + Tindouf). */
   async ensureCatalog() {
     const existing = await this.prisma.camp.count();
-    if (existing >= CAMPS.length) return;
+    if (existing < CAMPS.length) {
+      this.logger.log(`Catálogo de campamentos incompleto (${existing}/${CAMPS.length}) — sincronizando…`);
+    }
 
-    this.logger.log(`Catálogo de campamentos incompleto (${existing}/${CAMPS.length}) — sincronizando…`);
+    // Siempre sincroniza nombres (corrige copy árabe en producción).
     for (const c of CAMPS) {
       await this.prisma.camp.upsert({
         where: { slug: c.slug },
@@ -49,7 +51,9 @@ export class CampsService implements OnModuleInit {
       });
     }
     await this.redis.del(CAMPS_CACHE_KEY);
-    this.logger.log(`Catálogo de campamentos listo (${CAMPS.length})`);
+    if (existing < CAMPS.length) {
+      this.logger.log(`Catálogo de campamentos listo (${CAMPS.length})`);
+    }
   }
 
   async findAll() {

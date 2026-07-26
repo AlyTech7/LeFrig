@@ -621,6 +621,7 @@ const fr: Messages = {
     tagCash: '💵 Espèces',
     tagFiado: '📒 Fiado',
     tagVoucher: '🎫 Bons',
+    registerCta: 'Enregistrer une boutique',
     studio: {
       back: 'Retour aux boutiques',
       badge: 'Boutiques Lefrig',

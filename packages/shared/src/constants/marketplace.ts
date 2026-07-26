@@ -31,7 +31,7 @@ export const MARKETPLACE_DEPARTMENTS: MarketplaceDepartment[] = [
       { slug: 'cars', nameEs: 'Coches', nameAr: 'سيارات', icon: '🚙', kind: 'listing' },
       { slug: 'car-rentals', nameEs: 'Alquiler de coches', nameAr: 'تأجير سيارات', icon: '🚘', kind: 'listing' },
       { slug: 'spare_parts', nameEs: 'Repuestos', nameAr: 'قطع غيار', icon: '🔧', kind: 'listing' },
-      { slug: 'car-services', nameEs: 'Servicios de coches', nameAr: 'خدمات سيارات', icon: '⚙️', kind: 'service' },
+      { slug: 'car-services', nameEs: 'Servicios de coches', nameAr: 'خدمات السيارات', icon: '⚙️', kind: 'service' },
     ],
   },
   {
@@ -64,7 +64,7 @@ export const MARKETPLACE_DEPARTMENTS: MarketplaceDepartment[] = [
   {
     id: 'animals',
     nameEs: 'Animales',
-    nameAr: 'حيوانات',
+    nameAr: 'مواشي',
     icon: '🐪',
     accent: 'linear-gradient(135deg, #a16207 0%, #fbbf24 100%)',
     items: [
@@ -119,11 +119,11 @@ export const MARKETPLACE_DEPARTMENTS: MarketplaceDepartment[] = [
     icon: '👨‍👩‍👧',
     accent: 'linear-gradient(135deg, #be185d 0%, #f472b6 100%)',
     items: [
-      { slug: 'men-fashion', nameEs: 'Moda hombre', nameAr: 'ملابس رجال', icon: '👔', kind: 'listing' },
-      { slug: 'women-fashion', nameEs: 'Moda mujer', nameAr: 'ملابس نساء', icon: '👗', kind: 'listing' },
-      { slug: 'kids-products', nameEs: 'Productos infantiles', nameAr: 'منتجات أطفال', icon: '🧸', kind: 'listing' },
-      { slug: 'food', nameEs: 'Comida', nameAr: 'طعام', icon: '🍞', kind: 'listing' },
-      { slug: 'cosmetics', nameEs: 'Cosmética', nameAr: 'مستحضرات', icon: '💄', kind: 'listing' },
+      { slug: 'men-fashion', nameEs: 'Moda hombre', nameAr: 'ملابس الرجال', icon: '👔', kind: 'listing' },
+      { slug: 'women-fashion', nameEs: 'Moda mujer', nameAr: 'ملابس النساء', icon: '👗', kind: 'listing' },
+      { slug: 'kids-products', nameEs: 'Productos infantiles', nameAr: 'ملابس ومنتجات أطفال', icon: '🧸', kind: 'listing' },
+      { slug: 'food', nameEs: 'Comida', nameAr: 'خدمات ومتاجر ومطاعم', icon: '🍞', kind: 'listing' },
+      { slug: 'cosmetics', nameEs: 'Cosmética', nameAr: 'مستحضرات تجميل', icon: '💄', kind: 'listing' },
       { slug: 'gifts-flowers', nameEs: 'Regalos y flores', nameAr: 'هدايا وزهور', icon: '💐', kind: 'listing' },
     ],
   },
