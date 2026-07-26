@@ -349,11 +349,11 @@ async function main() {
   await prisma.listing.create({
     data: {
       sellerId: users.seller.id,
-      categoryId: catBySlug.solar.id,
+      categoryId: (catBySlug.tools ?? catBySlug.other).id,
       campId: campBySlug.dakhla.id,
       dairaId: dairaRecords.dakhla.id,
-      title: 'Panel solar 100W',
-      description: 'Panel solar monocristalino, ideal para caravana.',
+      title: 'Generador 2.5kW',
+      description: 'Generador compacto para uso doméstico, en buen estado.',
       price: 12000,
       status: 'active',
       paymentMethods: ['cash'],
@@ -514,8 +514,8 @@ async function main() {
       campId: campBySlug.tindouf.id,
       jobType: 'offer',
       category: 'skilled',
-      title: 'Técnico solar',
-      description: 'Instalación de paneles en viviendas del campamento.',
+      title: 'Técnico de generadores',
+      description: 'Instalación y mantenimiento de generadores en viviendas del campamento.',
       salary: 8000,
     },
   });
@@ -539,7 +539,7 @@ async function main() {
       type: 'product',
       title: 'Necesito generador pequeño',
       description: 'Para uso doméstico, preferiblemente 2-3kW',
-      category: 'solar',
+      category: 'generators',
       status: 'open',
     },
   });
@@ -627,7 +627,7 @@ async function main() {
 
   await prisma.analyticsEvent.createMany({
     data: [
-      { eventType: 'search', term: 'solar', category: 'solar', campId: campBySlug.dakhla.id, bucket: '2025-06' },
+      { eventType: 'search', term: 'generador', category: 'tools', campId: campBySlug.dakhla.id, bucket: '2025-06' },
       { eventType: 'search', term: 'telefono', category: 'mobiles', campId: campBySlug.aaiun.id, bucket: '2025-06', count: 12 },
       { eventType: 'listing_view', category: 'mobiles', campId: campBySlug.aaiun.id, value: 8500, bucket: '2025-06', count: 45 },
       { eventType: 'route_search', term: 'rabouni-tindouf', campId: campBySlug.rabouni.id, bucket: '2025-06', count: 8 },
