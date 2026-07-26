@@ -119,8 +119,8 @@ export const MARKETPLACE_DEPARTMENTS: MarketplaceDepartment[] = [
     icon: '👨‍👩‍👧',
     accent: 'linear-gradient(135deg, #be185d 0%, #f472b6 100%)',
     items: [
-      { slug: 'men-fashion', nameEs: 'Moda hombre', nameAr: 'أزياء رجال', icon: '👔', kind: 'listing' },
-      { slug: 'women-fashion', nameEs: 'Moda mujer', nameAr: 'أزياء نساء', icon: '👗', kind: 'listing' },
+      { slug: 'men-fashion', nameEs: 'Moda hombre', nameAr: 'ملابس رجال', icon: '👔', kind: 'listing' },
+      { slug: 'women-fashion', nameEs: 'Moda mujer', nameAr: 'ملابس نساء', icon: '👗', kind: 'listing' },
       { slug: 'kids-products', nameEs: 'Productos infantiles', nameAr: 'منتجات أطفال', icon: '🧸', kind: 'listing' },
       { slug: 'food', nameEs: 'Comida', nameAr: 'طعام', icon: '🍞', kind: 'listing' },
       { slug: 'cosmetics', nameEs: 'Cosmética', nameAr: 'مستحضرات', icon: '💄', kind: 'listing' },
