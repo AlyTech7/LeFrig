@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   TRANSPORT_HUBS,
+  TRANSPORT_HUB_ZONES,
+  assertRouteMatchesScope,
   corridorsForScope,
   getTransportHub,
   hubScope,
@@ -27,6 +29,7 @@ type DriverRow = {
   vehicleType: string | null;
   seatsCapacity: number;
   rating: number;
+  preferredHubSlugs?: string[];
   user: { displayName: string; phone: string | null };
   frequentRoutes: { originCamp: { nameEs: string }; destinationCamp: { nameEs: string } }[];
 };
@@ -35,8 +38,18 @@ type Field = 'origin' | 'dest' | null;
 
 const TRIP_MODE_IDS = ['shared_ride', 'person', 'package'] as const;
 
-const LOCAL_DEFAULT = { origin: 'rabouni', dest: 'nouakchott', originZone: 'wilaya' as TransportHubZone, destZone: 'mauritania' as TransportHubZone };
-const INTL_DEFAULT = { origin: 'madrid', dest: 'rabouni', originZone: 'espana' as TransportHubZone, destZone: 'wilaya' as TransportHubZone };
+const LOCAL_DEFAULT = {
+  origin: 'rabouni',
+  dest: 'tindouf',
+  originZone: 'wilaya' as TransportHubZone,
+  destZone: 'tindouf' as TransportHubZone,
+};
+const INTL_DEFAULT = {
+  origin: 'madrid',
+  dest: 'rabouni',
+  originZone: 'espana' as TransportHubZone,
+  destZone: 'wilaya' as TransportHubZone,
+};
 
 function HubField({
   label,
@@ -69,14 +82,18 @@ function HubField({
   locale: ReturnType<typeof useLocale>['locale'];
   t: ReturnType<typeof useT>;
 }) {
-  const scopeZones = useMemo(() => zonesForScope(scope), [scope]);
-  const scopeHubs = useMemo(() => {
-    if (scope === 'international') return TRANSPORT_HUBS;
-    return hubsInScope(scope);
-  }, [scope]);
+  // Local: solo wilaya+tindouf. Internacional: todas las zonas (un extremo puede ser local).
+  const scopeZones = useMemo(
+    () => (scope === 'local' ? zonesForScope('local') : TRANSPORT_HUB_ZONES),
+    [scope],
+  );
+  const scopeHubs = useMemo(
+    () => (scope === 'local' ? hubsInScope('local') : TRANSPORT_HUBS),
+    [scope],
+  );
   const h = TRANSPORT_HUBS.find((x) => x.slug === hub);
   const list = useMemo(() => {
-    const base = hubsInZone(zone);
+    const base = hubsInZone(zone).filter((x) => scopeHubs.some((s) => s.slug === x.slug));
     if (!query.trim()) return base;
     const q = query.toLowerCase();
     return scopeHubs
@@ -167,6 +184,8 @@ export function TransportConnect() {
   const [departureDate, setDepartureDate] = useState('');
   const [phone, setPhone] = useState('');
   const [note, setNote] = useState('');
+  const [priceEstimate, setPriceEstimate] = useState('');
+  const [publishedTripId, setPublishedTripId] = useState<string | null>(null);
 
   const [trips, setTrips] = useState<TransportRequestSummary[]>([]);
   const [drivers, setDrivers] = useState<DriverRow[]>([]);
@@ -289,37 +308,38 @@ export function TransportConnect() {
       setToast(t('transport.connect.errors.invalidHub'));
       return;
     }
-    if (routeScope === 'local') {
-      if (hubScope(origin.zone) !== 'local' || hubScope(dest.zone) !== 'local') {
-        setToast(t('transport.connect.errors.localScope'));
-        return;
-      }
-    } else {
-      const intlZones: TransportHubZone[] = ['espana', 'francia', 'mauritania'];
-      const hasIntl = intlZones.includes(origin.zone) || intlZones.includes(dest.zone);
-      if (!hasIntl) {
-        setToast(t('transport.connect.errors.intlScope'));
-        return;
-      }
+    const scopeCheck = assertRouteMatchesScope(routeScope, originHub, destHub);
+    if (!scopeCheck.ok) {
+      setToast(
+        routeScope === 'local'
+          ? t('transport.connect.errors.localScope')
+          : t('transport.connect.errors.intlScope'),
+      );
+      return;
     }
     setSubmitting(true);
     setToast('');
     try {
       await authFetch('/auth/sync', { method: 'POST' });
-      await authFetch('/transport', {
+      const price = priceEstimate.trim() ? Number(priceEstimate) : undefined;
+      const created = await authFetch<{ id: string }>('/transport', {
         method: 'POST',
         body: JSON.stringify({
           type: tripType,
+          scope: routeScope,
           originHubSlug: originHub,
           destinationHubSlug: destHub,
           seatsRequested: seats,
           description: note.trim() || routeLabel,
           contactPhone: phone.trim() || undefined,
           departureAt: departureDate ? new Date(departureDate).toISOString() : undefined,
+          priceEstimate: price && Number.isFinite(price) && price > 0 ? price : undefined,
         }),
       });
+      setPublishedTripId(created.id);
       setToast(t('transport.connect.errors.published'));
       setNote('');
+      setPriceEstimate('');
       loadMatches();
     } catch {
       setToast(t('transport.connect.errors.signIn'));
@@ -464,6 +484,18 @@ export function TransportConnect() {
               {t('transport.connect.note')}
               <input type="text" placeholder={t('transport.connect.notePlaceholder')} value={note} onChange={(e) => setNote(e.target.value)} />
             </label>
+            <label>
+              {t('transport.connect.priceOptional')}
+              <input
+                type="number"
+                min={0}
+                step={100}
+                inputMode="decimal"
+                placeholder="—"
+                value={priceEstimate}
+                onChange={(e) => setPriceEstimate(e.target.value)}
+              />
+            </label>
           </div>
 
           {toast && (
@@ -472,6 +504,13 @@ export function TransportConnect() {
             </p>
           )}
 
+          {publishedTripId ? (
+            <Link href={`/transport/${publishedTripId}`} className="lx-cta lx-cta--link">
+              <span>{t('transport.connect.openTrip')}</span>
+              <AppIcon name="arrow-right" size={18} color="#1a1612" />
+            </Link>
+          ) : null}
+
           <button type="button" className="lx-cta" onClick={publish} disabled={submitting}>
             <span>{submitting ? t('transport.connect.publishing') : t('transport.connect.publishCta')}</span>
             <AppIcon name="arrow-right" size={18} color="#1a1612" />
@@ -479,29 +518,17 @@ export function TransportConnect() {
           <p className="lx-disclaimer">{t('transport.connect.disclaimer')}</p>
         </section>
 
-        <aside className="lx-live-panel">
-          <details className="lx-live-drawer">
-            <summary className="lx-live-drawer__summary">
-              <div className="lx-live-panel__top lx-live-panel__top--drawer">
-                <div>
-                  <h2>{t('transport.connect.liveTitle')}</h2>
-                  <p className="lx-route-live">{routeLabel}</p>
-                </div>
-                <button
-                  type="button"
-                  className="lx-refresh"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    loadMatches();
-                  }}
-                  disabled={loading}
-                >
-                  {loading ? '···' : '↻'}
-                </button>
-              </div>
-            </summary>
-            <div className="lx-live-drawer__body">
+        <aside className="lx-live-panel" aria-label={t('transport.connect.liveAria')}>
+          <div className="lx-live-panel__top">
+            <div>
+              <h2>{t('transport.connect.liveTitle')}</h2>
+              <p className="lx-route-live">{routeLabel}</p>
+            </div>
+            <button type="button" className="lx-refresh" onClick={() => loadMatches()} disabled={loading}>
+              {loading ? '···' : '↻'}
+            </button>
+          </div>
+
           <div className="lx-live-counts">
             <div className="lx-count">
               <span className="lx-count__n">{drivers.length}</span>
@@ -515,8 +542,8 @@ export function TransportConnect() {
 
           {drivers.length > 0 && (
             <div className="lx-stack">
-              <h3>{t('transport.connect.verifiedCorridor')}</h3>
-              {drivers.map((d) => (
+              <h3>{t('transport.connect.suggestedDrivers')}</h3>
+              {drivers.slice(0, 6).map((d) => (
                 <article key={d.id} className="lx-driver">
                   <div className="lx-driver__ring">🚐</div>
                   <div className="lx-driver__body">
@@ -525,7 +552,8 @@ export function TransportConnect() {
                       <span className="lx-verified">✓</span>
                     </div>
                     <p>
-                      {d.vehicleType ?? t('transport.connect.vehicle')} · {t('transport.connect.seatsCount', { count: d.seatsCapacity })} · ★ {d.rating.toFixed(1)}
+                      {d.vehicleType ?? t('transport.connect.vehicle')} ·{' '}
+                      {t('transport.connect.seatsCount', { count: d.seatsCapacity })} · ★ {d.rating.toFixed(1)}
                     </p>
                     {d.frequentRoutes[0] && (
                       <p className="lx-driver__route">
@@ -544,7 +572,7 @@ export function TransportConnect() {
           )}
 
           <div className="lx-stack">
-            <h3>{t('transport.connect.activeRequests')}</h3>
+            <h3>{t('transport.connect.openRequests')}</h3>
             {loading ? (
               <p className="lx-muted">{t('transport.connect.syncing')}</p>
             ) : trips.length === 0 ? (
@@ -562,17 +590,18 @@ export function TransportConnect() {
                   </div>
                   <div className="lx-trip__foot">
                     <span className="lx-status">
-                      {t(`transport.connect.status.${trip.status}` as 'transport.connect.status.requested') ?? trip.status}
+                      {t(`transport.connect.status.${trip.status}` as 'transport.connect.status.requested') ??
+                        trip.status}
                     </span>
-                    {trip.seatsRequested ? <span>{t('transport.connect.seatOne', { count: trip.seatsRequested })}</span> : null}
-                    <Link href="/messages">{t('transport.connect.message')}</Link>
+                    {trip.seatsRequested ? (
+                      <span>{t('transport.connect.seatOne', { count: trip.seatsRequested })}</span>
+                    ) : null}
+                    <Link href={`/transport/${trip.id}`}>{t('transport.connect.openTrip')}</Link>
                   </div>
                 </article>
               ))
             )}
           </div>
-            </div>
-          </details>
         </aside>
       </div>
     </div>

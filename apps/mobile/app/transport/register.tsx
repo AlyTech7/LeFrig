@@ -183,6 +183,16 @@ export default function DriverRegisterScreen() {
           vehiclePlate: form.vehiclePlate.trim() || undefined,
           licenseNumber: form.licenseNumber.trim() || undefined,
           seatsCapacity: form.seatsCapacity,
+          preferredHubSlugs: [
+            form.originCampId
+              ? camps.find((c) => c.id === form.originCampId)?.slug
+              : undefined,
+            form.destinationCampId
+              ? camps.find((c) => c.id === form.destinationCampId)?.slug
+              : undefined,
+            'tindouf',
+            'rabouni',
+          ].filter((s): s is string => Boolean(s)),
           routes,
         }),
       });

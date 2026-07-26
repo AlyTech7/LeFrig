@@ -181,6 +181,9 @@ export default function MeDriverPage() {
                             <span style={{ opacity: 0.55, fontWeight: 500 }}> · {tr.requesterName}</span>
                           ) : null}
                         </span>
+                        <Link href={`/transport/${tr.id}`} className="me-btn me-btn--ghost">
+                          {t('transport.connect.openTrip')}
+                        </Link>
                         <button
                           type="button"
                           className="me-btn me-btn--primary"
@@ -200,13 +203,21 @@ export default function MeDriverPage() {
               <div className="me-driver-panel">
                 <h3>{t('me.driver.myTrips')}</h3>
                 <ul className="me-route-list">
-                  {trips.slice(0, 8).map((tr) => (
-                    <li key={tr.id}>
-                      {(tr.originLabel ?? tr.originHubSlug) ?? '?'} →{' '}
-                      {(tr.destinationLabel ?? tr.destinationHubSlug) ?? '?'}
-                      <span style={{ opacity: 0.55, fontWeight: 500 }}> · {tr.status}</span>
-                    </li>
-                  ))}
+                  {trips
+                    .filter((tr) => tr.status !== 'completed' && tr.status !== 'cancelled')
+                    .slice(0, 8)
+                    .map((tr) => (
+                      <li key={tr.id} style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                        <span style={{ flex: 1 }}>
+                          {(tr.originLabel ?? tr.originHubSlug) ?? '?'} →{' '}
+                          {(tr.destinationLabel ?? tr.destinationHubSlug) ?? '?'}
+                          <span style={{ opacity: 0.55, fontWeight: 500 }}> · {tr.status}</span>
+                        </span>
+                        <Link href={`/transport/${tr.id}`} className="me-btn me-btn--primary">
+                          {t('transport.connect.openTrip')}
+                        </Link>
+                      </li>
+                    ))}
                 </ul>
               </div>
             ) : null}

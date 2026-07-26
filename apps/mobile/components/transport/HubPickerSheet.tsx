@@ -10,9 +10,11 @@ import {
   ScrollView,
 } from 'react-native';
 import {
-  zonesForScope,
+  TRANSPORT_HUBS,
+  TRANSPORT_HUB_ZONES,
   hubsInScope,
   hubsInZone,
+  zonesForScope,
   type TransportHub,
   type TransportHubZone,
   type TransportRouteScope,
@@ -37,16 +39,19 @@ export function HubPickerSheet({ visible, title, scope, selectedSlug, onSelect, 
   const [zone, setZone] = useState<TransportHubZone | 'all'>('all');
   const [search, setSearch] = useState('');
 
-  const scopeZones = useMemo(() => zonesForScope(scope), [scope]);
+  // Local: solo wilaya+tindouf. Internacional: todas las zonas (un extremo puede ser local).
+  const scopeZones = useMemo(
+    () => (scope === 'local' ? zonesForScope('local') : TRANSPORT_HUB_ZONES),
+    [scope],
+  );
 
   const hubs: TransportHub[] = useMemo(() => {
-    const base = zone === 'all' ? hubsInScope(scope) : hubsInZone(zone);
+    const pool = scope === 'local' ? hubsInScope('local') : TRANSPORT_HUBS;
+    const base = zone === 'all' ? pool : hubsInZone(zone).filter((h) => pool.some((p) => p.slug === h.slug));
     const q = search.trim().toLowerCase();
     if (!q) return base;
     return base.filter(
-      (h) =>
-        h.nameEs.toLowerCase().includes(q) ||
-        h.nameAr.includes(search.trim()),
+      (h) => h.nameEs.toLowerCase().includes(q) || h.nameAr.includes(search.trim()) || h.slug.includes(q),
     );
   }, [zone, search, scope]);
 

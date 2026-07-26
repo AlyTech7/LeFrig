@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
+  assertRouteMatchesScope,
   corridorsForScope,
   getTransportHub,
   type TransportRouteScope,
@@ -49,17 +50,23 @@ export default function TransportScreen() {
   const router = useRouter();
   const t = useT();
   const { locale } = useLocale();
-  const { scope: scopeParam } = useLocalSearchParams<{ scope?: string }>();
+  const { scope: scopeParam, origin: originParam, dest: destParam } = useLocalSearchParams<{
+    scope?: string;
+    origin?: string;
+    dest?: string;
+  }>();
   const { authFetch } = useAuthApi();
   const initialScope: TransportRouteScope =
     scopeParam === 'international' ? 'international' : 'local';
 
   const [routeScope, setRouteScope] = useState<TransportRouteScope>(initialScope);
-  const [originHub, setOriginHub] = useState('rabouni');
-  const [destHub, setDestHub] = useState('nouakchott');
+  const [originHub, setOriginHub] = useState(originParam || (initialScope === 'international' ? 'madrid' : 'rabouni'));
+  const [destHub, setDestHub] = useState(destParam || (initialScope === 'international' ? 'rabouni' : 'tindouf'));
   const [seats, setSeats] = useState(1);
   const [note, setNote] = useState('');
   const [phone, setPhone] = useState('');
+  const [priceEstimate, setPriceEstimate] = useState('');
+  const [publishedId, setPublishedId] = useState<string | null>(null);
   const [drivers, setDrivers] = useState<DriverRow[]>([]);
   const [tripCount, setTripCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -70,14 +77,15 @@ export default function TransportScreen() {
   const scopeCorridors = useMemo(() => corridorsForScope(routeScope), [routeScope]);
 
   useEffect(() => {
+    if (originParam || destParam) return;
     if (routeScope === 'international') {
       setOriginHub('madrid');
       setDestHub('rabouni');
     } else {
       setOriginHub('rabouni');
-      setDestHub('nouakchott');
+      setDestHub('tindouf');
     }
-  }, [routeScope]);
+  }, [routeScope, originParam, destParam]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -100,24 +108,39 @@ export default function TransportScreen() {
 
   const publish = async () => {
     if (originHub === destHub) {
-      Alert.alert(t('transport.routeIncomplete'), t('transport.routeIncomplete'));
+      Alert.alert(t('transport.routeIncomplete'), t('transport.connect.errors.sameHub'));
+      return;
+    }
+    const check = assertRouteMatchesScope(routeScope, originHub, destHub);
+    if (!check.ok) {
+      Alert.alert(
+        t('common.error'),
+        routeScope === 'local'
+          ? t('transport.connect.errors.localScope')
+          : t('transport.connect.errors.intlScope'),
+      );
       return;
     }
     setSubmitting(true);
     try {
-      await authFetch('/transport', {
+      const price = priceEstimate.trim() ? Number(priceEstimate) : undefined;
+      const created = await authFetch<{ id: string }>('/transport', {
         method: 'POST',
         body: JSON.stringify({
           type: tripMode,
+          scope: routeScope,
           originHubSlug: originHub,
           destinationHubSlug: destHub,
           seatsRequested: seats,
           description: note.trim() || `${hubLabel(originHub)} → ${hubLabel(destHub)}`,
           contactPhone: phone.trim() || undefined,
+          priceEstimate: price && Number.isFinite(price) && price > 0 ? price : undefined,
         }),
       });
+      setPublishedId(created.id);
       Alert.alert(t('transport.tripPublished'), t('transport.tripPublished'));
       setNote('');
+      setPriceEstimate('');
       load();
     } catch {
       Alert.alert(t('common.error'), t('transport.sessionError'));
@@ -280,7 +303,32 @@ export default function TransportScreen() {
               placeholderTextColor={theme.inkSoft}
             />
           </View>
+
+          <View style={styles.detailSeparator} />
+
+          <View style={styles.inputRow}>
+            <AppIcon name="dollar-sign" size={16} color={theme.inkMuted} />
+            <TextInput
+              style={styles.inputInner}
+              value={priceEstimate}
+              onChangeText={setPriceEstimate}
+              placeholder={t('transport.connect.priceOptional')}
+              placeholderTextColor={theme.inkSoft}
+              keyboardType="numeric"
+            />
+          </View>
         </View>
+
+        {publishedId ? (
+          <Pressable
+            style={[styles.publishBtn, { marginBottom: 8, backgroundColor: theme.gold }]}
+            onPress={() => router.push(`/transport/${publishedId}` as never)}
+          >
+            <Text style={[styles.publishText, { color: theme.obsidian }]}>
+              {t('transport.connect.openTrip')}
+            </Text>
+          </Pressable>
+        ) : null}
 
         <Pressable
           style={[styles.publishBtn, submitting && styles.disabled]}

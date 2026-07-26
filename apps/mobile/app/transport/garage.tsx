@@ -202,10 +202,12 @@ export default function DriverGarageScreen() {
                 ) : (
                   claimable.map((tr) => (
                     <View key={tr.id} style={styles.claimRow}>
-                      <Text style={styles.route}>
-                        {(tr.originLabel ?? tr.originHubSlug) ?? '?'} →{' '}
-                        {(tr.destinationLabel ?? tr.destinationHubSlug) ?? '?'}
-                      </Text>
+                      <Pressable style={{ flex: 1 }} onPress={() => router.push(`/transport/${tr.id}` as never)}>
+                        <Text style={styles.route}>
+                          {(tr.originLabel ?? tr.originHubSlug) ?? '?'} →{' '}
+                          {(tr.destinationLabel ?? tr.destinationHubSlug) ?? '?'}
+                        </Text>
+                      </Pressable>
                       <Pressable
                         style={styles.claimBtn}
                         disabled={claimingId === tr.id}
@@ -224,12 +226,17 @@ export default function DriverGarageScreen() {
             {trips.length > 0 ? (
               <View style={styles.panel}>
                 <Text style={styles.panelTitle}>{t('me.driver.myTrips')}</Text>
-                {trips.slice(0, 8).map((tr) => (
-                  <Text key={tr.id} style={styles.route}>
-                    {(tr.originLabel ?? tr.originHubSlug) ?? '?'} →{' '}
-                    {(tr.destinationLabel ?? tr.destinationHubSlug) ?? '?'} · {tr.status}
-                  </Text>
-                ))}
+                {trips
+                  .filter((tr) => tr.status !== 'completed' && tr.status !== 'cancelled')
+                  .slice(0, 8)
+                  .map((tr) => (
+                    <Pressable key={tr.id} onPress={() => router.push(`/transport/${tr.id}` as never)}>
+                      <Text style={styles.route}>
+                        {(tr.originLabel ?? tr.originHubSlug) ?? '?'} →{' '}
+                        {(tr.destinationLabel ?? tr.destinationHubSlug) ?? '?'} · {tr.status}
+                      </Text>
+                    </Pressable>
+                  ))}
               </View>
             ) : null}
 
