@@ -118,7 +118,7 @@ function HubField({
       <button type="button" className="lx-field__trigger" onClick={onFocus}>
         <span className="lx-field__kicker">{label}</span>
         <span className="lx-field__value">
-          <span className="lx-field__flag">{h?.flag ?? 'ⵣ'}</span>
+          <span className="lx-field__flag">{h?.flag ?? '🇪🇭'}</span>
           <strong>{h ? hubName(h) : t('transport.connect.pickHub')}</strong>
         </span>
         <span className="lx-field__sub">{sub}</span>

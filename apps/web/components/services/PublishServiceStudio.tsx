@@ -30,8 +30,8 @@ const TIP_KEYS: Record<Step, string> = {
 };
 
 function campEmoji(slug: string) {
-  if (slug === 'tindouf') return '🏜️';
-  return 'ⵣ';
+  if (slug === 'tindouf') return '🇩🇿';
+  return '🇪🇭';
 }
 
 export function PublishServiceStudio() {
