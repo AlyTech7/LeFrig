@@ -20,6 +20,7 @@ import {
 } from '@lefrig/shared';
 import type { PaginatedResponse, TransportRequestSummary } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
+import { CountryFlag } from '@/components/CountryFlag';
 import { fetchApi, mapApiTransport, unwrapPaginated } from '@/lib/api';
 import { useAuthFetch } from '@/lib/auth-fetch';
 import { useLocale, useT } from '@/lib/locale';
@@ -118,7 +119,9 @@ function HubField({
       <button type="button" className="lx-field__trigger" onClick={onFocus}>
         <span className="lx-field__kicker">{label}</span>
         <span className="lx-field__value">
-          <span className="lx-field__flag">{h?.flag ?? '🇪🇭'}</span>
+          <span className="lx-field__flag">
+            {h ? <CountryFlag country={h.country} size={16} /> : null}
+          </span>
           <strong>{h ? hubName(h) : t('transport.connect.pickHub')}</strong>
         </span>
         <span className="lx-field__sub">{sub}</span>
@@ -148,7 +151,7 @@ function HubField({
             {list.map((item: TransportHub) => (
               <li key={item.slug}>
                 <button type="button" onClick={() => { onPick(item.slug); onClose(); }}>
-                  <span>{item.flag}</span>
+                  <CountryFlag country={item.country} size={16} />
                   <strong>{hubName(item)}</strong>
                 </button>
               </li>
@@ -512,7 +515,7 @@ export function TransportConnect() {
                 >
                   {TRANSPORT_PHONE_PREFIXES.map((p) => (
                     <option key={p.dial} value={p.dial}>
-                      {p.flag} {p.dial}
+                      {p.dial}
                     </option>
                   ))}
                 </select>

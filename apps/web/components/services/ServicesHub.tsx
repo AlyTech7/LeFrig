@@ -11,11 +11,6 @@ import { AppImage } from '@/lib/images';
 import { useLocale, useT } from '@/lib/locale';
 import { localizedCampFromSummary, pickLocalized } from '@lefrig/shared';
 
-function campEmoji(slug: string) {
-  if (slug === 'tindouf') return '🇩🇿';
-  return '🇪🇭';
-}
-
 export function ServicesHub() {
   const t = useT();
   const { locale } = useLocale();
@@ -140,7 +135,7 @@ export function ServicesHub() {
             <option value="">{t('marketplace.allCamps')}</option>
             {camps.map((c) => (
               <option key={c.id} value={c.id}>
-                {campEmoji(c.slug)} {localizedCampFromSummary(c, locale)}
+                {localizedCampFromSummary(c, locale)}
               </option>
             ))}
           </select>

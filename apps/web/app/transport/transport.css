@@ -280,6 +280,8 @@
 .lx-field__flag {
   font-size: 1.2rem;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
 }
 
 .lx-field__sub {

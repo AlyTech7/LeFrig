@@ -13,7 +13,7 @@ function dz(
     nameEs,
     nameAr,
     country: 'DZ',
-    flag: '🇩🇿',
+    flag: '',
     popular: opts?.popular,
   };
 }

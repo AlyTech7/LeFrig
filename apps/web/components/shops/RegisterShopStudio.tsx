@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { CampSummary } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
+import { CountryFlag } from '@/components/CountryFlag';
 import { ImageUploader, type PhotoItem } from '@/components/marketplace/ImageUploader';
 import { demoCamps, fetchWithMeta } from '@/lib/api';
 import { useAuthFetch } from '@/lib/auth-fetch';
@@ -37,9 +38,8 @@ const TIP_KEYS: Record<Step, string> = {
   4: 'shops.studio.tip4',
 };
 
-function campEmoji(slug: string) {
-  if (slug === 'tindouf') return '🇩🇿';
-  return '🇪🇭';
+function campCountry(slug: string) {
+  return slug === 'tindouf' ? 'DZ' : 'EH';
 }
 
 export function RegisterShopStudio() {
@@ -211,7 +211,7 @@ export function RegisterShopStudio() {
                     className={campId === c.id ? 'pub-camp pub-camp--on' : 'pub-camp'}
                     onClick={() => setCampId(c.id)}
                   >
-                    <span>{campEmoji(c.slug)}</span>
+                    <CountryFlag country={campCountry(c.slug)} size={16} />
                     <span>
                       <strong>{localizedCampFromSummary(c, locale)}</strong>
                     </span>

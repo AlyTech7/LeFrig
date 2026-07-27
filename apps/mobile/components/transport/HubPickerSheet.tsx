@@ -20,6 +20,7 @@ import {
   type TransportRouteScope,
 } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
+import { CountryFlag } from '@/components/CountryFlag';
 import { pickLabel, pickName } from '@/lib/bilingual';
 import { useLocale, useT } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
@@ -116,7 +117,7 @@ export function HubPickerSheet({ visible, title, scope, selectedSlug, onSelect, 
                   onClose();
                 }}
               >
-                <Text style={styles.hubFlag}>{item.flag}</Text>
+                <CountryFlag country={item.country} size={18} />
                 <View style={styles.hubInfo}>
                   <Text style={[styles.hubName, selected && styles.hubNameOn, dir === 'rtl' && styles.rtl]}>
                     {pickName(locale, item)}

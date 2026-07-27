@@ -30,6 +30,7 @@ import { useAuthApi } from '@/lib/useAuthApi';
 import { theme, radii } from '@/lib/theme';
 import { AppIcon, type FeatherIconName } from '@/components/AppIcon';
 import { HubPickerSheet } from '@/components/transport/HubPickerSheet';
+import { CountryFlag } from '@/components/CountryFlag';
 import { pickName } from '@/lib/bilingual';
 import { useLocale, useT } from '@/lib/locale';
 
@@ -207,9 +208,12 @@ export default function TransportScreen() {
               <View style={styles.dotOrigin} />
               <View style={styles.routeCopy}>
                 <Text style={styles.routeLabel}>{t('transport.from')}</Text>
-                <Text style={styles.routeValue} numberOfLines={1}>
-                  {origin ? `${origin.flag} ${pickName(locale, origin)}` : t('transport.pickOrigin')}
-                </Text>
+                <View style={styles.routeValueRow}>
+                  {origin ? <CountryFlag country={origin.country} size={16} /> : null}
+                  <Text style={styles.routeValue} numberOfLines={1}>
+                    {origin ? pickName(locale, origin) : t('transport.pickOrigin')}
+                  </Text>
+                </View>
               </View>
               <AppIcon name="chevron-down" size={16} color={theme.inkSoft} />
             </Pressable>
@@ -222,9 +226,12 @@ export default function TransportScreen() {
               <View style={styles.dotDest} />
               <View style={styles.routeCopy}>
                 <Text style={styles.routeLabel}>{t('transport.to')}</Text>
-                <Text style={styles.routeValue} numberOfLines={1}>
-                  {dest ? `${dest.flag} ${pickName(locale, dest)}` : t('transport.pickDest')}
-                </Text>
+                <View style={styles.routeValueRow}>
+                  {dest ? <CountryFlag country={dest.country} size={16} /> : null}
+                  <Text style={styles.routeValue} numberOfLines={1}>
+                    {dest ? pickName(locale, dest) : t('transport.pickDest')}
+                  </Text>
+                </View>
               </View>
               <AppIcon name="chevron-down" size={16} color={theme.inkSoft} />
             </Pressable>
@@ -311,7 +318,7 @@ export default function TransportScreen() {
                   onPress={() => setPhoneDial(p.dial)}
                 >
                   <Text style={[styles.dialChipText, phoneDial === p.dial && styles.dialChipTextOn]}>
-                    {p.flag} {p.dial}
+                    {p.dial}
                   </Text>
                 </Pressable>
               ))}
@@ -583,7 +590,8 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
-  routeValue: { fontSize: 16, fontWeight: '800', color: theme.ink, marginTop: 2 },
+  routeValue: { fontSize: 16, fontWeight: '800', color: theme.ink, flexShrink: 1 },
+  routeValueRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
   routeDivider: { paddingLeft: 23 },
   routeLine: {
     width: 2,

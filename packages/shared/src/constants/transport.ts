@@ -46,7 +46,7 @@ export const TRANSPORT_SCOPE_ZONES: Record<TransportRouteScope, TransportHubZone
 export const TRANSPORT_HUB_ZONES: { id: TransportHubZone; labelEs: string; labelAr: string; icon: string }[] = [
   { id: 'wilaya', labelEs: 'Wilayas saharauis', labelAr: 'الولايات', icon: '🏕️' },
   { id: 'tindouf', labelEs: 'Tindouf', labelAr: 'تندوف', icon: '🏜️' },
-  { id: 'argelia', labelEs: 'Argelia (58 wilayas)', labelAr: 'الجزائر', icon: '🇩🇿' },
+  { id: 'argelia', labelEs: 'Argelia (58 wilayas)', labelAr: 'الجزائر', icon: '🗺️' },
   { id: 'mauritania', labelEs: 'Mauritania', labelAr: 'موريتانيا', icon: '🐪' },
   { id: 'espana', labelEs: 'España (provincias)', labelAr: 'إسبانيا', icon: '🇪🇸' },
   { id: 'francia', labelEs: 'Francia (departamentos)', labelAr: 'فرنسا', icon: '🇫🇷' },
@@ -54,13 +54,14 @@ export const TRANSPORT_HUB_ZONES: { id: TransportHubZone; labelEs: string; label
 
 const CORE_HUBS: TransportHub[] = [
   // Wilayas saharauis
-  { slug: 'aaiun', zone: 'wilaya', nameEs: 'Aaiún / Laayoune', nameAr: 'العيون', campSlug: 'aaiun', country: 'EH', flag: '🇪🇭', popular: true },
-  { slug: 'smara', zone: 'wilaya', nameEs: 'Smara', nameAr: 'السمارة', campSlug: 'smara', country: 'EH', flag: '🇪🇭', popular: true },
-  { slug: 'auserd', zone: 'wilaya', nameEs: 'Auserd', nameAr: 'أوسرد', campSlug: 'auserd', country: 'EH', flag: '🇪🇭' },
-  { slug: 'dakhla', zone: 'wilaya', nameEs: 'Dakhla', nameAr: 'الداخلة', campSlug: 'dakhla', country: 'EH', flag: '🇪🇭', popular: true },
-  { slug: 'rabouni', zone: 'wilaya', nameEs: 'Rabouni', nameAr: 'الرابوني', campSlug: 'rabouni', country: 'EH', flag: '🇪🇭', popular: true },
-  { slug: '27-febrero', zone: 'wilaya', nameEs: '27 de Febrero / Boujdour', nameAr: 'فبراير27 - ولاية بوجدور', campSlug: '27-febrero', country: 'EH', flag: '🇪🇭' },
-  { slug: 'tindouf', zone: 'tindouf', nameEs: 'Tindouf (Argelia)', nameAr: 'تندوف', campSlug: 'tindouf', country: 'DZ', flag: '🇩🇿', popular: true },
+  // flag vacío: EH/DZ no se pintan como emoji en Windows (salen "EH"/"DZ"). UI usa CountryFlag SVG.
+  { slug: 'aaiun', zone: 'wilaya', nameEs: 'Aaiún / Laayoune', nameAr: 'العيون', campSlug: 'aaiun', country: 'EH', flag: '', popular: true },
+  { slug: 'smara', zone: 'wilaya', nameEs: 'Smara', nameAr: 'السمارة', campSlug: 'smara', country: 'EH', flag: '', popular: true },
+  { slug: 'auserd', zone: 'wilaya', nameEs: 'Auserd', nameAr: 'أوسرد', campSlug: 'auserd', country: 'EH', flag: '' },
+  { slug: 'dakhla', zone: 'wilaya', nameEs: 'Dakhla', nameAr: 'الداخلة', campSlug: 'dakhla', country: 'EH', flag: '', popular: true },
+  { slug: 'rabouni', zone: 'wilaya', nameEs: 'Rabouni', nameAr: 'الرابوني', campSlug: 'rabouni', country: 'EH', flag: '', popular: true },
+  { slug: '27-febrero', zone: 'wilaya', nameEs: '27 de Febrero / Boujdour', nameAr: 'فبراير27 - ولاية بوجدور', campSlug: '27-febrero', country: 'EH', flag: '' },
+  { slug: 'tindouf', zone: 'tindouf', nameEs: 'Tindouf (Argelia)', nameAr: 'تندوف', campSlug: 'tindouf', country: 'DZ', flag: '', popular: true },
 
   // Mauritania — internacional
   { slug: 'nouakchott', zone: 'mauritania', nameEs: 'Nuakchott', nameAr: 'نواكشوط', country: 'MR', flag: '🇲🇷', popular: true },
