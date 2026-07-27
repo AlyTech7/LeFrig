@@ -218,6 +218,7 @@ export enum TrustBadge {
 // Shop
 export enum ShopType {
   INDIVIDUAL = 'individual',
+  RESTAURANT = 'restaurant',
   COOPERATIVE = 'cooperative',
   ASSOCIATION = 'association',
   WORKSHOP = 'workshop',

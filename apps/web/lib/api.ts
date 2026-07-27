@@ -285,6 +285,20 @@ export const demoShops: ShopListItem[] = [
     productCount: 56,
     description: 'Marsa central — de todo un poco para el día a día.',
   },
+  {
+    id: 'shop-7',
+    name: 'مطعم الواحة',
+    slug: 'restaurant-oasis',
+    campId: campIds[4]!,
+    campName: 'الرابوني',
+    acceptsCash: true,
+    acceptsFiado: false,
+    acceptsVouchers: false,
+    verified: true,
+    shopType: 'restaurant',
+    productCount: 12,
+    description: 'وجبات يومية · شاي · أكل جاهز — نقداً.',
+  },
 ];
 
 export const demoServices = SERVICE_CATEGORIES.slice(0, 12).map((s, i) => ({

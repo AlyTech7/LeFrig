@@ -17,13 +17,32 @@ import { useLocale, useT } from '@/lib/locale';
 import { localizedCampFromSummary } from '@lefrig/shared';
 
 type PayFilter = 'all' | 'cash' | 'verified';
+type TypeFilter = 'all' | 'individual' | 'restaurant' | 'cooperative' | 'association' | 'workshop';
 
 const SHOP_TYPE_KEYS: Record<string, string> = {
   individual: 'shops.typeIndividual',
+  restaurant: 'shops.typeRestaurant',
   cooperative: 'shops.typeCooperative',
   association: 'shops.typeAssociation',
   workshop: 'shops.typeWorkshop',
 };
+
+const TYPE_ICONS: Record<string, string> = {
+  individual: '🏪',
+  restaurant: '🍽️',
+  cooperative: '🤝',
+  association: '👥',
+  workshop: '🔧',
+};
+
+const TYPE_FILTERS: { id: TypeFilter; labelKey: string; icon?: string }[] = [
+  { id: 'all', labelKey: 'shops.filterAll' },
+  { id: 'individual', labelKey: 'shops.typeIndividual', icon: '🏪' },
+  { id: 'restaurant', labelKey: 'shops.typeRestaurant', icon: '🍽️' },
+  { id: 'cooperative', labelKey: 'shops.typeCooperative', icon: '🤝' },
+  { id: 'workshop', labelKey: 'shops.typeWorkshop', icon: '🔧' },
+  { id: 'association', labelKey: 'shops.typeAssociation', icon: '👥' },
+];
 
 function campEmoji(slug: string) {
   if (slug === 'tindouf') return '🏜️';
@@ -45,18 +64,21 @@ export function ShopsHub() {
   const [usingDemo, setUsingDemo] = useState(false);
   const [campId, setCampId] = useState('');
   const [payFilter, setPayFilter] = useState<PayFilter>('all');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [query, setQuery] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     if (campId) params.set('campId', campId);
+    if (typeFilter !== 'all') params.set('shopType', typeFilter);
+    params.set('limit', '100');
 
     const [campsRes, shopsRes] = await Promise.all([
       fetchWithMeta<CampSummary[]>('/camps', demoCamps),
       fetchWithMeta<PaginatedResponse<ShopListItem> | ShopListItem[]>(
         `/shops?${params}`,
-        { data: demoShops, meta: { total: demoShops.length, page: 1, limit: 50, totalPages: 1 } },
+        { data: demoShops, meta: { total: demoShops.length, page: 1, limit: 100, totalPages: 1 } },
       ),
     ]);
 
@@ -73,7 +95,7 @@ export function ShopsHub() {
     );
     setUsingDemo(campsRes.fromFallback || shopsRes.fromFallback);
     setLoading(false);
-  }, [campId]);
+  }, [campId, typeFilter]);
 
   useEffect(() => {
     load();
@@ -87,17 +109,24 @@ export function ShopsHub() {
         (s) =>
           s.name.toLowerCase().includes(q) ||
           (s.description?.toLowerCase().includes(q) ?? false) ||
-          (s.campName?.toLowerCase().includes(q) ?? false),
+          (s.campName?.toLowerCase().includes(q) ?? false) ||
+          (s.shopType?.toLowerCase().includes(q) ?? false),
       );
+    }
+    if (typeFilter !== 'all' && usingDemo) {
+      list = list.filter((s) => (s.shopType ?? 'individual') === typeFilter);
     }
     if (payFilter === 'cash') list = list.filter((s) => s.acceptsCash);
     if (payFilter === 'verified') list = list.filter((s) => s.verified);
     return list;
-  }, [shops, query, payFilter]);
+  }, [shops, query, payFilter, typeFilter, usingDemo]);
+
+  const hasActiveFilters = Boolean(campId || payFilter !== 'all' || typeFilter !== 'all' || query);
 
   const clearFilters = () => {
     setCampId('');
     setPayFilter('all');
+    setTypeFilter('all');
     setQuery('');
   };
 
@@ -105,7 +134,7 @@ export function ShopsHub() {
     <div className="shp">
       <header className="shp-hero">
         <div className="shp-hero__row">
-          <div>
+          <div className="shp-hero__copy">
             <p className="shp-kicker">
               <span className="shp-kicker__dot" aria-hidden />
               {t('shops.kicker')}
@@ -117,10 +146,13 @@ export function ShopsHub() {
             </h1>
             <p className="shp-lead">{t('shops.lead')}</p>
           </div>
-          <Link href="/shops/register" className="shp-cta">
-            <AppIcon name="store" size={18} color="#1a1612" />
-            {t('shops.registerCta')}
-          </Link>
+          <div className="shp-hero__actions">
+            <Link href="/shops/register" className="shp-cta">
+              <AppIcon name="store" size={18} color="#1a1612" />
+              {t('shops.registerCta')}
+            </Link>
+            <p className="shp-hero__hint">{t('shops.browseHint')}</p>
+          </div>
         </div>
 
         <div className="shp-toolbar">
@@ -147,11 +179,27 @@ export function ShopsHub() {
               </option>
             ))}
           </select>
-          {(campId || payFilter !== 'all' || query) && (
-            <button type="button" className="shp-pill" onClick={clearFilters}>
+          {hasActiveFilters && (
+            <button type="button" className="shp-pill shp-pill--clear" onClick={clearFilters}>
               {t('common.clear')}
             </button>
           )}
+        </div>
+
+        <div className="shp-type-rail" role="tablist" aria-label={t('shops.typeFiltersAria')}>
+          {TYPE_FILTERS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={typeFilter === item.id}
+              className={typeFilter === item.id ? 'shp-type shp-type--on' : 'shp-type'}
+              onClick={() => setTypeFilter(item.id)}
+            >
+              {item.icon ? <span aria-hidden>{item.icon}</span> : null}
+              {t(item.labelKey)}
+            </button>
+          ))}
         </div>
 
         <div className="shp-filters" role="tablist" aria-label={t('shops.paymentFiltersAria')}>
@@ -178,6 +226,16 @@ export function ShopsHub() {
 
       {usingDemo && <p className="shp-banner">{t('shops.demoBanner')}</p>}
 
+      {!loading && filtered.length > 0 && (
+        <div className="shp-results">
+          <p className="shp-results__count">
+            {filtered.length === 1
+              ? t('shops.resultsCountOne')
+              : t('shops.resultsCount', { count: filtered.length })}
+          </p>
+        </div>
+      )}
+
       {loading ? (
         <div className="shp-grid">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -186,6 +244,9 @@ export function ShopsHub() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="shp-empty">
+          <span className="shp-empty__icon" aria-hidden>
+            {typeFilter === 'restaurant' ? '🍽️' : '🏪'}
+          </span>
           <h3>{t('shops.emptyTitle')}</h3>
           <p>{t('shops.emptyHint')}</p>
           <Link href="/shops/register" className="shp-cta">
@@ -194,34 +255,47 @@ export function ShopsHub() {
         </div>
       ) : (
         <div className="shp-grid">
-          {filtered.map((shop) => (
-            <Link key={shop.id} href={`/shops/${shop.id}`} className="shp-card">
-              <div className="shp-card__media">
-                {shop.imageUrl ? <AppImage src={shop.imageUrl} alt="" loading="lazy" /> : <span>🏪</span>}
-                {shop.verified && <span className="shp-card__verified">{t('shops.filterVerified')}</span>}
-              </div>
-              <div className="shp-card__body">
-                <p className="shp-card__type">
-                  {t(SHOP_TYPE_KEYS[shop.shopType ?? 'individual'] ?? 'shops.title')}
-                </p>
-                <h2 className="shp-card__title">{shop.name}</h2>
-                {shop.description && <p className="shp-card__desc">{shop.description}</p>}
-                <div className="shp-card__tags">
-                  {paymentTags(shop, t).map((tag) => (
-                    <span key={tag.key} className={`shp-tag ${tag.cls}`}>
-                      {tag.label}
-                    </span>
-                  ))}
-                </div>
-                <div className="shp-card__foot">
-                  <span>📍 {shop.campName ?? t('shops.campFallback')}</span>
-                  {shop.productCount != null && (
-                    <span>{t('shops.productCount', { count: shop.productCount })}</span>
+          {filtered.map((shop) => {
+            const type = shop.shopType ?? 'individual';
+            return (
+              <Link key={shop.id} href={`/shops/${shop.id}`} className="shp-card">
+                <div className="shp-card__media">
+                  {shop.imageUrl ? (
+                    <AppImage src={shop.imageUrl} alt="" loading="lazy" />
+                  ) : (
+                    <span>{TYPE_ICONS[type] ?? '🏪'}</span>
+                  )}
+                  {shop.verified && (
+                    <span className="shp-card__verified">{t('shops.filterVerified')}</span>
                   )}
                 </div>
-              </div>
-            </Link>
-          ))}
+                <div className="shp-card__body">
+                  <p className="shp-card__type">
+                    <span aria-hidden>{TYPE_ICONS[type] ?? '🏪'}</span>
+                    {t(SHOP_TYPE_KEYS[type] ?? 'shops.title')}
+                  </p>
+                  <h2 className="shp-card__title">{shop.name}</h2>
+                  {shop.description && <p className="shp-card__desc">{shop.description}</p>}
+                  <div className="shp-card__tags">
+                    {paymentTags(shop, t).map((tag) => (
+                      <span key={tag.key} className={`shp-tag ${tag.cls}`}>
+                        {tag.label}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="shp-card__foot">
+                    <span>
+                      📍 {shop.campName ?? t('shops.campFallback')}
+                    </span>
+                    {shop.productCount != null && (
+                      <span>{t('shops.productCount', { count: shop.productCount })}</span>
+                    )}
+                  </div>
+                  <span className="shp-card__cta">{t('shops.openCta')} →</span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

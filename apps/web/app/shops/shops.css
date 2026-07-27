@@ -203,6 +203,77 @@
   font-weight: 600;
 }
 
+.shp-hero__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.45rem;
+}
+
+.shp-hero__hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--shp-ink-faint);
+  max-width: 14rem;
+  text-align: end;
+}
+
+.shp-type-rail {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.shp-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--shp-r);
+  border: 1px solid var(--shp-line);
+  background: var(--shp-surface);
+  color: var(--shp-ink-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.shp-type:hover {
+  border-color: var(--shp-line-hover);
+}
+
+.shp-type--on {
+  border-color: var(--shp-gold);
+  background: var(--shp-gold-glow);
+  color: var(--shp-ink);
+}
+
+.shp-pill--clear {
+  border-style: dashed;
+}
+
+.shp-results {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 0.85rem;
+}
+
+.shp-results__count {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--shp-ink-muted);
+}
+
 .shp-banner {
   margin: 0 0 1rem;
   padding: 0.6rem 0.85rem;
@@ -280,12 +351,30 @@
 }
 
 .shp-card__type {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--shp-ink-faint);
   margin: 0 0 0.25rem;
+}
+
+.shp-card__cta {
+  display: inline-block;
+  margin-top: 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--shp-gold);
+}
+
+.shp-empty__icon {
+  display: block;
+  font-size: 2.4rem;
+  margin-bottom: 0.65rem;
+  opacity: 0.7;
 }
 
 .shp-card__title {
@@ -482,6 +571,16 @@
     flex-direction: column;
   }
 
+  .shp-hero__actions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .shp-hero__hint {
+    text-align: start;
+    max-width: none;
+  }
+
   .shp-cta {
     width: 100%;
     justify-content: center;
@@ -490,6 +589,10 @@
   .shp-toolbar {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .shp-card__media {
+    height: 148px;
   }
 }
 
