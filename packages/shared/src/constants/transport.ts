@@ -207,8 +207,108 @@ export function corridorsForScope(scope: TransportRouteScope): TransportCorridor
   return TRANSPORT_CORRIDORS.filter((c) => c.scope === scope);
 }
 
-export function hubLabel(slug: string, lang: 'es' | 'ar' = 'es'): string {
+export type DriverCoverageMode = 'zone' | 'corridors' | 'flexible';
+
+export type DriverCorridorPair = { originHubSlug: string; destinationHubSlug: string };
+
+/** Expande preferredHubSlugs a partir del modo de cobertura (para matching). */
+export function expandDriverPreferredHubs(input: {
+  coverageMode: DriverCoverageMode;
+  coverageOriginHubSlug?: string | null;
+  coverageZones?: string[] | null;
+  corridorPairs?: DriverCorridorPair[] | null;
+  coverageScope?: TransportRouteScope | null;
+  preferredHubSlugs?: string[] | null;
+}): string[] {
+  const set = new Set<string>();
+  for (const s of input.preferredHubSlugs ?? []) {
+    if (getTransportHub(s)) set.add(s);
+  }
+
+  if (input.coverageMode === 'zone') {
+    if (input.coverageOriginHubSlug && getTransportHub(input.coverageOriginHubSlug)) {
+      set.add(input.coverageOriginHubSlug);
+    }
+    for (const zone of input.coverageZones ?? []) {
+      for (const h of hubsInZone(zone as TransportHubZone)) set.add(h.slug);
+    }
+  } else if (input.coverageMode === 'corridors') {
+    for (const p of input.corridorPairs ?? []) {
+      if (getTransportHub(p.originHubSlug)) set.add(p.originHubSlug);
+      if (getTransportHub(p.destinationHubSlug)) set.add(p.destinationHubSlug);
+    }
+  } else if (input.coverageMode === 'flexible' && input.coverageScope) {
+    for (const h of hubsInScope(input.coverageScope)) set.add(h.slug);
+  }
+
+  return [...set].slice(0, 80);
+}
+
+/** Score de cobertura para un viaje origen→destino (mayor = mejor). */
+export function scoreDriverCoverage(
+  profile: {
+    coverageMode?: string | null;
+    coverageOriginHubSlug?: string | null;
+    coverageZones?: string[] | null;
+    corridorPairs?: DriverCorridorPair[] | unknown;
+    coverageScope?: string | null;
+    preferredHubSlugs?: string[] | null;
+    isVerified?: boolean;
+    verificationStatus?: string | null;
+  },
+  originHub?: string,
+  destHub?: string,
+): number {
+  if (!originHub && !destHub) return 1;
+  let score = 0;
+  const mode = (profile.coverageMode ?? 'flexible') as DriverCoverageMode;
+  const pairs = Array.isArray(profile.corridorPairs)
+    ? (profile.corridorPairs as DriverCorridorPair[])
+    : [];
+  const hubs = new Set(profile.preferredHubSlugs ?? []);
+
+  if (mode === 'zone' && originHub && destHub) {
+    const o = getTransportHub(originHub);
+    const d = getTransportHub(destHub);
+    const originOk =
+      profile.coverageOriginHubSlug === originHub || profile.coverageOriginHubSlug === destHub;
+    const zones = new Set(profile.coverageZones ?? []);
+    const destInZone =
+      (o && zones.has(o.zone) && profile.coverageOriginHubSlug === destHub) ||
+      (d && zones.has(d.zone) && profile.coverageOriginHubSlug === originHub) ||
+      (o && zones.has(o.zone)) ||
+      (d && zones.has(d.zone));
+    if (originOk && destInZone) score += 8;
+    else if (originOk || destInZone) score += 3;
+  }
+
+  if (mode === 'corridors' && originHub && destHub) {
+    const hit = pairs.some(
+      (p) =>
+        (p.originHubSlug === originHub && p.destinationHubSlug === destHub) ||
+        (p.originHubSlug === destHub && p.destinationHubSlug === originHub),
+    );
+    if (hit) score += 10;
+    else if (hubs.has(originHub) || hubs.has(destHub)) score += 2;
+  }
+
+  if (mode === 'flexible') {
+    if (originHub && hubs.has(originHub)) score += 2;
+    if (destHub && hubs.has(destHub)) score += 2;
+    if (score === 0) score = 1;
+  }
+
+  if (originHub && hubs.has(originHub)) score += 1;
+  if (destHub && hubs.has(destHub)) score += 1;
+
+  if (profile.isVerified || profile.verificationStatus === 'verified') score += 4;
+  if (score === 0) score = 0.5;
+  return score;
+}
+
+export function hubLabel(slug: string, locale: 'es' | 'ar' | 'en' | 'fr' = 'es'): string {
   const h = getTransportHub(slug);
   if (!h) return slug;
-  return lang === 'ar' ? h.nameAr : h.nameEs;
+  if (locale === 'ar') return h.nameAr;
+  return h.nameEs;
 }

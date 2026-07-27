@@ -228,9 +228,35 @@
   border-color: rgba(45, 138, 98, 0.28);
 }
 
+.me-driver-banner--basic {
+  background: rgba(45, 138, 98, 0.05);
+  border-color: rgba(45, 138, 98, 0.18);
+}
+
 .me-driver-banner--pending {
   background: rgba(168, 132, 45, 0.1);
   border-color: rgba(168, 132, 45, 0.3);
+}
+
+.me-driver-banner--rejected {
+  background: rgba(180, 60, 50, 0.08);
+  border-color: rgba(180, 60, 50, 0.28);
+}
+
+.me-driver-banner__reason {
+  margin: 0.55rem 0 0 !important;
+  font-weight: 600;
+  color: rgba(140, 40, 35, 0.9) !important;
+}
+
+.me-driver-chip--basic {
+  background: rgba(45, 138, 98, 0.1);
+  color: #1f6b4a;
+}
+
+.me-driver-chip--rejected {
+  background: rgba(180, 60, 50, 0.1);
+  color: #8c2823;
 }
 
 .me-driver-banner h2 {

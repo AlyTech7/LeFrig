@@ -655,11 +655,28 @@ model DriverProfile {
   licenseNumber   String?  @map("license_number")
   seatsCapacity   Int      @default(4) @map("seats_capacity")
   isVerified      Boolean  @default(false) @map("is_verified")
+  /** basic | pending_review | verified | rejected */
+  verificationStatus String @default("basic") @map("verification_status")
+  rejectionReason String?  @map("rejection_reason")
   rating          Float    @default(0)
   totalTrips      Int      @default(0) @map("total_trips")
   /** Hubs preferidos (slugs) para matching más allá de camps */
   preferredHubSlugs String[] @default([]) @map("preferred_hub_slugs")
+  /** zone | corridors | flexible */
+  coverageMode    String   @default("flexible") @map("coverage_mode")
+  coverageOriginHubSlug String? @map("coverage_origin_hub_slug")
+  /** Zonas destino (wilaya, tindouf, argelia…) cuando coverageMode=zone */
+  coverageZones   String[] @default([]) @map("coverage_zones")
+  /** Pares hub→hub cuando coverageMode=corridors: [{originHubSlug,destinationHubSlug}] */
+  corridorPairs   Json     @default("[]") @map("corridor_pairs")
+  /** local | international — coverageMode=flexible */
+  coverageScope   String?  @map("coverage_scope")
+  contactPhone    String?  @map("contact_phone")
+  whatsapp        String?
+  licenseDocUrl   String?  @map("license_doc_url")
+  vehiclePhotoUrl String?  @map("vehicle_photo_url")
   createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   frequentRoutes FrequentRoute[]

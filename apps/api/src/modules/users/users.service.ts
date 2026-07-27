@@ -192,9 +192,13 @@ export class UsersService {
 
     const driverStatus = !driver
       ? 'none'
-      : driver.isVerified
+      : driver.verificationStatus === 'verified' || driver.isVerified
         ? 'verified'
-        : 'pending';
+        : driver.verificationStatus === 'pending_review'
+          ? 'pending'
+          : driver.verificationStatus === 'rejected'
+            ? 'rejected'
+            : 'basic';
 
     return {
       user,
@@ -206,6 +210,14 @@ export class UsersService {
             licenseNumber: driver.licenseNumber,
             seatsCapacity: driver.seatsCapacity,
             isVerified: driver.isVerified,
+            verificationStatus: driver.verificationStatus,
+            rejectionReason: driver.rejectionReason,
+            coverageMode: driver.coverageMode,
+            coverageZones: driver.coverageZones,
+            coverageScope: driver.coverageScope,
+            coverageOriginHubSlug: driver.coverageOriginHubSlug,
+            contactPhone: driver.contactPhone,
+            whatsapp: driver.whatsapp,
             rating: driver.rating,
             totalTrips: driver.totalTrips,
             status: driverStatus,

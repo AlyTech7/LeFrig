@@ -21,6 +21,24 @@ type OpenTrip = {
 
 type PaginatedTrips = { data: OpenTrip[] };
 
+type DriverStatus = MeHub['driverStatus'];
+
+function statusTitleKey(status: DriverStatus) {
+  if (status === 'verified') return 'me.driver.statusVerified';
+  if (status === 'pending') return 'me.driver.statusPending';
+  if (status === 'basic') return 'me.driver.statusBasic';
+  if (status === 'rejected') return 'me.driver.statusRejected';
+  return 'me.driver.statusNone';
+}
+
+function statusBodyKey(status: DriverStatus) {
+  if (status === 'verified') return 'me.driver.statusVerifiedBody';
+  if (status === 'pending') return 'me.driver.statusPendingBody';
+  if (status === 'basic') return 'me.driver.statusBasicBody';
+  if (status === 'rejected') return 'me.driver.statusRejectedBody';
+  return 'me.driver.statusNoneBody';
+}
+
 export default function MeDriverPage() {
   const t = useT();
   const { authFetch, isSignedIn, isLoaded } = useAuthFetch();
@@ -76,9 +94,24 @@ export default function MeDriverPage() {
     }
   };
 
-  const status = hub?.driverStatus ?? 'none';
+  const status: DriverStatus = hub?.driverStatus ?? 'none';
   const driver = hub?.driver;
-  const claimable = status === 'verified' ? openBoard.filter((tr) => tr.status === 'requested' || tr.status === 'open') : [];
+  const canClaim = status === 'verified' || status === 'basic' || status === 'pending';
+  const claimable = canClaim ? openBoard.filter((tr) => tr.status === 'requested' || tr.status === 'open') : [];
+
+  const coverageLabel = (() => {
+    if (!driver?.coverageMode) return null;
+    if (driver.coverageMode === 'zone') {
+      const zones = (driver.coverageZones ?? []).map((z) => t(`transport.zones.${z}`)).join(', ');
+      return `${driver.coverageOriginHubSlug ?? '—'} → ${zones || '—'}`;
+    }
+    if (driver.coverageMode === 'flexible') {
+      return driver.coverageScope === 'international'
+        ? t('transport.driver.scopeInternational')
+        : t('transport.driver.scopeLocal');
+    }
+    return t('transport.driver.modeCorridors');
+  })();
 
   return (
     <>
@@ -102,20 +135,13 @@ export default function MeDriverPage() {
         ) : (
           <>
             <div className={`me-driver-banner me-driver-banner--${status === 'none' ? '' : status}`.trim()}>
-              <h2>
-                {status === 'verified'
-                  ? t('me.driver.statusVerified')
-                  : status === 'pending'
-                    ? t('me.driver.statusPending')
-                    : t('me.driver.statusNone')}
-              </h2>
-              <p>
-                {status === 'verified'
-                  ? t('me.driver.statusVerifiedBody')
-                  : status === 'pending'
-                    ? t('me.driver.statusPendingBody')
-                    : t('me.driver.statusNoneBody')}
-              </p>
+              <h2>{t(statusTitleKey(status))}</h2>
+              <p>{t(statusBodyKey(status))}</p>
+              {status === 'rejected' && driver?.rejectionReason ? (
+                <p className="me-driver-banner__reason">
+                  {t('me.driver.rejectionReason')}: {driver.rejectionReason}
+                </p>
+              ) : null}
             </div>
 
             {driver ? (
@@ -124,7 +150,11 @@ export default function MeDriverPage() {
                 <dl className="me-driver-facts">
                   <div>
                     <dt>{t('me.driver.vehicle')}</dt>
-                    <dd>{driver.vehicleType ?? '—'}</dd>
+                    <dd>
+                      {driver.vehicleType
+                        ? t(`transport.driver.vehicleTypes.${driver.vehicleType}`)
+                        : '—'}
+                    </dd>
                   </div>
                   <div>
                     <dt>{t('me.driver.plate')}</dt>
@@ -134,6 +164,16 @@ export default function MeDriverPage() {
                     <dt>{t('me.driver.seats')}</dt>
                     <dd>{driver.seatsCapacity}</dd>
                   </div>
+                  <div>
+                    <dt>{t('me.driver.phone')}</dt>
+                    <dd>{driver.contactPhone ?? '—'}</dd>
+                  </div>
+                  {coverageLabel ? (
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <dt>{t('me.driver.coverage')}</dt>
+                      <dd>{coverageLabel}</dd>
+                    </div>
+                  ) : null}
                   <div>
                     <dt>{t('me.driver.rating')}</dt>
                     <dd>{driver.rating?.toFixed?.(1) ?? driver.rating}</dd>
@@ -164,7 +204,7 @@ export default function MeDriverPage() {
               </div>
             ) : null}
 
-            {status === 'verified' ? (
+            {canClaim ? (
               <div className="me-driver-panel">
                 <h3>{t('me.driver.openBoard')}</h3>
                 {claimMsg ? <p className="me-muted">{claimMsg}</p> : null}
@@ -229,7 +269,9 @@ export default function MeDriverPage() {
                 </Link>
               ) : (
                 <Link href="/transport/register" className="me-btn me-btn--primary">
-                  {t('me.driver.editProfile')}
+                  {status === 'basic' || status === 'rejected'
+                    ? t('me.driver.verifyCta')
+                    : t('me.driver.editProfile')}
                 </Link>
               )}
               <Link href="/transport" className="me-btn me-btn--ghost">

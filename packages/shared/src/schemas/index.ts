@@ -164,12 +164,33 @@ export const createTransportSchema = z.object({
   luggageNote: z.string().max(300).optional(),
 });
 
-export const createDriverProfileSchema = z.object({
-  vehicleType: z.enum(['car', 'pickup', 'van', 'truck', 'motorcycle']).optional(),
+const driverProfileFieldsSchema = z.object({
+  vehicleType: z.enum(['car', 'pickup', 'van', 'truck', 'motorcycle']),
   vehiclePlate: z.string().min(2).max(20).optional(),
   licenseNumber: z.string().min(2).max(40).optional(),
   seatsCapacity: z.coerce.number().int().min(1).max(50).default(4),
   preferredHubSlugs: z.array(z.string().min(1).max(64)).max(40).optional(),
+  coverageMode: z.enum(['zone', 'corridors', 'flexible']).default('flexible'),
+  coverageOriginHubSlug: z.string().min(1).max(64).optional(),
+  coverageZones: z
+    .array(z.enum(['wilaya', 'tindouf', 'argelia', 'mauritania', 'espana', 'francia']))
+    .max(6)
+    .optional(),
+  corridorPairs: z
+    .array(
+      z.object({
+        originHubSlug: z.string().min(1).max(64),
+        destinationHubSlug: z.string().min(1).max(64),
+      }),
+    )
+    .max(12)
+    .optional(),
+  coverageScope: z.enum(['local', 'international']).optional(),
+  contactPhone: phoneSchema,
+  whatsapp: phoneSchema.optional().nullable(),
+  licenseDocUrl: z.string().url().optional().nullable(),
+  vehiclePhotoUrl: z.string().url().optional().nullable(),
+  submitForReview: z.boolean().optional(),
   routes: z
     .array(
       z.object({
@@ -180,6 +201,39 @@ export const createDriverProfileSchema = z.object({
     )
     .max(5)
     .optional(),
+});
+
+export const createDriverProfileSchema = driverProfileFieldsSchema.superRefine((data, ctx) => {
+  if (data.coverageMode === 'zone') {
+    if (!data.coverageOriginHubSlug) {
+      ctx.addIssue({ code: 'custom', message: 'Origen de zona requerido', path: ['coverageOriginHubSlug'] });
+    }
+    if (!data.coverageZones?.length) {
+      ctx.addIssue({ code: 'custom', message: 'Elige al menos una zona de destino', path: ['coverageZones'] });
+    }
+  }
+  if (data.coverageMode === 'corridors') {
+    const pairs = data.corridorPairs ?? [];
+    if (!pairs.length) {
+      ctx.addIssue({ code: 'custom', message: 'Añade al menos un corredor', path: ['corridorPairs'] });
+    }
+    for (const [i, p] of pairs.entries()) {
+      if (p.originHubSlug === p.destinationHubSlug) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Origen y destino deben ser distintos',
+          path: ['corridorPairs', i],
+        });
+      }
+    }
+  }
+  if (data.coverageMode === 'flexible' && !data.coverageScope) {
+    ctx.addIssue({ code: 'custom', message: 'Elige ámbito local o internacional', path: ['coverageScope'] });
+  }
+});
+
+export const updateDriverProfileSchema = driverProfileFieldsSchema.partial().extend({
+  contactPhone: phoneSchema.optional(),
 });
 
 export const transportCompleteSchema = z.object({

@@ -24,9 +24,17 @@ export type MeHub = {
     vehiclePlate: string | null;
     seatsCapacity: number;
     isVerified: boolean;
+    verificationStatus?: string;
+    rejectionReason?: string | null;
+    coverageMode?: string | null;
+    coverageZones?: string[];
+    coverageScope?: string | null;
+    coverageOriginHubSlug?: string | null;
+    contactPhone?: string | null;
+    whatsapp?: string | null;
     rating: number;
     totalTrips: number;
-    status: 'none' | 'pending' | 'verified';
+    status: 'none' | 'basic' | 'pending' | 'verified' | 'rejected';
     frequentRoutes: {
       id: string;
       frequency: string;
@@ -34,7 +42,7 @@ export type MeHub = {
       destination: { id: string; nameEs: string; slug: string };
     }[];
   } | null;
-  driverStatus: 'none' | 'pending' | 'verified';
+  driverStatus: 'none' | 'basic' | 'pending' | 'verified' | 'rejected';
   stats: {
     listingsActive: number;
     ordersAsBuyer: number;
@@ -105,7 +113,11 @@ export default function MeHubPage() {
       ? t('me.modules.driverSubVerified')
       : hub?.driverStatus === 'pending'
         ? t('me.modules.driverSubPending')
-        : t('me.modules.driverSubNone');
+        : hub?.driverStatus === 'basic'
+          ? t('me.modules.driverSubBasic')
+          : hub?.driverStatus === 'rejected'
+            ? t('me.modules.driverSubRejected')
+            : t('me.modules.driverSubNone');
 
   const modules: Module[] = hub
     ? [
