@@ -39,7 +39,7 @@ export class OrdersService {
         skip,
         take,
         include: {
-          shop: { select: { name: true, slug: true, ownerId: true } },
+          shop: { select: { id: true, name: true, slug: true, ownerId: true } },
           items: true,
         },
         orderBy: { createdAt: 'desc' },
@@ -54,7 +54,7 @@ export class OrdersService {
     const order = await this.prisma.order.findUnique({
       where: { id },
       include: {
-        shop: { select: { name: true, slug: true, ownerId: true } },
+        shop: { select: { id: true, name: true, slug: true, ownerId: true } },
         items: true,
         buyer: { select: { displayName: true } },
       },

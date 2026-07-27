@@ -3,22 +3,23 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Button, Input, colors } from '@lefrig/ui/client';
 import { AppIcon } from '@/components/AppIcon';
-import { PageBody, PageHero } from '@/components/PageHero';
 import { API_URL } from '@/lib/api';
 import { useAuthFetch } from '@/lib/auth-fetch';
 import { streamConversation, type ChatMessage } from '@/lib/messageStream';
+import { useT } from '@/lib/locale';
+import '../../hub-studio.css';
 
 export default function ConversationPage() {
   const params = useParams<{ id: string }>();
-  /** getToken vía useAuthFetch (ya guarda isClerkEnabled); no llamar useAuth() directo */
   const { authFetch, isSignedIn, isLoaded, getToken } = useAuthFetch();
+  const t = useT();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [live, setLive] = useState(false);
+  const [myId, setMyId] = useState('');
   const listRef = useRef<HTMLDivElement>(null);
 
   const appendMessage = (msg: ChatMessage) => {
@@ -29,8 +30,12 @@ export default function ConversationPage() {
     if (!silent) setLoading(true);
     authFetch<ChatMessage[]>(`/messages/conversations/${params.id}`)
       .then(setMessages)
-      .catch(() => { if (!silent) setMessages([]); })
-      .finally(() => { if (!silent) setLoading(false); });
+      .catch(() => {
+        if (!silent) setMessages([]);
+      })
+      .finally(() => {
+        if (!silent) setLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -38,6 +43,9 @@ export default function ConversationPage() {
       setLoading(false);
       return;
     }
+    authFetch<{ user?: { id?: string } }>('/auth/sync', { method: 'POST' })
+      .then((sync) => setMyId(sync.user?.id ?? ''))
+      .catch(() => setMyId(''));
     load();
   }, [authFetch, isLoaded, isSignedIn, params.id]);
 
@@ -52,9 +60,15 @@ export default function ConversationPage() {
           const token = await getToken();
           if (!token || cancelled) break;
           setLive(true);
-          await streamConversation(API_URL, params.id, token, (ev) => {
-            if (ev.type === 'message' && ev.message) appendMessage(ev.message);
-          }, ac.signal);
+          await streamConversation(
+            API_URL,
+            params.id,
+            token,
+            (ev) => {
+              if (ev.type === 'message' && ev.message) appendMessage(ev.message);
+            },
+            ac.signal,
+          );
         } catch {
           if (cancelled) return;
           setLive(false);
@@ -91,71 +105,75 @@ export default function ConversationPage() {
 
   if (!isLoaded) {
     return (
-      <div style={{ maxWidth: 640, margin: '0 auto', padding: '80px 20px', textAlign: 'center' }}>
-        <p style={{ color: colors.gray[500] }}>Cargando...</p>
+      <div className="hub-page">
+        <p className="hub-lead">{t('messages.loading')}</p>
       </div>
     );
   }
 
   if (!isSignedIn) {
     return (
-      <div style={{ maxWidth: 640, margin: '0 auto', padding: '80px 20px', textAlign: 'center' }}>
-        <Link href="/sign-in" style={{ color: colors.deepGreen[600], fontWeight: 700 }}>Inicia sesión</Link>
+      <div className="hub-page">
+        <div className="hub-empty">
+          <Link href="/sign-in" className="hub-back">
+            {t('nav.signIn')}
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <>
-      <PageHero icon="message-circle" title="Chat" subtitle={live ? 'En vivo · SSE' : 'Mensajes en tiempo real'} maxWidth={720} />
-      <PageBody maxWidth={720}>
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Link href="/messages" style={{ color: 'var(--lf-gold)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <AppIcon name="arrow-left" size={18} color="var(--lf-gold)" />
-          Conversaciones
-        </Link>
-        {live && (
-          <span style={{ fontSize: '0.75rem', color: 'var(--lf-emerald)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--lf-emerald)' }} />
-            En vivo
-          </span>
-        )}
-      </div>
+    <div className="hub-page">
+      <div className="hub-chat">
+        <div className="hub-chat__toolbar">
+          <Link href="/messages" className="hub-back">
+            <AppIcon name="arrow-left" size={16} color="var(--hub-gold)" />
+            {t('messages.backList')}
+          </Link>
+          {live ? (
+            <span className="hub-live">
+              <span className="hub-live__dot" />
+              {t('messages.live')}
+            </span>
+          ) : (
+            <span className="hub-card__meta">{t('messages.offline')}</span>
+          )}
+        </div>
 
-      <div ref={listRef} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24, maxHeight: '55vh', overflowY: 'auto' }}>
-        {loading ? (
-          <p style={{ color: colors.gray[500] }}>Cargando...</p>
-        ) : messages.length === 0 ? (
-          <p style={{ color: colors.gray[500] }}>Sin mensajes aún. Escribe el primero.</p>
-        ) : (
-          messages.map((m) => (
-            <div
-              key={m.id}
-              style={{
-                alignSelf: 'flex-start',
-                maxWidth: '80%',
-                padding: '12px 16px',
-                borderRadius: 16,
-                background: 'var(--lf-surface)',
-                border: '1px solid rgba(255,255,255,0.06)',
-              }}
-            >
-              <p style={{ margin: '0 0 4px', fontSize: '0.75rem', fontWeight: 700, color: 'var(--lf-emerald)' }}>
-                {m.sender.displayName}
-              </p>
-              <p style={{ margin: 0 }}>{m.content}</p>
-            </div>
-          ))
-        )}
-      </div>
+        <h1 style={{ margin: '0 0 0.85rem', fontSize: '1.35rem' }}>{t('messages.chat')}</h1>
 
-      <div style={{ display: 'flex', gap: 12 }}>
-        <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Escribe un mensaje..." onKeyDown={(e) => e.key === 'Enter' && send()} />
-        <Button onClick={send} disabled={sending}>{sending ? '...' : 'Enviar'}</Button>
+        <div ref={listRef} className="hub-bubbles">
+          {loading ? (
+            <p className="hub-lead">{t('messages.loading')}</p>
+          ) : messages.length === 0 ? (
+            <p className="hub-lead">{t('messages.emptyThread')}</p>
+          ) : (
+            messages.map((m) => {
+              const mine = Boolean(myId && m.sender.id === myId);
+              return (
+                <div key={m.id} className={`hub-bubble ${mine ? 'hub-bubble--mine' : 'hub-bubble--other'}`}>
+                  {!mine ? <p className="hub-bubble__name">{m.sender.displayName}</p> : null}
+                  <p>{m.content}</p>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        <div className="hub-composer">
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={t('messages.placeholder')}
+            onKeyDown={(e) => e.key === 'Enter' && void send()}
+            aria-label={t('messages.placeholder')}
+          />
+          <button type="button" className="hub-btn" onClick={() => void send()} disabled={sending || !text.trim()}>
+            {sending ? '…' : t('messages.send')}
+          </button>
+        </div>
       </div>
-      </div>
-      </PageBody>
-    </>
+    </div>
   );
 }

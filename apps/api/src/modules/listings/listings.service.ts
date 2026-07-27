@@ -214,6 +214,17 @@ export class ListingsService {
     return listing;
   }
 
+  async findMine(sellerId: string) {
+    return this.prisma.listing.findMany({
+      where: { sellerId },
+      include: {
+        category: { select: { slug: true, nameEs: true, nameAr: true } },
+        camp: { select: { id: true, slug: true, nameEs: true, nameAr: true } },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+  }
+
   async create(sellerId: string, input: unknown) {
     const data = parseOrBadRequest(createListingSchema, input);
     const category = await this.prisma.category.findFirst({
@@ -294,7 +305,11 @@ export class ListingsService {
       data: updateData,
       include: { category: true },
     }).then((listing) => {
-      void this.indexListing(listing);
+      if (listing.status === 'active') {
+        void this.indexListing(listing);
+      } else {
+        void this.meili.deleteDocument('listings', listing.id);
+      }
       return listing;
     });
   }

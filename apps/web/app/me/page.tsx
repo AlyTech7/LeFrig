@@ -116,7 +116,7 @@ export default function MeHubPage() {
           sub: `${t('me.modules.ordersSub')} · ${hub.stats.ordersAsBuyer}`,
         },
         {
-          href: '/marketplace/create',
+          href: '/marketplace/mine',
           icon: 'shopping-bag',
           titleKey: 'me.modules.sales',
           sub: `${t('me.modules.salesSub')} · ${hub.stats.listingsActive}`,
