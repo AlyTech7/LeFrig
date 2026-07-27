@@ -28,8 +28,16 @@ type ShopDetail = {
   products?: Product[];
 };
 
-const SHOP_TYPE_KEYS: Record<string, 'shops.typeIndividual' | 'shops.typeCooperative' | 'shops.typeAssociation' | 'shops.typeWorkshop'> = {
+const SHOP_TYPE_KEYS: Record<
+  string,
+  | 'shops.typeIndividual'
+  | 'shops.typeRestaurant'
+  | 'shops.typeCooperative'
+  | 'shops.typeAssociation'
+  | 'shops.typeWorkshop'
+> = {
   individual: 'shops.typeIndividual',
+  restaurant: 'shops.typeRestaurant',
   cooperative: 'shops.typeCooperative',
   association: 'shops.typeAssociation',
   workshop: 'shops.typeWorkshop',

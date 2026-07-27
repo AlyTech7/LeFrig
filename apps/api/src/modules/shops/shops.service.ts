@@ -26,9 +26,15 @@ export class ShopsService {
   async findAll(query: unknown) {
     const { page, limit } = paginationSchema.parse(query);
     const { skip, take } = skipTake(page, limit);
-    const campId = (query as Record<string, string>)?.campId;
+    const q = query as Record<string, string>;
+    const campId = q?.campId;
+    const shopType = q?.shopType;
 
-    const where = { isActive: true, ...(campId && { campId }) };
+    const where = {
+      isActive: true,
+      ...(campId && { campId }),
+      ...(shopType && { shopType }),
+    };
 
     const [data, total] = await Promise.all([
       this.prisma.shop.findMany({

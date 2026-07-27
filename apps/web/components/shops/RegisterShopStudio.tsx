@@ -13,7 +13,7 @@ import { localizedCampFromSummary, DEFAULT_PHONE_COUNTRY } from '@lefrig/shared'
 import { PhoneField } from '@lefrig/ui/client';
 
 type Step = 1 | 2 | 3 | 4;
-type ShopType = 'individual' | 'cooperative' | 'association' | 'workshop';
+type ShopType = 'individual' | 'restaurant' | 'cooperative' | 'association' | 'workshop';
 
 const STEPS: { n: Step; labelKey: string }[] = [
   { n: 1, labelKey: 'shops.studio.stepType' },
@@ -24,9 +24,10 @@ const STEPS: { n: Step; labelKey: string }[] = [
 
 const SHOP_TYPES: { id: ShopType; labelKey: string; descKey: string; icon: string }[] = [
   { id: 'individual', labelKey: 'shops.typeIndividual', descKey: 'shops.studio.typeIndividualDesc', icon: '🏪' },
+  { id: 'restaurant', labelKey: 'shops.typeRestaurant', descKey: 'shops.studio.typeRestaurantDesc', icon: '🍽️' },
   { id: 'cooperative', labelKey: 'shops.typeCooperative', descKey: 'shops.studio.typeCooperativeDesc', icon: '🤝' },
-  { id: 'association', labelKey: 'shops.typeAssociation', descKey: 'shops.studio.typeAssociationDesc', icon: '👥' },
   { id: 'workshop', labelKey: 'shops.typeWorkshop', descKey: 'shops.studio.typeWorkshopDesc', icon: '🔧' },
+  { id: 'association', labelKey: 'shops.typeAssociation', descKey: 'shops.studio.typeAssociationDesc', icon: '👥' },
 ];
 
 const TIP_KEYS: Record<Step, string> = {
@@ -121,7 +122,7 @@ export function RegisterShopStudio() {
     setError('');
     try {
       await authFetch('/auth/sync', { method: 'POST' });
-      await authFetch('/shops', {
+      const created = await authFetch<{ id: string }>('/shops', {
         method: 'POST',
         body: JSON.stringify({
           name: name.trim(),
@@ -134,7 +135,11 @@ export function RegisterShopStudio() {
           imageUrl: imageUrls[0],
         }),
       });
-      router.push('/shops');
+      if (created?.id) {
+        router.push(`/shops/${created.id}/manage`);
+      } else {
+        router.push('/shops');
+      }
     } catch {
       setError(t('shops.studio.registerError'));
     } finally {

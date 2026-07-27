@@ -158,7 +158,7 @@ export const MARKETPLACE_DEPARTMENTS: MarketplaceDepartment[] = [
     accent: 'linear-gradient(135deg, #57534e 0%, #a8a29e 100%)',
     items: [
       { slug: 'tools', nameEs: 'Herramientas', nameAr: 'أدوات', icon: '🛠️', kind: 'listing' },
-      { slug: 'special-currencies', nameEs: 'Divisas especiales', nameAr: 'عملات خاصة', icon: '💱', kind: 'listing' },
+      { slug: 'special-currencies', nameEs: 'Divisas especiales', nameAr: 'أسعار العملات', icon: '💱', kind: 'listing' },
       { slug: 'other', nameEs: 'General', nameAr: 'عام', icon: '📦', kind: 'listing' },
     ],
   },
