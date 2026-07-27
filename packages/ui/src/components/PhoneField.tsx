@@ -52,35 +52,54 @@ export function PhoneField({
     if (value.trim()) onChange(formatPhone(value, country));
   };
 
+  const border = `2px solid ${error ? colors.error : colors.sand[300]}`;
+
   return (
-    <div style={{ width: '100%' }}>
+    <div className="lf-phone" style={{ width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }}>
       {label ? (
-        <label htmlFor={`${id}-local`} style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: '0.9375rem' }}>
+        <label
+          htmlFor={`${id}-local`}
+          style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: '0.9375rem' }}
+        >
           {label}
           {required ? ' *' : ''}
         </label>
       ) : null}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: 8,
+          alignItems: 'stretch',
+          width: '100%',
+          maxWidth: '100%',
+          minWidth: 0,
+          boxSizing: 'border-box',
+        }}
+      >
         <select
           id={`${id}-country`}
-          aria-label="País"
+          aria-label={phoneCountryLabel(country, locale)}
+          title={phoneCountryLabel(country, locale)}
           value={country.iso}
           disabled={disabled}
           onChange={(e) => setCountry(e.target.value)}
           style={{
             flex: '0 0 auto',
-            minWidth: 132,
+            width: '7.25rem',
+            maxWidth: '42%',
+            minWidth: 0,
             minHeight: touchTarget.comfortable,
-            padding: '12px 10px',
+            padding: '12px 8px',
             borderRadius: radii.lg,
-            border: `2px solid ${error ? colors.error : colors.sand[300]}`,
+            border,
             background: colors.warmWhite,
-            fontSize: '0.95rem',
+            fontSize: '0.9rem',
+            boxSizing: 'border-box',
           }}
         >
           {PHONE_COUNTRIES.map((c: PhoneCountry) => (
-            <option key={c.iso} value={c.iso}>
-              {c.flag} {c.dial} {phoneCountryLabel(c, locale)}
+            <option key={c.iso} value={c.iso} title={`${c.dial} ${phoneCountryLabel(c, locale)}`}>
+              {c.flag} {c.dial}
             </option>
           ))}
         </select>
@@ -96,14 +115,17 @@ export function PhoneField({
           onChange={(e) => setLocal(e.target.value)}
           onBlur={onBlurLocal}
           style={{
-            flex: 1,
+            flex: '1 1 0',
+            minWidth: 0,
+            width: '100%',
             minHeight: touchTarget.comfortable,
-            padding: '12px 16px',
+            padding: '12px 14px',
             borderRadius: radii.lg,
-            border: `2px solid ${error ? colors.error : colors.sand[300]}`,
+            border,
             background: colors.warmWhite,
             fontSize: '1rem',
             outline: 'none',
+            boxSizing: 'border-box',
           }}
         />
       </div>
