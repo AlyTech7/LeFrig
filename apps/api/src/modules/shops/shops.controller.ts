@@ -72,6 +72,17 @@ export class ShopsController {
     return this.shopsService.deleteProduct(shopId, productId, user.sub);
   }
 
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  update(
+    @Param('id') id: string,
+    @CurrentUser() user: { sub: string },
+    @Body() body: unknown,
+  ) {
+    return this.shopsService.update(id, user.sub, body);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.shopsService.findOne(id);

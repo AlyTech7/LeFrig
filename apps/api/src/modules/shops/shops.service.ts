@@ -7,6 +7,7 @@ import {
   createShopSchema,
   paginationSchema,
   updateShopProductSchema,
+  updateShopSchema,
 } from '@lefrig/shared';
 
 @Injectable()
@@ -56,12 +57,34 @@ export class ShopsService {
 
   findMine(ownerId: string) {
     return this.prisma.shop.findMany({
-      where: { ownerId, isActive: true },
+      where: { ownerId },
       include: {
-        camp: { select: { nameEs: true } },
-        _count: { select: { products: true } },
+        camp: { select: { id: true, slug: true, nameEs: true, nameAr: true } },
+        _count: { select: { products: { where: { isActive: true } } } },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { updatedAt: 'desc' },
+    });
+  }
+
+  async update(shopId: string, userId: string, input: unknown) {
+    await this.assertShopOwner(shopId, userId);
+    const data = updateShopSchema.parse(input);
+    if (data.imageUrl) {
+      this.storage.assertOwnedImageUrl(data.imageUrl, userId);
+    }
+    const { imageUrl, description, whatsapp, ...rest } = data;
+    return this.prisma.shop.update({
+      where: { id: shopId },
+      data: {
+        ...rest,
+        ...(description !== undefined && { description: description ?? null }),
+        ...(whatsapp !== undefined && { whatsapp: whatsapp ?? null }),
+        ...(imageUrl !== undefined && { imageUrl: imageUrl ?? null }),
+      },
+      include: {
+        camp: { select: { id: true, slug: true, nameEs: true, nameAr: true } },
+        _count: { select: { products: { where: { isActive: true } } } },
+      },
     });
   }
 
