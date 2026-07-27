@@ -45,8 +45,8 @@ const TYPE_FILTERS: { id: TypeFilter; labelKey: string; icon?: string }[] = [
 ];
 
 function campEmoji(slug: string) {
-  if (slug === 'tindouf') return '🏜️';
-  return 'ⵣ';
+  if (slug === 'tindouf') return '🇩🇿';
+  return '🇪🇭';
 }
 
 function paymentTags(shop: ShopListItem, t: ReturnType<typeof useT>) {

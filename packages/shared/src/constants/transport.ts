@@ -54,12 +54,12 @@ export const TRANSPORT_HUB_ZONES: { id: TransportHubZone; labelEs: string; label
 
 const CORE_HUBS: TransportHub[] = [
   // Wilayas saharauis
-  { slug: 'aaiun', zone: 'wilaya', nameEs: 'Aaiún / Laayoune', nameAr: 'العيون', campSlug: 'aaiun', country: 'EH', flag: 'ⵣ', popular: true },
-  { slug: 'smara', zone: 'wilaya', nameEs: 'Smara', nameAr: 'السمارة', campSlug: 'smara', country: 'EH', flag: 'ⵣ', popular: true },
-  { slug: 'auserd', zone: 'wilaya', nameEs: 'Auserd', nameAr: 'أوسرد', campSlug: 'auserd', country: 'EH', flag: 'ⵣ' },
-  { slug: 'dakhla', zone: 'wilaya', nameEs: 'Dakhla', nameAr: 'الداخلة', campSlug: 'dakhla', country: 'EH', flag: 'ⵣ', popular: true },
-  { slug: 'rabouni', zone: 'wilaya', nameEs: 'Rabouni', nameAr: 'الرابوني', campSlug: 'rabouni', country: 'EH', flag: 'ⵣ', popular: true },
-  { slug: '27-febrero', zone: 'wilaya', nameEs: '27 de Febrero / Boujdour', nameAr: 'فبراير27 - ولاية بوجدور', campSlug: '27-febrero', country: 'EH', flag: 'ⵣ' },
+  { slug: 'aaiun', zone: 'wilaya', nameEs: 'Aaiún / Laayoune', nameAr: 'العيون', campSlug: 'aaiun', country: 'EH', flag: '🇪🇭', popular: true },
+  { slug: 'smara', zone: 'wilaya', nameEs: 'Smara', nameAr: 'السمارة', campSlug: 'smara', country: 'EH', flag: '🇪🇭', popular: true },
+  { slug: 'auserd', zone: 'wilaya', nameEs: 'Auserd', nameAr: 'أوسرد', campSlug: 'auserd', country: 'EH', flag: '🇪🇭' },
+  { slug: 'dakhla', zone: 'wilaya', nameEs: 'Dakhla', nameAr: 'الداخلة', campSlug: 'dakhla', country: 'EH', flag: '🇪🇭', popular: true },
+  { slug: 'rabouni', zone: 'wilaya', nameEs: 'Rabouni', nameAr: 'الرابوني', campSlug: 'rabouni', country: 'EH', flag: '🇪🇭', popular: true },
+  { slug: '27-febrero', zone: 'wilaya', nameEs: '27 de Febrero / Boujdour', nameAr: 'فبراير27 - ولاية بوجدور', campSlug: '27-febrero', country: 'EH', flag: '🇪🇭' },
   { slug: 'tindouf', zone: 'tindouf', nameEs: 'Tindouf (Argelia)', nameAr: 'تندوف', campSlug: 'tindouf', country: 'DZ', flag: '🇩🇿', popular: true },
 
   // Mauritania — internacional

@@ -12,8 +12,8 @@ import { useLocale, useT } from '@/lib/locale';
 import { localizedCampFromSummary, pickLocalized } from '@lefrig/shared';
 
 function campEmoji(slug: string) {
-  if (slug === 'tindouf') return '🏜️';
-  return 'ⵣ';
+  if (slug === 'tindouf') return '🇩🇿';
+  return '🇪🇭';
 }
 
 export function ServicesHub() {
