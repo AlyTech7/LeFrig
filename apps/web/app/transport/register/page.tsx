@@ -7,6 +7,7 @@ import { Button, Card, Input, colors } from '@lefrig/ui/client';
 import type { CampSummary } from '@lefrig/shared';
 import { TRANSPORT_HUBS, localizedCampFromSummary, pickLocalized } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
+import { CountryFlag } from '@/components/CountryFlag';
 import { fetchApi } from '@/lib/api';
 import { PageBody, PageHero } from '@/components/PageHero';
 import { useAuthFetch } from '@/lib/auth-fetch';
@@ -226,7 +227,7 @@ export default function DriverRegisterPage() {
                             cursor: 'pointer',
                           }}
                         >
-                          {h.flag} {pickLocalized(h, locale)}
+                          <CountryFlag country={h.country} size={14} /> {pickLocalized(h, locale)}
                         </button>
                       );
                     })}

@@ -44,11 +44,6 @@ const TYPE_FILTERS: { id: TypeFilter; labelKey: string; icon?: string }[] = [
   { id: 'association', labelKey: 'shops.typeAssociation', icon: '👥' },
 ];
 
-function campEmoji(slug: string) {
-  if (slug === 'tindouf') return '🇩🇿';
-  return '🇪🇭';
-}
-
 function paymentTags(shop: ShopListItem, t: ReturnType<typeof useT>) {
   const tags: { key: string; label: string; cls: string }[] = [];
   if (shop.acceptsCash) tags.push({ key: 'cash', label: t('shops.tagCash'), cls: 'shp-tag--cash' });
@@ -175,7 +170,7 @@ export function ShopsHub() {
             <option value="">{t('marketplace.allCamps')}</option>
             {camps.map((c) => (
               <option key={c.id} value={c.id}>
-                {campEmoji(c.slug)} {localizedCampFromSummary(c, locale)}
+                {localizedCampFromSummary(c, locale)}
               </option>
             ))}
           </select>
