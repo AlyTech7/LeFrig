@@ -21,6 +21,9 @@
   --pub-r: 3px;
 
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
   min-height: 60vh;
   animation: pub-page-in 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -39,8 +42,12 @@
 .pub {
   position: relative;
   max-width: var(--pub-max);
+  width: 100%;
+  min-width: 0;
   margin: 0 auto;
-  padding: 0.35rem clamp(1rem, 3vw, 1.25rem) 3.5rem;
+  padding: 0.35rem clamp(0.85rem, 3vw, 1.25rem) 3.5rem;
+  box-sizing: border-box;
+  overflow-x: clip;
 }
 
 /* ─── Hero compacto ─── */
@@ -237,6 +244,10 @@
   padding: clamp(1.15rem, 3vw, 1.65rem);
   box-shadow: var(--pub-shadow-lg);
   position: relative;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+  box-sizing: border-box;
 }
 
 .pub-panel::before {
@@ -263,6 +274,8 @@
   font-size: 0.86rem;
   color: var(--pub-ink-muted);
   line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .pub-subtitle {
@@ -1304,5 +1317,13 @@
 
   .pub-camps {
     grid-template-columns: 1fr;
+  }
+
+  .pub-panel {
+    padding: 1rem 0.85rem;
+  }
+
+  .pub-cats {
+    grid-template-columns: 1fr 1fr !important;
   }
 }
