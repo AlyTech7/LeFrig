@@ -162,7 +162,7 @@ export default function MeHubPage() {
           sub: t('me.modules.cashSub'),
         },
         {
-          href: '/shops',
+          href: '/shops/mine',
           icon: 'store',
           titleKey: 'me.modules.shops',
           sub: `${t('me.modules.shopsSub')} · ${hub.stats.shops}`,

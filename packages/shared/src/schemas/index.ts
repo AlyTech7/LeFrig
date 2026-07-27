@@ -95,6 +95,17 @@ export const createShopSchema = z.object({
   imageUrl: z.string().url().optional(),
 });
 
+export const updateShopSchema = createShopSchema
+  .partial()
+  .extend({
+    isActive: z.boolean().optional(),
+    /** Allow clearing optional WhatsApp */
+    whatsapp: phoneSchema.optional().nullable(),
+    imageUrl: z.string().url().optional().nullable(),
+    description: z.string().max(1000).optional().nullable(),
+  })
+  .refine((data) => Object.keys(data).length > 0, { message: 'At least one field required' });
+
 export const moneyAmountSchema = z.number().finite().positive().max(10_000_000);
 
 export const createShopProductSchema = z.object({

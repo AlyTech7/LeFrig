@@ -30,7 +30,7 @@ export default function ShopsScreen() {
   const t = useT();
   const { locale, dir } = useLocale();
   const [shops, setShops] = useState<ShopItem[]>([]);
-  const [myShopId, setMyShopId] = useState<string | null>(null);
+  const [myShops, setMyShops] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [campFilter, setCampFilter] = useState<string | null>(null);
@@ -44,9 +44,11 @@ export default function ShopsScreen() {
       },
     );
     if (isSignedIn) {
-      authFetch<{ id: string }[]>('/shops/mine')
-        .then((mine) => setMyShopId(mine[0]?.id ?? null))
-        .catch(() => setMyShopId(null));
+      authFetch<{ id: string; name: string }[]>('/shops/mine')
+        .then((mine) => setMyShops(Array.isArray(mine) ? mine.map((s) => ({ id: s.id, name: s.name })) : []))
+        .catch(() => setMyShops([]));
+    } else {
+      setMyShops([]);
     }
   }, [authFetch, isSignedIn]);
 
@@ -85,12 +87,23 @@ export default function ShopsScreen() {
         </View>
       </SafeAreaView>
 
-      {myShopId ? (
-        <Pressable style={styles.myShopBanner} onPress={() => router.push(`/shops/${myShopId}/products`)}>
-          <AppIcon name="edit-3" size={18} color={theme.dune} />
-          <Text style={styles.myShopText}>{t('shops.manageMyShop')}</Text>
-          <AppIcon name="chevron-right" size={16} color={theme.dune} />
-        </Pressable>
+      {myShops.length > 0 ? (
+        <View style={styles.myShopsWrap}>
+          <Text style={[styles.myShopsTitle, dir === 'rtl' && styles.rtl]}>{t('shops.mine.title')}</Text>
+          {myShops.map((shop) => (
+            <Pressable
+              key={shop.id}
+              style={styles.myShopBanner}
+              onPress={() => router.push(`/shops/${shop.id}/products`)}
+            >
+              <AppIcon name="edit-3" size={18} color={theme.dune} />
+              <Text style={styles.myShopText} numberOfLines={1}>
+                {myShops.length === 1 ? t('shops.manageMyShop') : shop.name}
+              </Text>
+              <AppIcon name="chevron-right" size={16} color={theme.dune} />
+            </Pressable>
+          ))}
+        </View>
       ) : null}
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.campRow}>
@@ -179,12 +192,23 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   searchInput: { flex: 1, fontSize: 15, color: theme.ink, fontWeight: '500' },
+  myShopsWrap: { marginTop: 4, gap: 0 },
+  myShopsTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: theme.inkMuted,
+    marginHorizontal: 20,
+    marginTop: 12,
+    marginBottom: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
   myShopBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     marginHorizontal: 20,
-    marginTop: 12,
+    marginTop: 8,
     padding: 14,
     borderRadius: radii.md,
     backgroundColor: 'rgba(168,132,45,0.1)',

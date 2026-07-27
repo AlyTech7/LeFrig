@@ -15,6 +15,7 @@ import {
 } from '@/lib/api';
 import { useLocale, useT } from '@/lib/locale';
 import { localizedCampFromSummary } from '@lefrig/shared';
+import { useAuthFetch } from '@/lib/auth-fetch';
 
 type PayFilter = 'all' | 'cash' | 'verified';
 type TypeFilter = 'all' | 'individual' | 'restaurant' | 'cooperative' | 'association' | 'workshop';
@@ -53,6 +54,7 @@ function paymentTags(shop: ShopListItem, t: ReturnType<typeof useT>) {
 export function ShopsHub() {
   const t = useT();
   const { locale } = useLocale();
+  const { authFetch, isSignedIn } = useAuthFetch();
   const [shops, setShops] = useState<ShopListItem[]>([]);
   const [camps, setCamps] = useState<CampSummary[]>(demoCamps);
   const [loading, setLoading] = useState(true);
@@ -61,6 +63,7 @@ export function ShopsHub() {
   const [payFilter, setPayFilter] = useState<PayFilter>('all');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [query, setQuery] = useState('');
+  const [mineCount, setMineCount] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -95,6 +98,16 @@ export function ShopsHub() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      setMineCount(0);
+      return;
+    }
+    authFetch<{ id: string }[]>('/shops/mine')
+      .then((mine) => setMineCount(Array.isArray(mine) ? mine.length : 0))
+      .catch(() => setMineCount(0));
+  }, [authFetch, isSignedIn]);
 
   const filtered = useMemo(() => {
     let list = shops;
@@ -142,6 +155,12 @@ export function ShopsHub() {
             <p className="shp-lead">{t('shops.lead')}</p>
           </div>
           <div className="shp-hero__actions">
+            {isSignedIn && mineCount > 0 ? (
+              <Link href="/shops/mine" className="shp-cta shp-cta--secondary">
+                <AppIcon name="store" size={18} color="var(--shp-oasis, #2d8a62)" />
+                {t('shops.manageMyShop')} · {mineCount}
+              </Link>
+            ) : null}
             <Link href="/shops/register" className="shp-cta">
               <AppIcon name="store" size={18} color="#1a1612" />
               {t('shops.registerCta')}
