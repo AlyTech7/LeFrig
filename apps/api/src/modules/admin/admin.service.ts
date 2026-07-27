@@ -590,7 +590,11 @@ export class AdminService {
 
     const updated = await this.prisma.driverProfile.update({
       where: { userId },
-      data: { isVerified: verified },
+      data: {
+        isVerified: verified,
+        verificationStatus: verified ? 'verified' : 'basic',
+        rejectionReason: verified ? null : undefined,
+      },
       include: { user: { select: { displayName: true, roles: true } } },
     });
 

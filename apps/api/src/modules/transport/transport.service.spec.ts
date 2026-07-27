@@ -29,7 +29,8 @@ describe('TransportService lifecycle', () => {
 
   beforeEach(() => {
     prisma = mockPrisma();
-    service = new TransportService(prisma as never);
+    const storage = { assertOwnedImageUrl: vi.fn() };
+    service = new TransportService(prisma as never, storage as never);
   });
 
   it('create rechaza scope inválido (local con Mauritania)', async () => {
@@ -81,7 +82,11 @@ describe('TransportService lifecycle', () => {
   });
 
   it('claim genera PIN de 4 dígitos', async () => {
-    prisma.driverProfile.findUnique.mockResolvedValue({ isVerified: true });
+    prisma.driverProfile.findUnique.mockResolvedValue({
+      isVerified: false,
+      verificationStatus: 'basic',
+      contactPhone: '+213555000000',
+    });
     prisma.transportRequest.findUnique.mockResolvedValue({
       id: 'trip-1',
       requesterId: 'pass-1',

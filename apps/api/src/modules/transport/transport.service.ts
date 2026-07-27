@@ -8,14 +8,18 @@ import {
   assertRouteMatchesScope,
   createDriverProfileSchema,
   createTransportSchema,
+  expandDriverPreferredHubs,
   getTransportHub,
   hubLabel,
   paginationSchema,
   routeScopeForHubs,
+  scoreDriverCoverage,
   transportCompleteSchema,
 } from '@lefrig/shared';
 import { paginate, skipTake } from '../../common/utils/pagination';
 import { buildTransportReceiptPdf } from './transport-receipt-pdf';
+import { StorageAdapter } from '../../adapters/storage.adapter';
+import { Prisma } from '@prisma/client';
 
 type TripIncludeRow = {
   id: string;
@@ -44,7 +48,10 @@ type TripIncludeRow = {
 
 @Injectable()
 export class TransportService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private storage: StorageAdapter,
+  ) {}
 
   getHubCatalog() {
     return {
@@ -295,8 +302,11 @@ export class TransportService {
 
   async claimAsDriver(tripId: string, driverUserId: string) {
     const profile = await this.prisma.driverProfile.findUnique({ where: { userId: driverUserId } });
-    if (!profile?.isVerified) {
-      throw new ForbiddenException('Necesitas perfil de conductor verificado');
+    if (!profile || profile.verificationStatus === 'rejected') {
+      throw new ForbiddenException('Necesitas un perfil de conductor activo');
+    }
+    if (!profile.contactPhone) {
+      throw new ForbiddenException('Completa tu teléfono de contacto en el registro de conductor');
     }
     const trip = await this.prisma.transportRequest.findUnique({ where: { id: tripId } });
     if (!trip) throw new NotFoundException('Viaje no encontrado');
@@ -448,20 +458,32 @@ export class TransportService {
 
     return this.prisma.driverProfile
       .findMany({
-        where: { isVerified: true },
+        where: { verificationStatus: { not: 'rejected' } },
         include: {
           user: { select: { displayName: true, campId: true, phone: true } },
           frequentRoutes: { include: { originCamp: true, destinationCamp: true } },
         },
       })
       .then((drivers) => {
-        if (!originHub && !destHub) return drivers;
+        if (!originHub && !destHub) {
+          return drivers.sort((a, b) => Number(b.isVerified) - Number(a.isVerified));
+        }
 
         const scored = drivers.map((driver) => {
-          let score = 0;
-          const hubs = new Set(driver.preferredHubSlugs ?? []);
-          if (originHub && hubs.has(originHub)) score += 2;
-          if (destHub && hubs.has(destHub)) score += 2;
+          let score = scoreDriverCoverage(
+            {
+              coverageMode: driver.coverageMode,
+              coverageOriginHubSlug: driver.coverageOriginHubSlug,
+              coverageZones: driver.coverageZones,
+              corridorPairs: driver.corridorPairs,
+              coverageScope: driver.coverageScope,
+              preferredHubSlugs: driver.preferredHubSlugs,
+              isVerified: driver.isVerified,
+              verificationStatus: driver.verificationStatus,
+            },
+            originHub,
+            destHub,
+          );
 
           const routeMatch = driver.frequentRoutes.some((r) => {
             const os = r.originCamp.slug;
@@ -478,8 +500,6 @@ export class TransportService {
           });
           if (routeMatch) score += 3;
 
-          // Soft match: verified drivers without route still appear with low score
-          if (score === 0) score = 0.5;
           return { driver, score };
         });
 
@@ -503,7 +523,27 @@ export class TransportService {
   async registerDriver(userId: string, input: unknown) {
     const data = createDriverProfileSchema.parse(input);
 
-    const preferredHubSlugs = (data.preferredHubSlugs ?? []).filter((slug) => Boolean(getTransportHub(slug)));
+    const corridorPairs = (data.corridorPairs ?? []).filter(
+      (p) =>
+        Boolean(getTransportHub(p.originHubSlug)) &&
+        Boolean(getTransportHub(p.destinationHubSlug)) &&
+        p.originHubSlug !== p.destinationHubSlug,
+    );
+
+    const preferredHubSlugs = expandDriverPreferredHubs({
+      coverageMode: data.coverageMode,
+      coverageOriginHubSlug: data.coverageOriginHubSlug,
+      coverageZones: data.coverageZones,
+      corridorPairs,
+      coverageScope: data.coverageScope,
+      preferredHubSlugs: data.preferredHubSlugs,
+    });
+
+    if (data.licenseDocUrl) this.storage.assertOwnedImageUrl(data.licenseDocUrl, userId);
+    if (data.vehiclePhotoUrl) this.storage.assertOwnedImageUrl(data.vehiclePhotoUrl, userId);
+
+    const wantsReview = Boolean(data.submitForReview && data.licenseDocUrl);
+    const verificationStatus = wantsReview ? 'pending_review' : 'basic';
 
     const profile = await this.prisma.driverProfile.upsert({
       where: { userId },
@@ -514,6 +554,16 @@ export class TransportService {
         licenseNumber: data.licenseNumber,
         seatsCapacity: data.seatsCapacity,
         preferredHubSlugs,
+        coverageMode: data.coverageMode,
+        coverageOriginHubSlug: data.coverageOriginHubSlug,
+        coverageZones: data.coverageZones ?? [],
+        corridorPairs: corridorPairs as unknown as Prisma.InputJsonValue,
+        coverageScope: data.coverageScope,
+        contactPhone: data.contactPhone,
+        whatsapp: data.whatsapp ?? null,
+        licenseDocUrl: data.licenseDocUrl ?? null,
+        vehiclePhotoUrl: data.vehiclePhotoUrl ?? null,
+        verificationStatus,
         isVerified: false,
       },
       update: {
@@ -521,9 +571,27 @@ export class TransportService {
         vehiclePlate: data.vehiclePlate,
         licenseNumber: data.licenseNumber,
         seatsCapacity: data.seatsCapacity,
-        ...(data.preferredHubSlugs !== undefined ? { preferredHubSlugs } : {}),
+        preferredHubSlugs,
+        coverageMode: data.coverageMode,
+        coverageOriginHubSlug: data.coverageOriginHubSlug ?? null,
+        coverageZones: data.coverageZones ?? [],
+        corridorPairs: corridorPairs as unknown as Prisma.InputJsonValue,
+        coverageScope: data.coverageScope ?? null,
+        contactPhone: data.contactPhone,
+        whatsapp: data.whatsapp ?? null,
+        licenseDocUrl: data.licenseDocUrl ?? null,
+        vehiclePhotoUrl: data.vehiclePhotoUrl ?? null,
+        ...(wantsReview
+          ? { verificationStatus: 'pending_review', rejectionReason: null }
+          : {}),
       },
     });
+
+    // Keep User.phone in sync if empty
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { phone: true } });
+    if (user && !user.phone && data.contactPhone) {
+      await this.prisma.user.update({ where: { id: userId }, data: { phone: data.contactPhone } });
+    }
 
     if (data.routes?.length) {
       const campIds = [
