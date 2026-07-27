@@ -21,6 +21,13 @@ export class ListingsController {
     return this.listingsService.getFavorites(user.sub);
   }
 
+  @Get('mine')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  findMine(@CurrentUser() user: { sub: string }) {
+    return this.listingsService.findMine(user.sub);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.listingsService.findOne(id);

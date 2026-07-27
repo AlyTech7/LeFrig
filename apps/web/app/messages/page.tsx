@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AppIcon } from '@/components/AppIcon';
 import { useAuthFetch } from '@/lib/auth-fetch';
-import { useT } from '@/lib/locale';
+import { useLocale, useT } from '@/lib/locale';
+import '../hub-studio.css';
 
 type Conversation = {
   id: string;
@@ -12,11 +13,15 @@ type Conversation = {
   participants: { user: { id: string; displayName: string } }[];
 };
 
+const DATE_LOCALE = { es: 'es-ES', ar: 'ar-MA', en: 'en-GB', fr: 'fr-FR' } as const;
+
 export default function MessagesPage() {
   const { authFetch, isSignedIn, isLoaded } = useAuthFetch();
   const t = useT();
+  const { locale } = useLocale();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [myId, setMyId] = useState('');
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -24,114 +29,98 @@ export default function MessagesPage() {
       setLoading(false);
       return;
     }
-    authFetch<Conversation[]>('/messages/conversations')
-      .then(setConversations)
-      .catch(() => setConversations([]))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    (async () => {
+      try {
+        const sync = await authFetch<{ user?: { id?: string } }>('/auth/sync', { method: 'POST' });
+        if (!cancelled) setMyId(sync.user?.id ?? '');
+        const list = await authFetch<Conversation[]>('/messages/conversations');
+        if (!cancelled) setConversations(Array.isArray(list) ? list : []);
+      } catch {
+        if (!cancelled) setConversations([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [authFetch, isLoaded, isSignedIn]);
 
-  if (!isLoaded) {
-    return (
-      <section className="lf-page-hero">
-        <div className="lf-page-hero-inner" style={{ textAlign: 'center' }}>
-          <p className="lf-page-sub">{t('common.loading')}</p>
-        </div>
-      </section>
-    );
-  }
-
-  if (!isSignedIn) {
-    return (
-      <>
-        <section className="lf-page-hero">
-          <div className="lf-page-hero-inner" style={{ textAlign: 'center' }}>
-            <AppIcon name="message-circle" size={40} color="var(--lf-gold)" />
-            <h1 className="lf-page-title" style={{ marginTop: 16 }}>{t('messages.title')}</h1>
-            <p className="lf-page-sub">
-              <Link href="/sign-in?redirect_url=/messages" style={{ color: 'var(--lf-gold)', fontWeight: 700 }}>
-                {t('nav.signIn')}
-              </Link>{' '}
-              {t('messages.signInSuffix')}
-            </p>
-          </div>
-        </section>
-      </>
-    );
-  }
-
   return (
-    <>
-      <section className="lf-page-hero">
-        <div className="lf-page-hero-inner">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <AppIcon name="message-circle" size={36} color="var(--lf-gold)" />
-            <div>
-              <h1 className="lf-page-title" style={{ margin: 0 }}>{t('messages.title')}</h1>
-              <p className="lf-page-sub" style={{ margin: '4px 0 0' }}>
-                {t('messages.sub')}
-              </p>
-            </div>
-          </div>
+    <div className="hub-page">
+      <header className="hub-hero">
+        <div className="hub-hero__top">
+          <Link href="/me" className="hub-back">
+            <AppIcon name="arrow-left" size={16} color="var(--hub-gold)" />
+            {t('messages.back')}
+          </Link>
+          <Link href="/marketplace" className="hub-btn hub-btn--ghost">
+            {t('messages.marketLink')}
+          </Link>
         </div>
-      </section>
+        <h1>{t('messages.title')}</h1>
+        <p className="hub-lead">{t('messages.sub')}</p>
+      </header>
 
-      <div className="lf-page-body" style={{ maxWidth: 720 }}>
-        {loading ? (
-          <p style={{ color: 'var(--lf-text-muted)' }}>{t('common.loading')}</p>
-        ) : conversations.length === 0 ? (
-          <p style={{ color: 'var(--lf-text-muted)' }}>
-            {t('messages.emptyHint')}{' '}
-            <Link href="/marketplace" style={{ color: 'var(--lf-gold)' }}>{t('messages.marketLink')}</Link>.
+      {!isLoaded || loading ? (
+        <div className="hub-grid">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="hub-skel" />
+          ))}
+        </div>
+      ) : !isSignedIn ? (
+        <div className="hub-empty">
+          <p>
+            <Link href="/sign-in?redirect_url=/messages" className="hub-back">
+              {t('nav.signIn')}
+            </Link>{' '}
+            {t('messages.signInSuffix')}
           </p>
-        ) : (
-          <div style={{ display: 'grid', gap: 12 }}>
-            {conversations.map((conv) => {
-              const other = conv.participants.find((p) => p.user)?.user;
-              const last = conv.messages[0];
-              return (
-                <Link
-                  key={conv.id}
-                  href={`/messages/${conv.id}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 16,
-                    padding: 18,
-                    borderRadius: 16,
-                    border: '1px solid rgba(255,255,255,0.06)',
-                    background: 'var(--lf-surface)',
-                    textDecoration: 'none',
-                    color: 'inherit',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 14,
-                      background: 'rgba(13,148,136,0.15)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 800,
-                      color: 'var(--lf-emerald)',
-                    }}
-                  >
-                    {other?.displayName?.[0]?.toUpperCase() ?? '?'}
+        </div>
+      ) : conversations.length === 0 ? (
+        <div className="hub-empty">
+          <span className="hub-empty__icon" aria-hidden>
+            💬
+          </span>
+          <h2>{t('messages.emptyTitle')}</h2>
+          <p>{t('messages.emptyHint')}</p>
+          <Link href="/marketplace" className="hub-btn">
+            {t('messages.marketLink')}
+          </Link>
+        </div>
+      ) : (
+        <ul className="hub-msg-list">
+          {conversations.map((conv) => {
+            const other =
+              conv.participants.find((p) => p.user?.id && p.user.id !== myId)?.user ??
+              conv.participants.find((p) => p.user)?.user;
+            const last = conv.messages[0];
+            return (
+              <li key={conv.id}>
+                <Link href={`/messages/${conv.id}`} className="hub-msg-item">
+                  <div className="hub-msg-avatar">{other?.displayName?.[0]?.toUpperCase() ?? '?'}</div>
+                  <div className="hub-msg-body">
+                    <strong>{other?.displayName ?? t('messages.conversation')}</strong>
+                    <p>{last?.content ?? t('messages.emptyThread')}</p>
+                    {last?.createdAt ? (
+                      <p style={{ fontSize: '0.75rem', marginTop: 4 }}>
+                        {new Date(last.createdAt).toLocaleString(DATE_LOCALE[locale], {
+                          day: 'numeric',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    ) : null}
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: '0 0 4px', fontWeight: 700 }}>{other?.displayName ?? t('messages.conversation')}</p>
-                    <p style={{ margin: 0, color: 'var(--lf-text-muted)', fontSize: '0.9rem' }}>
-                      {last?.content ?? t('messages.emptyThread')}
-                    </p>
-                  </div>
-                  <AppIcon name="chevron-right" size={18} color="var(--lf-text-muted)" />
+                  <AppIcon name="chevron-right" size={16} color="var(--hub-faint)" />
                 </Link>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }

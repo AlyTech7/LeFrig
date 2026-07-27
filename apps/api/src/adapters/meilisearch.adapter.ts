@@ -60,6 +60,18 @@ export class MeilisearchAdapter {
     }
   }
 
+  async deleteDocument(index: string, id: string): Promise<void> {
+    if (!this.isConfigured()) return;
+    try {
+      await fetch(`${this.host}/indexes/${index}/documents/${id}`, {
+        method: 'DELETE',
+        headers: this.headers(),
+      });
+    } catch (e) {
+      this.logger.warn(`Meili delete failed: ${(e as Error).message}`);
+    }
+  }
+
   async indexDocuments(index: string, docs: Record<string, unknown>[]): Promise<void> {
     if (!this.isConfigured() || docs.length === 0) return;
     try {

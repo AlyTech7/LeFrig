@@ -66,7 +66,12 @@ function refineListingBody(
 
 export const createListingSchema = listingBodySchema.superRefine(refineListingBody);
 
-export const updateListingSchema = listingBodySchema.partial().superRefine(refineListingBody);
+export const updateListingSchema = listingBodySchema
+  .partial()
+  .extend({
+    status: z.enum(['active', 'paused', 'sold', 'draft']).optional(),
+  })
+  .superRefine(refineListingBody);
 
 export const listingFilterSchema = listingAttributeFilterSchema.merge(
   z.object({
