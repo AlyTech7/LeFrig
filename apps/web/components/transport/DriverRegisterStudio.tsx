@@ -103,7 +103,7 @@ function DocSlot({
   error: string;
   onPick: (file: File) => void;
   onClear: () => void;
-  inputRef: RefObject<HTMLInputElement | null>;
+  inputRef: RefObject<HTMLInputElement>;
 }) {
   return (
     <div className="drv-doc">
