@@ -1,107 +1,157 @@
 import { useUser, useAuth } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Image, ActivityIndicator } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Image,
+  ActivityIndicator,
+  Animated,
+  Easing,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AppIcon, type FeatherIconName } from '@/components/AppIcon';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
-import { useT } from '@/lib/locale';
+import { useLocale, useT } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
+import { fonts, space } from '@/lib/ui';
 import { clearLegacySession, getLegacyUser, type LegacyUser } from '@/lib/legacySession';
 import { useAuthApi } from '@/lib/useAuthApi';
 
-type LinkGroup = {
-  titleKey: string;
-  items: { labelKey: string; route: string; icon: FeatherIconName }[];
-};
-
 type HubPayload = {
-  driverStatus: 'none' | 'pending' | 'verified';
+  driverStatus: 'none' | 'basic' | 'pending' | 'verified' | 'rejected';
   stats: {
     listingsActive: number;
     ordersAsBuyer: number;
+    shops: number;
     transportOpen: number;
     unreadNotifications: number;
   };
   user: {
     displayName: string;
     reputationScore: number;
+    avatarUrl?: string | null;
     camp: { nameEs: string } | null;
   };
 };
 
-const LINK_GROUPS: LinkGroup[] = [
-  {
-    titleKey: 'profile.groups.activity',
-    items: [
-      { labelKey: 'nav.orders', route: '/orders', icon: 'package' },
-      { labelKey: 'profile.links.driverArea', route: '/transport/garage', icon: 'truck' },
-      { labelKey: 'nav.transport', route: '/transport', icon: 'map' },
-      { labelKey: 'nav.messages', route: '/messages', icon: 'message-circle' },
-      { labelKey: 'nav.notifications', route: '/notifications', icon: 'bell' },
-      { labelKey: 'nav.favorites', route: '/favorites', icon: 'heart' },
-    ],
-  },
-  {
-    titleKey: 'profile.groups.explore',
-    items: [
-      { labelKey: 'nav.marketplace', route: '/marketplace', icon: 'grid' },
-      { labelKey: 'nav.shops', route: '/shops', icon: 'shopping-bag' },
-      { labelKey: 'nav.services', route: '/services', icon: 'zap' },
-      { labelKey: 'nav.jobs', route: '/jobs', icon: 'briefcase' },
-      { labelKey: 'nav.camps', route: '/camps', icon: 'map-pin' },
-    ],
-  },
-  {
-    titleKey: 'profile.groups.account',
-    items: [
-      { labelKey: 'profile.links.cashPin', route: '/cash', icon: 'dollar-sign' },
-      { labelKey: 'nav.disputes', route: '/disputes', icon: 'shield' },
-    ],
-  },
-  {
-    titleKey: 'profile.groups.community',
-    items: [
-      { labelKey: 'profile.links.forum', route: '/community', icon: 'users' },
-      { labelKey: 'nav.needs', route: '/needs', icon: 'help-circle' },
-      { labelKey: 'profile.links.map', route: '/locations', icon: 'navigation' },
-      { labelKey: 'footer.legalCenter', route: '/legal', icon: 'file-text' },
-    ],
-  },
-];
+type LinkItem = {
+  route: string;
+  icon: FeatherIconName;
+  titleKey: string;
+  sub: string;
+  badge?: string | number;
+  tone?: 'default' | 'oasis' | 'flare';
+};
+
+const EMPTY_STATS: HubPayload['stats'] = {
+  listingsActive: 0,
+  ordersAsBuyer: 0,
+  shops: 0,
+  transportOpen: 0,
+  unreadNotifications: 0,
+};
+
+function Stat({ value, label }: { value: number; label: string }) {
+  return (
+    <View style={styles.stat}>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function LinkRow({
+  item,
+  onPress,
+  last,
+}: {
+  item: LinkItem;
+  onPress: () => void;
+  last?: boolean;
+}) {
+  const t = useT();
+  const iconColor =
+    item.tone === 'oasis' ? theme.oasisDeep : item.tone === 'flare' ? theme.flare : theme.dune;
+
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.linkRow, last && styles.linkRowLast, pressed && styles.pressed]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={t(item.titleKey)}
+    >
+      <View style={[styles.linkIcon, item.tone === 'oasis' && styles.linkIconOasis]}>
+        <AppIcon name={item.icon} size={17} color={iconColor} />
+      </View>
+      <View style={styles.linkCopy}>
+        <Text style={styles.linkTitle}>{t(item.titleKey)}</Text>
+        <Text style={styles.linkSub} numberOfLines={1}>
+          {item.sub}
+        </Text>
+      </View>
+      {item.badge != null && item.badge !== 0 && item.badge !== '' ? (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{item.badge}</Text>
+        </View>
+      ) : null}
+      <AppIcon name="chevron-right" size={16} color={theme.inkSoft} />
+    </Pressable>
+  );
+}
 
 export default function ProfileScreen() {
   const { user } = useUser();
   const { signOut } = useAuth();
-  const { authFetch, isSignedIn } = useAuthApi();
+  const { authFetch, syncUser, isSignedIn } = useAuthApi();
   const router = useRouter();
   const t = useT();
+  const { dir } = useLocale();
   const [legacyUser, setLegacyUser] = useState<LegacyUser | null>(null);
   const [hub, setHub] = useState<HubPayload | null>(null);
   const [hubLoading, setHubLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const enter = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(enter, {
+      toValue: 1,
+      duration: 620,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [enter]);
 
   const loadHub = useCallback(async () => {
     if (!isSignedIn) {
       setHub(null);
+      setLoadError(false);
       return;
     }
     setHubLoading(true);
+    setLoadError(false);
     try {
+      await syncUser().catch(() => null);
       const data = await authFetch<HubPayload>('/users/me/hub');
       setHub(data);
     } catch {
       setHub(null);
+      setLoadError(true);
     } finally {
       setHubLoading(false);
     }
-  }, [authFetch, isSignedIn]);
+  }, [authFetch, isSignedIn, syncUser]);
 
   useEffect(() => {
     getLegacyUser().then(setLegacyUser);
   }, [isSignedIn]);
 
   useEffect(() => {
-    loadHub();
+    void loadHub();
   }, [loadHub]);
 
   const displayName =
@@ -113,249 +163,548 @@ export default function ProfileScreen() {
   const phone = user?.primaryPhoneNumber?.phoneNumber ?? legacyUser?.phone ?? undefined;
   const authed = isSignedIn || !!legacyUser;
   const driverStatus = hub?.driverStatus ?? 'none';
+  const stats = hub?.stats ?? EMPTY_STATS;
+  const avatarUri = hub?.user.avatarUrl || user?.imageUrl || undefined;
+  const initial = (displayName[0] ?? 'ⵣ').toUpperCase();
+  const rep = hub ? Math.round(hub.user.reputationScore) : null;
+
+  const driverSub =
+    driverStatus === 'verified'
+      ? t('me.modules.driverSubVerified')
+      : driverStatus === 'pending'
+        ? t('me.modules.driverSubPending')
+        : driverStatus === 'basic'
+          ? t('me.modules.driverSubBasic')
+          : driverStatus === 'rejected'
+            ? t('me.modules.driverSubRejected')
+            : t('me.modules.driverSubNone');
+
+  const activityLinks: LinkItem[] = useMemo(
+    () => [
+      {
+        route: '/orders',
+        icon: 'package',
+        titleKey: 'me.modules.orders',
+        sub: t('me.modules.ordersSub'),
+        badge: stats.ordersAsBuyer || undefined,
+      },
+      {
+        route: '/marketplace/mine',
+        icon: 'tag',
+        titleKey: 'me.modules.sales',
+        sub: t('me.modules.salesSub'),
+        badge: stats.listingsActive || undefined,
+      },
+      {
+        route: '/shops/mine',
+        icon: 'shopping-bag',
+        titleKey: 'me.modules.shops',
+        sub: t('me.modules.shopsSub'),
+        badge: stats.shops || undefined,
+      },
+      {
+        route: '/transport',
+        icon: 'truck',
+        titleKey: 'me.modules.transport',
+        sub: t('me.modules.transportSub'),
+        badge: stats.transportOpen || undefined,
+      },
+    ],
+    [stats, t],
+  );
+
+  const communityLinks: LinkItem[] = useMemo(
+    () => [
+      {
+        route: '/messages',
+        icon: 'message-circle',
+        titleKey: 'me.modules.messages',
+        sub: t('me.modules.messagesSub'),
+      },
+      {
+        route: '/notifications',
+        icon: 'bell',
+        titleKey: 'me.modules.notifications',
+        sub:
+          stats.unreadNotifications > 0
+            ? t('me.modules.notificationsSub', { count: stats.unreadNotifications })
+            : t('me.modules.notificationsNone'),
+        badge: stats.unreadNotifications || undefined,
+        tone: stats.unreadNotifications > 0 ? 'flare' : 'default',
+      },
+      {
+        route: '/favorites',
+        icon: 'heart',
+        titleKey: 'me.modules.favorites',
+        sub: t('me.modules.favoritesSub'),
+      },
+      {
+        route: '/cash',
+        icon: 'dollar-sign',
+        titleKey: 'me.modules.cash',
+        sub: t('me.modules.cashSub'),
+      },
+    ],
+    [stats.unreadNotifications, t],
+  );
+
+  const heroMotion = {
+    opacity: enter,
+    transform: [
+      {
+        translateY: enter.interpolate({
+          inputRange: [0, 1],
+          outputRange: [16, 0],
+        }),
+      },
+    ],
+  };
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.content}>
-      <SafeAreaView edges={['top']}>
-        <View style={styles.header}>
-          {user?.imageUrl ? (
-            <Image source={{ uri: user.imageUrl }} style={styles.avatarImg} />
-          ) : (
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{displayName[0]?.toUpperCase() ?? 'ⵣ'}</Text>
-            </View>
-          )}
-          <Text style={styles.name}>{displayName}</Text>
-          {hub?.user.camp ? <Text style={styles.meta}>{hub.user.camp.nameEs}</Text> : null}
-          {phone ? (
-            <View style={styles.metaRow}>
-              <AppIcon name="smartphone" size={14} color={theme.dune} />
-              <Text style={styles.meta}>{phone}</Text>
-            </View>
-          ) : null}
-          {email ? (
-            <View style={styles.metaRow}>
-              <AppIcon name="mail" size={14} color={theme.dune} />
-              <Text style={styles.meta}>{email}</Text>
-            </View>
-          ) : null}
-          {authed ? (
-            <View style={styles.badgeRow}>
-              <AppIcon name="shield" size={14} color={theme.oasis} />
-              <Text style={styles.rep}>
-                {hub
-                  ? t('me.reputation', { score: Math.round(hub.user.reputationScore) })
-                  : t('profile.activeAccount')}
-              </Text>
-            </View>
-          ) : (
-            <Pressable style={styles.signInBtn} onPress={() => router.replace('/sign-in')}>
-              <Text style={styles.signInText}>{t('nav.signIn')}</Text>
-            </Pressable>
-          )}
-        </View>
-      </SafeAreaView>
+    <View style={styles.root}>
+      <LinearGradient
+        colors={['#f7f1e4', theme.canvas, theme.canvas]}
+        locations={[0, 0.32, 1]}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+      <View style={styles.orbA} pointerEvents="none" />
+      <View style={styles.orbB} pointerEvents="none" />
 
-      {authed ? (
-        <Pressable
-          style={[
-            styles.driverCard,
-            driverStatus === 'verified' && styles.driverCardVerified,
-            driverStatus === 'pending' && styles.driverCardPending,
-          ]}
-          onPress={() => router.push('/transport/garage' as never)}
+      <SafeAreaView edges={['top']} style={styles.safe}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
         >
-          {hubLoading ? (
-            <ActivityIndicator color={theme.gold} />
+          <Animated.View style={heroMotion}>
+            <Text style={styles.kicker}>Lefrig</Text>
+            <Text style={[styles.brandAr, dir === 'rtl' && styles.rtl]} accessibilityRole="header">
+              حسابي
+            </Text>
+            <Text style={[styles.title, dir === 'rtl' && styles.rtl]}>{t('me.title')}</Text>
+            <View style={styles.rule} />
+            <Text style={[styles.lead, dir === 'rtl' && styles.rtl]}>{t('me.subtitle')}</Text>
+          </Animated.View>
+
+          {!authed ? (
+            <View style={styles.guest}>
+              <Text style={styles.guestBody}>{t('me.signInPrompt')}</Text>
+              <Pressable style={styles.primaryCta} onPress={() => router.replace('/sign-in')}>
+                <Text style={styles.primaryCtaText}>{t('nav.signIn')}</Text>
+              </Pressable>
+              <Pressable style={styles.ghostCta} onPress={() => router.replace('/sign-up')}>
+                <Text style={styles.ghostCtaText}>{t('profile.createAccount')}</Text>
+              </Pressable>
+            </View>
+          ) : hubLoading && !hub ? (
+            <ActivityIndicator color={theme.dune} style={{ marginTop: 36 }} />
           ) : (
-            <>
-              <View style={styles.driverCardTop}>
-                <AppIcon name="truck" size={22} color={theme.oasisDeep} />
-                <Text style={styles.driverCardTitle}>{t('profile.links.driverArea')}</Text>
-              </View>
-              <Text style={styles.driverCardStatus}>{t(`profile.driverStatus.${driverStatus}`)}</Text>
-              {hub ? (
-                <Text style={styles.driverCardMeta}>
-                  {t('me.modules.orders')}: {hub.stats.ordersAsBuyer}
-                  {' · '}
-                  {t('me.modules.sales')}: {hub.stats.listingsActive}
-                  {' · '}
-                  {t('nav.notifications')}: {hub.stats.unreadNotifications}
-                </Text>
+            <Animated.View
+              style={{
+                opacity: enter,
+                transform: [
+                  {
+                    translateY: enter.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [10, 0],
+                    }),
+                  },
+                ],
+              }}
+            >
+              {loadError ? (
+                <View style={styles.warn}>
+                  <Text style={styles.warnText}>{t('me.loadError')}</Text>
+                  <Pressable onPress={() => void loadHub()} hitSlop={8}>
+                    <Text style={styles.warnRetry}>{t('common.retry')}</Text>
+                  </Pressable>
+                </View>
               ) : null}
-            </>
-          )}
-        </Pressable>
-      ) : null}
 
-      <View style={styles.languageSection}>
-        <Text style={styles.groupTitle}>{t('profile.language')}</Text>
-        <Text style={styles.languageHint}>{t('profile.languageHint')}</Text>
-        <LanguageSwitcher />
-      </View>
+              <View style={styles.identity}>
+                {avatarUri ? (
+                  <Image source={{ uri: avatarUri }} style={styles.avatarImg} />
+                ) : (
+                  <LinearGradient
+                    colors={['rgba(168,132,45,0.22)', 'rgba(45,138,98,0.16)']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.avatar}
+                  >
+                    <Text style={styles.avatarText}>{initial}</Text>
+                  </LinearGradient>
+                )}
 
-      {LINK_GROUPS.map((group) => (
-        <View key={group.titleKey} style={styles.group}>
-          <Text style={styles.groupTitle}>{t(group.titleKey)}</Text>
-          {group.items.map((l) => (
-            <Pressable key={l.route} style={styles.link} onPress={() => router.push(l.route as never)}>
-              <View style={styles.linkIconWrap}>
-                <AppIcon name={l.icon} size={20} color={theme.oasisDeep} />
+                <View style={styles.identityCopy}>
+                  <Text style={[styles.name, dir === 'rtl' && styles.rtl]} numberOfLines={2}>
+                    {displayName}
+                  </Text>
+                  <View style={styles.metaRow}>
+                    {hub?.user.camp ? (
+                      <Text style={styles.meta}>{hub.user.camp.nameEs}</Text>
+                    ) : null}
+                    {hub?.user.camp && (phone || email) ? <Text style={styles.metaDot}>·</Text> : null}
+                    {phone ? <Text style={styles.meta}>{phone}</Text> : null}
+                    {!phone && email ? <Text style={styles.meta}>{email}</Text> : null}
+                  </View>
+                  {rep != null ? (
+                    <Text style={styles.rep}>
+                      {t('me.reputation', { score: rep })}
+                    </Text>
+                  ) : (
+                    <Text style={styles.rep}>{t('profile.activeAccount')}</Text>
+                  )}
+                </View>
               </View>
-              <Text style={styles.linkLabel}>{t(l.labelKey)}</Text>
-              <AppIcon name="chevron-right" size={18} color={theme.inkSoft} />
-            </Pressable>
-          ))}
-        </View>
-      ))}
 
-      {!authed ? (
-        <Pressable style={styles.registerBtn} onPress={() => router.replace('/sign-up')}>
-          <Text style={styles.registerText}>{t('profile.createAccount')}</Text>
-        </Pressable>
-      ) : (
-        <Pressable
-          style={styles.signOut}
-          onPress={async () => {
-            await clearLegacySession();
-            try {
-              await signOut();
-            } catch {
-              /* legacy only */
-            }
-            router.replace('/sign-in');
-          }}
-        >
-          <AppIcon name="log-out" size={18} color={theme.flare} />
-          <Text style={styles.signOutText}>{t('nav.signOut')}</Text>
-        </Pressable>
-      )}
-    </ScrollView>
+              <View style={styles.stats}>
+                <Stat value={stats.ordersAsBuyer} label={t('me.modules.orders')} />
+                <View style={styles.statDivider} />
+                <Stat value={stats.listingsActive} label={t('me.modules.sales')} />
+                <View style={styles.statDivider} />
+                <Stat value={stats.shops} label={t('me.modules.shops')} />
+              </View>
+
+              <Text style={styles.sectionLabel}>{t('profile.groups.activity')}</Text>
+              <View style={styles.section}>
+                {activityLinks.map((item, i) => (
+                  <LinkRow
+                    key={item.route}
+                    item={item}
+                    last={i === activityLinks.length - 1}
+                    onPress={() => router.push(item.route as never)}
+                  />
+                ))}
+              </View>
+
+              <Pressable
+                style={({ pressed }) => [styles.driverRow, pressed && styles.pressed]}
+                onPress={() => router.push('/transport/garage')}
+              >
+                <View style={styles.driverLeft}>
+                  <View
+                    style={[
+                      styles.driverDot,
+                      driverStatus === 'verified' && styles.driverDotOk,
+                      driverStatus === 'pending' && styles.driverDotWait,
+                      driverStatus === 'rejected' && styles.driverDotBad,
+                    ]}
+                  />
+                  <View style={styles.driverCopy}>
+                    <Text style={styles.driverTitle}>{t('me.modules.driver')}</Text>
+                    <Text style={styles.driverSub} numberOfLines={2}>
+                      {t(`profile.driverStatus.${driverStatus}`)} · {driverSub}
+                    </Text>
+                  </View>
+                </View>
+                <AppIcon name="arrow-right" size={16} color={theme.dune} />
+              </Pressable>
+
+              <Text style={styles.sectionLabel}>{t('profile.groups.community')}</Text>
+              <View style={styles.section}>
+                {communityLinks.map((item, i) => (
+                  <LinkRow
+                    key={item.route}
+                    item={item}
+                    last={i === communityLinks.length - 1}
+                    onPress={() => router.push(item.route as never)}
+                  />
+                ))}
+              </View>
+
+              <Text style={styles.sectionLabel}>{t('account.section')}</Text>
+              <View style={styles.section}>
+                {[
+                  {
+                    route: '/profile/personal',
+                    icon: 'user' as const,
+                    titleKey: 'account.personal',
+                    sub: t('account.personalSub'),
+                  },
+                  {
+                    route: '/profile/security',
+                    icon: 'shield' as const,
+                    titleKey: 'account.security',
+                    sub: t('account.securitySub'),
+                  },
+                  {
+                    route: '/profile/privacy',
+                    icon: 'lock' as const,
+                    titleKey: 'account.privacy',
+                    sub: t('account.privacySub'),
+                  },
+                ].map((item, i, arr) => (
+                  <LinkRow
+                    key={item.route}
+                    item={item}
+                    last={i === arr.length - 1}
+                    onPress={() => router.push(item.route as never)}
+                  />
+                ))}
+              </View>
+            </Animated.View>
+          )}
+
+          <Text style={styles.sectionLabel}>{t('profile.language')}</Text>
+          <Text style={styles.langHint}>{t('profile.languageHint')}</Text>
+          <LanguageSwitcher variant="tabs" />
+
+          {authed ? (
+            <Pressable
+              style={styles.signOut}
+              onPress={async () => {
+                await clearLegacySession();
+                try {
+                  await signOut();
+                } catch {
+                  /* legacy only */
+                }
+                router.replace('/sign-in');
+              }}
+            >
+              <Text style={styles.signOutText}>{t('nav.signOut')}</Text>
+            </Pressable>
+          ) : null}
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.canvas },
-  content: { paddingBottom: 100 },
-  header: {
+  safe: { flex: 1 },
+  orbA: {
+    position: 'absolute',
+    top: -90,
+    right: -50,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: 'rgba(168,132,45,0.08)',
+  },
+  orbB: {
+    position: 'absolute',
+    top: 180,
+    left: -80,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(45,138,98,0.05)',
+  },
+  content: { paddingHorizontal: space.lg, paddingBottom: 130, paddingTop: 4 },
+  rtl: { writingDirection: 'rtl', textAlign: 'right' },
+  pressed: { opacity: 0.86 },
+
+  kicker: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 10,
+    letterSpacing: 1.6,
+    textTransform: 'uppercase',
+    color: theme.dune,
+  },
+  brandAr: {
+    fontFamily: fonts.display,
+    fontSize: 38,
+    color: theme.ink,
+    marginTop: 2,
+    writingDirection: 'rtl',
+    lineHeight: 46,
+  },
+  title: {
+    fontFamily: fonts.bodyMed,
+    fontSize: 15,
+    color: theme.inkMuted,
+    marginTop: -2,
+  },
+  rule: {
+    width: 28,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: theme.dune,
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  lead: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: theme.inkSoft,
+    lineHeight: 20,
+    marginBottom: 22,
+  },
+
+  guest: { gap: 12, marginTop: 8 },
+  guestBody: { fontFamily: fonts.body, fontSize: 15, color: theme.inkMuted, lineHeight: 22 },
+  primaryCta: {
+    backgroundColor: theme.ink,
+    borderRadius: radii.md,
+    paddingVertical: 15,
     alignItems: 'center',
-    paddingTop: 24,
-    paddingBottom: 28,
-    paddingHorizontal: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
   },
-  avatar: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: theme.oasisDeep,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-    borderWidth: 3,
-    borderColor: 'rgba(168,132,45,0.35)',
-  },
-  avatarImg: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    marginBottom: 12,
-    borderWidth: 3,
-    borderColor: 'rgba(168,132,45,0.35)',
-  },
-  avatarText: { fontSize: 36, fontWeight: '800', color: theme.pearl },
-  name: { fontSize: 24, fontWeight: '800', color: theme.ink },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
-  meta: { fontSize: 14, color: theme.inkMuted },
-  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 },
-  rep: { fontSize: 13, color: theme.oasis, fontWeight: '600' },
-  signInBtn: {
-    marginTop: 16,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: radii.pill,
-    backgroundColor: theme.oasisDeep,
-  },
-  signInText: { color: theme.pearl, fontWeight: '800', fontSize: 15 },
-  driverCard: {
-    marginHorizontal: 20,
-    marginTop: 16,
-    padding: 16,
-    borderRadius: radii.lg,
-    backgroundColor: theme.surface,
-    borderWidth: 1,
-    borderColor: theme.border,
+  primaryCtaText: { fontFamily: fonts.bodyBold, fontSize: 15, color: theme.pearl },
+  ghostCta: { paddingVertical: 12, alignItems: 'center' },
+  ghostCtaText: { fontFamily: fonts.bodyBold, fontSize: 14, color: theme.dune },
+
+  warn: {
+    marginBottom: 16,
+    paddingVertical: 10,
     gap: 6,
   },
-  driverCardVerified: {
-    backgroundColor: 'rgba(45,138,98,0.08)',
-    borderColor: 'rgba(45,138,98,0.3)',
+  warnText: { fontFamily: fonts.body, fontSize: 13, color: theme.inkMuted, lineHeight: 18 },
+  warnRetry: { fontFamily: fonts.bodyBold, fontSize: 13, color: theme.dune },
+
+  identity: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 22,
   },
-  driverCardPending: {
-    backgroundColor: 'rgba(168,132,45,0.1)',
-    borderColor: 'rgba(168,132,45,0.35)',
+  avatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  driverCardTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  driverCardTitle: { fontSize: 16, fontWeight: '800', color: theme.ink },
-  driverCardStatus: { fontSize: 14, fontWeight: '700', color: theme.oasisDeep },
-  driverCardMeta: { fontSize: 12, color: theme.inkMuted, marginTop: 2 },
-  languageSection: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 4,
-    gap: 10,
+  avatarImg: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 2,
+    borderColor: 'rgba(168,132,45,0.28)',
   },
-  languageHint: { fontSize: 13, color: theme.inkMuted, marginBottom: 4 },
-  group: { paddingHorizontal: 20, paddingTop: 20 },
-  groupTitle: {
-    fontSize: 11,
-    fontWeight: '800',
+  avatarText: { fontFamily: fonts.display, fontSize: 28, color: theme.ink },
+  identityCopy: { flex: 1, minWidth: 0, gap: 4 },
+  name: {
+    fontFamily: fonts.displaySemi,
+    fontSize: 24,
+    letterSpacing: -0.5,
+    color: theme.ink,
+    lineHeight: 28,
+  },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
+  meta: { fontFamily: fonts.body, fontSize: 13, color: theme.inkSoft },
+  metaDot: { fontFamily: fonts.body, fontSize: 13, color: theme.inkSoft },
+  rep: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 12,
     color: theme.dune,
-    letterSpacing: 1,
+    marginTop: 4,
+    letterSpacing: 0.2,
+  },
+
+  stats: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    marginBottom: 28,
+    paddingVertical: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: theme.borderStrong,
+  },
+  stat: { flex: 1, alignItems: 'center', gap: 4 },
+  statValue: {
+    fontFamily: fonts.display,
+    fontSize: 26,
+    letterSpacing: -0.6,
+    color: theme.ink,
+  },
+  statLabel: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 11,
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
+    color: theme.inkSoft,
+  },
+  statDivider: {
+    width: StyleSheet.hairlineWidth,
+    backgroundColor: theme.borderStrong,
+    marginVertical: 4,
+  },
+
+  sectionLabel: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 10,
+    letterSpacing: 1.3,
+    textTransform: 'uppercase',
+    color: theme.dune,
     marginBottom: 10,
+    marginTop: 4,
   },
-  link: {
+  section: { marginBottom: 22 },
+
+  linkRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
-    borderRadius: radii.md,
-    backgroundColor: theme.surface,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: theme.border,
+    gap: 12,
+    paddingVertical: 13,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: theme.border,
   },
-  linkIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: 'rgba(45,138,98,0.08)',
+  linkRowLast: { borderBottomWidth: 0 },
+  linkIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(168,132,45,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
   },
-  linkLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: theme.ink },
-  registerBtn: {
-    marginHorizontal: 20,
-    marginTop: 16,
-    padding: 16,
-    borderRadius: radii.lg,
-    backgroundColor: theme.dune,
+  linkIconOasis: { backgroundColor: 'rgba(45,138,98,0.1)' },
+  linkCopy: { flex: 1, minWidth: 0 },
+  linkTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: theme.ink, letterSpacing: -0.2 },
+  linkSub: { fontFamily: fonts.body, fontSize: 12, color: theme.inkSoft, marginTop: 2 },
+  badge: {
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    paddingHorizontal: 6,
+    backgroundColor: theme.ink,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  registerText: { color: theme.pearl, fontWeight: '800', fontSize: 16 },
+  badgeText: { fontFamily: fonts.bodyBold, fontSize: 11, color: theme.pearl },
+
+  driverRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingVertical: 16,
+    marginBottom: 22,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: theme.borderStrong,
+  },
+  driverLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  driverDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: theme.inkSoft,
+  },
+  driverDotOk: { backgroundColor: theme.oasis },
+  driverDotWait: { backgroundColor: theme.dune },
+  driverDotBad: { backgroundColor: theme.flare },
+  driverCopy: { flex: 1, minWidth: 0 },
+  driverTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: theme.ink },
+  driverSub: { fontFamily: fonts.body, fontSize: 12, color: theme.inkSoft, marginTop: 2, lineHeight: 17 },
+
+  langHint: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: theme.inkSoft,
+    marginBottom: 12,
+    marginTop: -4,
+  },
   signOut: {
-    marginHorizontal: 20,
-    marginTop: 16,
-    padding: 16,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: theme.flare,
-    flexDirection: 'row',
+    marginTop: 28,
+    paddingVertical: 14,
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
   },
-  signOutText: { color: theme.flare, fontWeight: '700', fontSize: 16 },
+  signOutText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 14,
+    color: theme.flare,
+  },
 });

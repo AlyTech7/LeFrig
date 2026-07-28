@@ -6,6 +6,7 @@ import { ListingCard } from '@/components/ListingCard';
 import { API_URL } from '@/lib/api';
 import { useT } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
+import { fonts } from '@/lib/ui';
 
 function imageUri(url?: string) {
   if (!url) return undefined;
@@ -26,7 +27,7 @@ export function HomeFeaturedListings({ listings, onPress, onSeeAll }: Props) {
     return (
       <Pressable style={styles.empty} onPress={onSeeAll}>
         <View style={styles.emptyIcon}>
-          <AppIcon name="shopping-bag" size={22} color={theme.dune} />
+          <AppIcon name="shopping-bag" size={20} color={theme.dune} />
         </View>
         <Text style={styles.emptyTitle}>{t('home.emptyFeaturedTitle')}</Text>
         <Text style={styles.emptySub}>{t('home.emptyFeaturedSub')}</Text>
@@ -44,14 +45,10 @@ export function HomeFeaturedListings({ listings, onPress, onSeeAll }: Props) {
           <Image source={{ uri: heroImg }} style={styles.heroImage} />
         ) : (
           <View style={[styles.heroImage, styles.heroPlaceholder]}>
-            <AppIcon name="image" size={32} color={theme.oasis} />
+            <AppIcon name="image" size={28} color={theme.oasis} />
           </View>
         )}
-        <LinearGradient colors={['transparent', 'rgba(10,8,6,0.88)']} style={styles.heroGrad} />
-        <View style={styles.heroBadge}>
-          <AppIcon name="zap" size={11} color={theme.pearl} />
-          <Text style={styles.heroBadgeText}>{t('common.featured')}</Text>
-        </View>
+        <LinearGradient colors={['transparent', 'rgba(10,8,6,0.9)']} style={styles.heroGrad} />
         <View style={styles.heroCopy}>
           <Text style={styles.heroTitle} numberOfLines={2}>
             {hero.title}
@@ -59,12 +56,9 @@ export function HomeFeaturedListings({ listings, onPress, onSeeAll }: Props) {
           <Text style={styles.heroPrice}>
             {hero.price.toLocaleString()} {hero.currency}
           </Text>
-          <View style={styles.heroMeta}>
-            <AppIcon name="user" size={11} color="rgba(250,248,244,0.7)" />
-            <Text style={styles.heroSeller} numberOfLines={1}>
-              {hero.sellerName}
-            </Text>
-          </View>
+          <Text style={styles.heroSeller} numberOfLines={1}>
+            {hero.sellerName}
+          </Text>
         </View>
       </Pressable>
 
@@ -80,37 +74,38 @@ export function HomeFeaturedListings({ listings, onPress, onSeeAll }: Props) {
 const styles = StyleSheet.create({
   wrap: { gap: 12 },
   hero: {
-    height: 200,
-    borderRadius: radii.xl,
+    height: 210,
+    borderRadius: radii.lg,
     overflow: 'hidden',
     backgroundColor: theme.canvasSoft,
-    shadowColor: theme.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 1,
-    shadowRadius: 18,
-    elevation: 6,
   },
   heroImage: { ...StyleSheet.absoluteFillObject, width: '100%', height: '100%' },
-  heroPlaceholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(45,138,98,0.08)' },
-  heroGrad: { ...StyleSheet.absoluteFillObject },
-  heroBadge: {
-    position: 'absolute',
-    top: 14,
-    left: 14,
-    flexDirection: 'row',
+  heroPlaceholder: {
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: radii.pill,
-    backgroundColor: 'rgba(168,132,45,0.92)',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(45,138,98,0.08)',
   },
-  heroBadgeText: { fontSize: 10, fontWeight: '800', color: theme.pearl, letterSpacing: 0.4 },
+  heroGrad: { ...StyleSheet.absoluteFillObject },
   heroCopy: { position: 'absolute', left: 16, right: 16, bottom: 16 },
-  heroTitle: { fontSize: 18, fontWeight: '800', color: theme.pearl, letterSpacing: -0.3 },
-  heroPrice: { fontSize: 20, fontWeight: '900', color: theme.duneBright, marginTop: 4 },
-  heroMeta: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 },
-  heroSeller: { fontSize: 12, color: 'rgba(250,248,244,0.75)', flex: 1 },
+  heroTitle: {
+    fontFamily: fonts.display,
+    fontSize: 22,
+    letterSpacing: -0.4,
+    color: theme.pearl,
+    lineHeight: 26,
+  },
+  heroPrice: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 16,
+    color: theme.duneBright,
+    marginTop: 8,
+  },
+  heroSeller: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: 'rgba(250,248,244,0.65)',
+    marginTop: 4,
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -118,24 +113,29 @@ const styles = StyleSheet.create({
   },
   empty: {
     alignItems: 'center',
-    paddingVertical: 28,
+    paddingVertical: 32,
     paddingHorizontal: 20,
-    borderRadius: radii.xl,
-    borderWidth: 1.5,
-    borderColor: theme.border,
-    borderStyle: 'dashed',
-    backgroundColor: theme.surface,
     gap: 6,
   },
   emptyIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 18,
+    width: 48,
+    height: 48,
+    borderRadius: 16,
     backgroundColor: 'rgba(168,132,45,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
+    marginBottom: 6,
   },
-  emptyTitle: { fontSize: 16, fontWeight: '800', color: theme.ink },
-  emptySub: { fontSize: 13, color: theme.inkMuted, textAlign: 'center' },
+  emptyTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 15,
+    color: theme.ink,
+  },
+  emptySub: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: theme.inkMuted,
+    textAlign: 'center',
+    lineHeight: 19,
+  },
 });

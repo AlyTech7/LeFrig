@@ -55,6 +55,16 @@ const TRANSMISSION_OPTIONS: AttributeFieldOption[] = [
   { value: 'automatic', labelEs: 'Automático', labelAr: 'أوتوماتيك' },
 ];
 
+const currentYear = new Date().getFullYear();
+
+const YEAR_OPTIONS: AttributeFieldOption[] = Array.from(
+  { length: currentYear + 1 - 1980 + 1 },
+  (_, i) => {
+    const y = String(currentYear + 1 - i);
+    return { value: y, labelEs: y, labelAr: y };
+  },
+);
+
 const PROPERTY_TYPE_RESIDENTIAL: AttributeFieldOption[] = [
   { value: 'apartment', labelEs: 'Piso / apartamento', labelAr: 'شقة' },
   { value: 'house', labelEs: 'Casa', labelAr: 'منزل' },
@@ -67,7 +77,59 @@ const PROPERTY_TYPE_COMMERCIAL: AttributeFieldOption[] = [
   { value: 'warehouse', labelEs: 'Almacén', labelAr: 'مستودع' },
 ];
 
-const currentYear = new Date().getFullYear();
+const ROOM_OPTIONS: AttributeFieldOption[] = [
+  { value: '0', labelEs: 'Estudio / 0', labelAr: 'استوديو' },
+  { value: '1', labelEs: '1', labelAr: '1' },
+  { value: '2', labelEs: '2', labelAr: '2' },
+  { value: '3', labelEs: '3', labelAr: '3' },
+  { value: '4', labelEs: '4', labelAr: '4' },
+  { value: '5', labelEs: '5', labelAr: '5' },
+  { value: '6', labelEs: '6+', labelAr: '6+' },
+];
+
+const LAND_TYPE_OPTIONS: AttributeFieldOption[] = [
+  { value: 'urban', labelEs: 'Urbano', labelAr: 'حضري' },
+  { value: 'rural', labelEs: 'Rústico', labelAr: 'ريفي' },
+  { value: 'agricultural', labelEs: 'Agrícola', labelAr: 'زراعي' },
+  { value: 'other', labelEs: 'Otro', labelAr: 'آخر' },
+];
+
+const FURNITURE_TYPE_OPTIONS: AttributeFieldOption[] = [
+  { value: 'sofa', labelEs: 'Sofá', labelAr: 'أريكة' },
+  { value: 'bed', labelEs: 'Cama', labelAr: 'سرير' },
+  { value: 'table', labelEs: 'Mesa', labelAr: 'طاولة' },
+  { value: 'wardrobe', labelEs: 'Armario', labelAr: 'خزانة' },
+  { value: 'chair', labelEs: 'Sillas', labelAr: 'كراسي' },
+  { value: 'kitchen', labelEs: 'Cocina', labelAr: 'مطبخ' },
+  { value: 'other', labelEs: 'Otro', labelAr: 'آخر' },
+];
+
+const ELECTRONICS_TYPE_OPTIONS: AttributeFieldOption[] = [
+  { value: 'laptop', labelEs: 'Portátil', labelAr: 'حاسوب محمول' },
+  { value: 'desktop', labelEs: 'Sobremesa', labelAr: 'حاسوب مكتبي' },
+  { value: 'tv', labelEs: 'Televisor', labelAr: 'تلفاز' },
+  { value: 'tablet', labelEs: 'Tablet', labelAr: 'جهاز لوحي' },
+  { value: 'console', labelEs: 'Consola', labelAr: 'جهاز ألعاب' },
+  { value: 'audio', labelEs: 'Audio', labelAr: 'صوتيات' },
+  { value: 'camera', labelEs: 'Cámara', labelAr: 'كاميرا' },
+  { value: 'appliance', labelEs: 'Electrodoméstico', labelAr: 'جهاز منزلي' },
+  { value: 'pos', labelEs: 'TPV / POS', labelAr: 'نقطة بيع' },
+  { value: 'other', labelEs: 'Otro', labelAr: 'آخر' },
+];
+
+const ELECTRONICS_BRANDS: AttributeFieldOption[] = [
+  { value: 'samsung', labelEs: 'Samsung', labelAr: 'سامسونج' },
+  { value: 'lg', labelEs: 'LG', labelAr: 'إل جي' },
+  { value: 'sony', labelEs: 'Sony', labelAr: 'سوني' },
+  { value: 'apple', labelEs: 'Apple', labelAr: 'أبل' },
+  { value: 'hp', labelEs: 'HP', labelAr: 'HP' },
+  { value: 'dell', labelEs: 'Dell', labelAr: 'ديل' },
+  { value: 'lenovo', labelEs: 'Lenovo', labelAr: 'لينوفو' },
+  { value: 'asus', labelEs: 'Asus', labelAr: 'أسوس' },
+  { value: 'huawei', labelEs: 'Huawei', labelAr: 'هواوي' },
+  { value: 'xiaomi', labelEs: 'Xiaomi', labelAr: 'شاومي' },
+  { value: 'other', labelEs: 'Otra marca', labelAr: 'ماركة أخرى' },
+];
 
 const PHONE_BRANDS: AttributeFieldOption[] = [
   { value: 'samsung', labelEs: 'Samsung', labelAr: 'سامسونج' },
@@ -125,17 +187,16 @@ export const LISTING_ATTRIBUTE_SCHEMAS: ListingAttributeSchema[] = [
         key: 'year',
         labelEs: 'Año',
         labelAr: 'السنة',
-        type: 'number',
+        type: 'select',
         required: true,
-        min: 1980,
-        max: currentYear + 1,
-        placeholder: String(currentYear),
+        options: YEAR_OPTIONS,
       },
       {
         key: 'mileageKm',
-        labelEs: 'Kilómetros (opcional)',
-        labelAr: 'الكيلومترات (اختياري)',
+        labelEs: 'Kilómetros',
+        labelAr: 'الكيلومترات',
         type: 'number',
+        required: true,
         min: 0,
         placeholder: '85000',
       },
@@ -144,6 +205,7 @@ export const LISTING_ATTRIBUTE_SCHEMAS: ListingAttributeSchema[] = [
         labelEs: 'Combustible',
         labelAr: 'الوقود',
         type: 'select',
+        required: true,
         options: FUEL_OPTIONS,
       },
       {
@@ -169,6 +231,14 @@ export const LISTING_ATTRIBUTE_SCHEMAS: ListingAttributeSchema[] = [
         options: PROPERTY_TYPE_RESIDENTIAL,
       },
       {
+        key: 'rooms',
+        labelEs: 'Habitaciones',
+        labelAr: 'الغرف',
+        type: 'select',
+        required: true,
+        options: ROOM_OPTIONS,
+      },
+      {
         key: 'areaM2',
         labelEs: 'Metros cuadrados',
         labelAr: 'المتر المربع',
@@ -177,15 +247,6 @@ export const LISTING_ATTRIBUTE_SCHEMAS: ListingAttributeSchema[] = [
         min: 1,
         placeholder: '85',
       },
-      {
-        key: 'rooms',
-        labelEs: 'Habitaciones (opcional)',
-        labelAr: 'الغرف (اختياري)',
-        type: 'number',
-        min: 0,
-        max: 20,
-        placeholder: '3',
-      },
     ],
   },
   {
@@ -193,6 +254,14 @@ export const LISTING_ATTRIBUTE_SCHEMAS: ListingAttributeSchema[] = [
     categorySlugs: ['lands'],
     descriptionMinLength: 0,
     fields: [
+      {
+        key: 'propertyType',
+        labelEs: 'Tipo de terreno',
+        labelAr: 'نوع الأرض',
+        type: 'select',
+        required: true,
+        options: LAND_TYPE_OPTIONS,
+      },
       {
         key: 'areaM2',
         labelEs: 'Superficie (m²)',
@@ -229,6 +298,29 @@ export const LISTING_ATTRIBUTE_SCHEMAS: ListingAttributeSchema[] = [
     ],
   },
   {
+    id: 'furniture',
+    categorySlugs: ['furniture'],
+    descriptionMinLength: 0,
+    fields: [
+      {
+        key: 'propertyType',
+        labelEs: 'Tipo de mueble',
+        labelAr: 'نوع الأثاث',
+        type: 'select',
+        required: true,
+        options: FURNITURE_TYPE_OPTIONS,
+      },
+      {
+        key: 'condition',
+        labelEs: 'Estado',
+        labelAr: 'الحالة',
+        type: 'select',
+        required: true,
+        options: PHONE_CONDITION,
+      },
+    ],
+  },
+  {
     id: 'mobile',
     categorySlugs: ['mobiles'],
     descriptionMinLength: 0,
@@ -253,6 +345,7 @@ export const LISTING_ATTRIBUTE_SCHEMAS: ListingAttributeSchema[] = [
         labelEs: 'Almacenamiento',
         labelAr: 'التخزين',
         type: 'select',
+        required: true,
         options: PHONE_STORAGE,
       },
       {
@@ -260,6 +353,45 @@ export const LISTING_ATTRIBUTE_SCHEMAS: ListingAttributeSchema[] = [
         labelEs: 'Estado',
         labelAr: 'الحالة',
         type: 'select',
+        required: true,
+        options: PHONE_CONDITION,
+      },
+    ],
+  },
+  {
+    id: 'electronics',
+    categorySlugs: ['electronics', 'pos'],
+    descriptionMinLength: 0,
+    fields: [
+      {
+        key: 'propertyType',
+        labelEs: 'Tipo de dispositivo',
+        labelAr: 'نوع الجهاز',
+        type: 'select',
+        required: true,
+        options: ELECTRONICS_TYPE_OPTIONS,
+      },
+      {
+        key: 'brand',
+        labelEs: 'Marca',
+        labelAr: 'الماركة',
+        type: 'select',
+        required: true,
+        options: ELECTRONICS_BRANDS,
+      },
+      {
+        key: 'brandOther',
+        labelEs: 'Nombre de la marca',
+        labelAr: 'اسم الماركة',
+        type: 'text',
+        placeholder: 'Ej: Acer',
+      },
+      {
+        key: 'condition',
+        labelEs: 'Estado',
+        labelAr: 'الحالة',
+        type: 'select',
+        required: true,
         options: PHONE_CONDITION,
       },
     ],
@@ -272,8 +404,8 @@ const vehicleAttributesSchema = z
     brandOther: z.string().max(60).optional(),
     model: z.string().max(80).optional(),
     year: z.coerce.number().int().min(1980).max(currentYear + 1),
-    mileageKm: z.coerce.number().min(0).optional(),
-    fuel: z.enum(['petrol', 'diesel', 'hybrid', 'electric', 'lpg']).optional(),
+    mileageKm: z.coerce.number().min(0),
+    fuel: z.enum(['petrol', 'diesel', 'hybrid', 'electric', 'lpg']),
     transmission: z.enum(['manual', 'automatic']).optional(),
   })
   .superRefine((data, ctx) => {
@@ -284,11 +416,12 @@ const vehicleAttributesSchema = z
 
 const residentialAttributesSchema = z.object({
   propertyType: z.enum(['apartment', 'house', 'villa']),
+  rooms: z.coerce.number().int().min(0).max(20),
   areaM2: z.coerce.number().positive(),
-  rooms: z.coerce.number().int().min(0).max(20).optional(),
 });
 
 const landsAttributesSchema = z.object({
+  propertyType: z.enum(['urban', 'rural', 'agricultural', 'other']),
   areaM2: z.coerce.number().positive(),
 });
 
@@ -297,12 +430,41 @@ const commercialAttributesSchema = z.object({
   areaM2: z.coerce.number().positive(),
 });
 
+const furnitureAttributesSchema = z.object({
+  propertyType: z.enum(['sofa', 'bed', 'table', 'wardrobe', 'chair', 'kitchen', 'other']),
+  condition: z.enum(['new', 'like_new', 'used']),
+});
+
 const mobileAttributesSchema = z
   .object({
     brand: z.string().min(1),
     brandOther: z.string().max(60).optional(),
-    storage: z.enum(['32', '64', '128', '256', '512']).optional(),
-    condition: z.enum(['new', 'like_new', 'used']).optional(),
+    storage: z.enum(['32', '64', '128', '256', '512']),
+    condition: z.enum(['new', 'like_new', 'used']),
+  })
+  .superRefine((data, ctx) => {
+    if (data.brand === 'other' && !data.brandOther?.trim()) {
+      ctx.addIssue({ code: 'custom', message: 'Indica la marca', path: ['brandOther'] });
+    }
+  });
+
+const electronicsAttributesSchema = z
+  .object({
+    propertyType: z.enum([
+      'laptop',
+      'desktop',
+      'tv',
+      'tablet',
+      'console',
+      'audio',
+      'camera',
+      'appliance',
+      'pos',
+      'other',
+    ]),
+    brand: z.string().min(1),
+    brandOther: z.string().max(60).optional(),
+    condition: z.enum(['new', 'like_new', 'used']),
   })
   .superRefine((data, ctx) => {
     if (data.brand === 'other' && !data.brandOther?.trim()) {
@@ -315,7 +477,9 @@ const SCHEMA_BY_ID: Record<string, z.ZodTypeAny> = {
   residential: residentialAttributesSchema,
   lands: landsAttributesSchema,
   commercial: commercialAttributesSchema,
+  furniture: furnitureAttributesSchema,
   mobile: mobileAttributesSchema,
+  electronics: electronicsAttributesSchema,
 };
 
 export function getListingAttributeSchema(categorySlug: string): ListingAttributeSchema | null {
@@ -384,7 +548,9 @@ function brandLabel(attrs: Record<string, unknown>): string {
   if (brand === 'other') return String(attrs.brandOther ?? 'Otra marca');
   const fromCars = labelForOption(CAR_BRANDS, brand);
   if (fromCars !== brand) return fromCars;
-  return labelForOption(PHONE_BRANDS, brand);
+  const fromPhones = labelForOption(PHONE_BRANDS, brand);
+  if (fromPhones !== brand) return fromPhones;
+  return labelForOption(ELECTRONICS_BRANDS, brand);
 }
 
 const FUEL_LABELS: Record<string, string> = Object.fromEntries(
@@ -430,15 +596,28 @@ export function formatAttributeHighlights(
     const typeKey = String(attributes.propertyType ?? '');
     const typeLabels = schema.id === 'residential' ? RES_TYPE_LABELS : COM_TYPE_LABELS;
     if (typeKey) chips.push(typeLabels[typeKey] ?? typeKey);
-    if (attributes.areaM2) chips.push(`${attributes.areaM2} m²`);
     if (attributes.rooms != null && schema.id === 'residential') {
       chips.push(`${attributes.rooms} hab.`);
     }
+    if (attributes.areaM2) chips.push(`${attributes.areaM2} m²`);
     return chips;
   }
 
   if (schema.id === 'lands') {
+    if (attributes.propertyType) {
+      chips.push(labelForOption(LAND_TYPE_OPTIONS, String(attributes.propertyType)));
+    }
     if (attributes.areaM2) chips.push(`${attributes.areaM2} m²`);
+    return chips;
+  }
+
+  if (schema.id === 'furniture') {
+    if (attributes.propertyType) {
+      chips.push(labelForOption(FURNITURE_TYPE_OPTIONS, String(attributes.propertyType)));
+    }
+    if (attributes.condition) {
+      chips.push(labelForOption(PHONE_CONDITION, String(attributes.condition)));
+    }
     return chips;
   }
 
@@ -446,7 +625,18 @@ export function formatAttributeHighlights(
     if (attributes.brand) chips.push(brandLabel(attributes));
     if (attributes.storage) chips.push(`${attributes.storage} GB`);
     if (attributes.condition) {
-      chips.push(PHONE_CONDITION.find((c) => c.value === attributes.condition)?.labelEs ?? String(attributes.condition));
+      chips.push(labelForOption(PHONE_CONDITION, String(attributes.condition)));
+    }
+    return chips;
+  }
+
+  if (schema.id === 'electronics') {
+    if (attributes.propertyType) {
+      chips.push(labelForOption(ELECTRONICS_TYPE_OPTIONS, String(attributes.propertyType)));
+    }
+    if (attributes.brand) chips.push(brandLabel(attributes));
+    if (attributes.condition) {
+      chips.push(labelForOption(PHONE_CONDITION, String(attributes.condition)));
     }
     return chips;
   }
@@ -564,11 +754,30 @@ export function getListingAttributeFilters(categorySlug: string): ListingAttribu
   if (schema.id === 'lands') {
     return [
       {
+        param: 'propertyType',
+        labelEs: 'Tipo',
+        labelAr: 'النوع',
+        type: 'select',
+        options: LAND_TYPE_OPTIONS,
+      },
+      {
         param: 'areaMin',
         labelEs: 'M² mínimo',
         labelAr: 'م² كحد أدنى',
         type: 'number',
         placeholder: '200',
+      },
+    ];
+  }
+
+  if (schema.id === 'furniture') {
+    return [
+      {
+        param: 'propertyType',
+        labelEs: 'Tipo',
+        labelAr: 'النوع',
+        type: 'select',
+        options: FURNITURE_TYPE_OPTIONS,
       },
     ];
   }
@@ -588,6 +797,25 @@ export function getListingAttributeFilters(categorySlug: string): ListingAttribu
         labelAr: 'التخزين',
         type: 'select',
         options: PHONE_STORAGE,
+      },
+    ];
+  }
+
+  if (schema.id === 'electronics') {
+    return [
+      {
+        param: 'brand',
+        labelEs: 'Marca',
+        labelAr: 'الماركة',
+        type: 'select',
+        options: ELECTRONICS_BRANDS.filter((b) => b.value !== 'other'),
+      },
+      {
+        param: 'propertyType',
+        labelEs: 'Tipo',
+        labelAr: 'النوع',
+        type: 'select',
+        options: ELECTRONICS_TYPE_OPTIONS,
       },
     ];
   }
@@ -619,11 +847,28 @@ export function suggestListingTitle(
     if (!attributes.propertyType || !attributes.areaM2) return null;
     const typeLabels = schema.id === 'residential' ? RES_TYPE_LABELS : COM_TYPE_LABELS;
     const type = typeLabels[String(attributes.propertyType)] ?? String(attributes.propertyType);
-    return `${type} · ${attributes.areaM2} m²`;
+    const rooms =
+      schema.id === 'residential' && attributes.rooms != null
+        ? ` · ${attributes.rooms} hab.`
+        : '';
+    return `${type}${rooms} · ${attributes.areaM2} m²`;
   }
 
   if (schema.id === 'lands' && attributes.areaM2) {
-    return `Terreno ${attributes.areaM2} m²`;
+    const type = attributes.propertyType
+      ? `${labelForOption(LAND_TYPE_OPTIONS, String(attributes.propertyType))} · `
+      : '';
+    return `${type}Terreno ${attributes.areaM2} m²`;
+  }
+
+  if (schema.id === 'furniture' && attributes.propertyType) {
+    return labelForOption(FURNITURE_TYPE_OPTIONS, String(attributes.propertyType));
+  }
+
+  if (schema.id === 'electronics') {
+    if (!attributes.propertyType || !attributes.brand) return null;
+    const type = labelForOption(ELECTRONICS_TYPE_OPTIONS, String(attributes.propertyType));
+    return `${brandLabel(attributes)} ${type}`;
   }
 
   return null;

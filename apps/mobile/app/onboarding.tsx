@@ -33,7 +33,7 @@ export default function OnboardingScreen() {
           <Text style={styles.subtitle}>{t('onboarding.subtitle')}</Text>
 
           <View style={styles.iconRow}>
-            <AppIcon name="globe" size={20} color={theme.gold} />
+            <AppIcon name="globe" size={20} color={theme.dune} />
             <Text style={styles.prompt}>{t('onboarding.prompt')}</Text>
           </View>
 
@@ -68,14 +68,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 16,
   },
-  brandGlyph: { fontSize: 32, color: theme.gold },
-  title: { fontSize: 36, fontWeight: '800', color: theme.text, letterSpacing: 4 },
-  subtitle: { fontSize: 15, color: theme.textMuted, marginBottom: 48, marginTop: 8, textAlign: 'center' },
+  brandGlyph: { fontSize: 32, color: theme.dune },
+  title: { fontSize: 36, fontWeight: '800', color: theme.ink, letterSpacing: 4 },
+  subtitle: { fontSize: 15, color: theme.inkMuted, marginBottom: 48, marginTop: 8, textAlign: 'center' },
   iconRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 },
-  prompt: { fontSize: 17, color: theme.text, fontWeight: '600' },
+  prompt: { fontSize: 17, color: theme.ink, fontWeight: '600' },
   langGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, maxWidth: 340 },
   langBtn: {
-    backgroundColor: theme.cream,
+    backgroundColor: theme.canvas,
     borderRadius: 20,
     padding: 20,
     minWidth: 140,

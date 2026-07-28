@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { Alert, I18nManager } from 'react-native';
+import { Alert, I18nManager, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   type Locale,
@@ -47,6 +47,9 @@ async function detectDeviceLocale(): Promise<Locale | null> {
 }
 
 async function applyRtl(locale: Locale) {
+  // Web preview: avoid I18nManager + Alert/reload loops that freeze boot.
+  if (Platform.OS === 'web') return;
+
   const rtl = getDirection(locale) === 'rtl';
   if (I18nManager.isRTL === rtl) return;
 

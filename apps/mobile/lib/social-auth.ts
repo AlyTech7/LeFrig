@@ -1,7 +1,11 @@
 import { useAuth, useSSO } from '@clerk/clerk-expo';
+import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
 import { useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import { API_URL } from '@/lib/api';
+import { getClerkErrorMessage } from '@/lib/clerk-errors';
 
 export type SocialProviderId = 'google' | 'facebook' | 'apple';
 
@@ -17,7 +21,18 @@ export const SOCIAL_PROVIDERS: SocialProvider[] = [
   { id: 'apple', strategy: 'oauth_apple', label: 'Apple' },
 ];
 
+function useWarmUpBrowser() {
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    void WebBrowser.warmUpAsync();
+    return () => {
+      void WebBrowser.coolDownAsync();
+    };
+  }, []);
+}
+
 export function useSocialAuth() {
+  useWarmUpBrowser();
   const { startSSOFlow } = useSSO();
   const { getToken } = useAuth();
   const router = useRouter();
@@ -38,7 +53,16 @@ export function useSocialAuth() {
     async (provider: SocialProvider): Promise<{ ok: true } | { ok: false; error: string }> => {
       setLoadingProvider(provider.id);
       try {
-        const { createdSessionId, setActive } = await startSSOFlow({ strategy: provider.strategy });
+        const redirectUrl = AuthSession.makeRedirectUri({
+          scheme: 'lefrig',
+          path: 'sso-callback',
+        });
+
+        const { createdSessionId, setActive, signIn, signUp } = await startSSOFlow({
+          strategy: provider.strategy,
+          redirectUrl,
+        });
+
         if (createdSessionId && setActive) {
           await setActive({ session: createdSessionId });
           const token = await getToken();
@@ -46,9 +70,25 @@ export function useSocialAuth() {
           router.replace('/');
           return { ok: true };
         }
-        return { ok: false, error: 'Inicio de sesión cancelado.' };
-      } catch {
-        return { ok: false, error: `No se pudo conectar con ${provider.label}. Prueba otro método.` };
+
+        // OAuth incompleto: faltan campos o el usuario cerró el navegador
+        const status = signIn?.status || signUp?.status;
+        if (!status || status === 'abandoned') {
+          return { ok: false, error: 'Inicio de sesión cancelado.' };
+        }
+
+        return {
+          ok: false,
+          error: `No se pudo completar el acceso con ${provider.label}. Prueba email o revisa la config de Clerk.`,
+        };
+      } catch (err) {
+        return {
+          ok: false,
+          error: getClerkErrorMessage(
+            err,
+            `No se pudo conectar con ${provider.label}. Prueba otro método.`,
+          ),
+        };
       } finally {
         setLoadingProvider(null);
       }

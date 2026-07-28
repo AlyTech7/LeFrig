@@ -8,13 +8,13 @@ import {
   Pressable,
   RefreshControl,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { AppIcon } from '@/components/AppIcon';
+import { Hero, EmptyState, Button } from '@/components/ui';
 import { useRouter } from 'expo-router';
 import { useAuthApi } from '@/lib/useAuthApi';
-import { useLocale, useT } from '@/lib/locale';
-import { theme, gradients } from '@/lib/theme';
+import { useT } from '@/lib/locale';
+import { theme, radii } from '@/lib/theme';
+import { fonts, space, ui } from '@/lib/ui';
 
 type Notification = {
   id: string;
@@ -30,7 +30,6 @@ export default function NotificationsScreen() {
   const router = useRouter();
   const { authFetch } = useAuthApi();
   const t = useT();
-  const { dir } = useLocale();
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -95,53 +94,61 @@ export default function NotificationsScreen() {
   const unread = items.filter((n) => !n.isRead).length;
 
   return (
-    <View style={styles.root}>
-      <LinearGradient colors={[...gradients.hero]} style={styles.header}>
-        <SafeAreaView edges={['top']}>
-          <View style={styles.headerRow}>
-            <View>
-              <Text style={[styles.title, dir === 'rtl' && styles.rtl]}>{t('notifications.title')}</Text>
-              <Text style={[styles.sub, dir === 'rtl' && styles.rtl]}>
-                {unread > 0 ? t('notifications.unread', { count: unread }) : t('notifications.allCaughtUp')}
-              </Text>
-            </View>
-            {unread > 0 && (
-              <Pressable style={styles.markBtn} onPress={markAllRead}>
-                <Text style={styles.markText}>{t('notifications.markRead')}</Text>
-              </Pressable>
-            )}
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
-
+    <View style={ui.screen}>
+      <Hero
+        title={t('nav.notifications')}
+        subtitle={unread > 0 ? t('me.modules.notificationsSub', { count: unread }) : t('me.modules.notificationsNone')}
+        kicker={t('me.modules.notifications')}
+        back={false}
+        right={
+          unread > 0 ? (
+            <Button label={t('notifications.markAllRead')} variant="ghost" onPress={() => void markAllRead()} />
+          ) : null
+        }
+      />
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={theme.gold} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              load();
+            }}
+            tintColor={theme.dune}
+          />
         }
         ListEmptyComponent={
           loading ? (
-            <ActivityIndicator color={theme.gold} style={{ marginTop: 48 }} />
+            <ActivityIndicator color={theme.dune} style={{ marginTop: 48 }} />
           ) : (
-            <View style={styles.emptyWrap}>
-              <AppIcon name="bell" size={32} color={theme.textDarkMuted} />
-              <Text style={styles.empty}>{t('notifications.empty')}</Text>
-            </View>
+            <EmptyState icon="bell" title={t('notifications.empty')} />
           )
         }
         renderItem={({ item }) => (
           <Pressable
-            style={[styles.card, !item.isRead && styles.cardUnread]}
-            onPress={() => openNotification(item)}
+            style={[styles.row, !item.isRead && styles.rowUnread]}
+            onPress={() => void openNotification(item)}
           >
-            <Text style={styles.type}>{item.type.replace(/_/g, ' ')}</Text>
-            <Text style={styles.cardTitle}>{item.title}</Text>
-            <Text style={styles.body}>{item.body}</Text>
-            <Text style={styles.time}>
-              {new Date(item.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-            </Text>
+            <View style={styles.dotWrap}>
+              {!item.isRead ? <View style={styles.dot} /> : <AppIcon name="bell" size={16} color={theme.inkSoft} />}
+            </View>
+            <View style={styles.info}>
+              <Text style={styles.title}>{item.title}</Text>
+              <Text style={styles.body} numberOfLines={2}>
+                {item.body}
+              </Text>
+              <Text style={styles.date}>
+                {new Date(item.createdAt).toLocaleString('es-ES', {
+                  day: 'numeric',
+                  month: 'short',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </Text>
+            </View>
           </Pressable>
         )}
       />
@@ -150,40 +157,25 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: theme.cream },
-  header: { paddingBottom: 20 },
-  headerRow: {
+  list: { padding: space.lg, paddingBottom: 110 },
+  row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-  },
-  title: { fontSize: 24, fontWeight: '800', color: theme.text },
-  rtl: { writingDirection: 'rtl', textAlign: 'right' },
-  sub: { fontSize: 14, color: theme.textMuted, marginTop: 4 },
-  markBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+    gap: 12,
+    padding: 14,
+    borderRadius: radii.md,
+    backgroundColor: theme.surface,
     borderWidth: 1,
-    borderColor: 'rgba(232,184,109,0.4)',
+    borderColor: theme.border,
+    marginBottom: 8,
   },
-  markText: { color: theme.gold, fontWeight: '700', fontSize: 13 },
-  list: { padding: 16, paddingBottom: 100 },
-  emptyWrap: { alignItems: 'center', marginTop: 48, gap: 12 },
-  empty: { color: theme.textDarkMuted },
-  card: {
-    padding: 16,
-    borderRadius: 16,
-    backgroundColor: '#fff',
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
+  rowUnread: {
+    borderColor: 'rgba(168,132,45,0.35)',
+    backgroundColor: 'rgba(168,132,45,0.06)',
   },
-  cardUnread: { borderLeftWidth: 4, borderLeftColor: theme.emeraldDeep },
-  type: { fontSize: 11, fontWeight: '700', color: theme.emeraldDeep, textTransform: 'uppercase' },
-  cardTitle: { fontSize: 16, fontWeight: '700', color: theme.textDark, marginTop: 4 },
-  body: { fontSize: 14, color: theme.textDarkMuted, marginTop: 6, lineHeight: 20 },
-  time: { fontSize: 12, color: theme.gray500, marginTop: 10 },
+  dotWrap: { width: 24, alignItems: 'center', paddingTop: 4 },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: theme.dune },
+  info: { flex: 1 },
+  title: { fontFamily: fonts.bodyBold, fontSize: 15, color: theme.ink },
+  body: { fontFamily: fonts.body, fontSize: 13, color: theme.inkMuted, marginTop: 2 },
+  date: { fontFamily: fonts.body, fontSize: 11, color: theme.inkSoft, marginTop: 6 },
 });

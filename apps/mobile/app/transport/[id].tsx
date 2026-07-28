@@ -94,7 +94,7 @@ export default function TransportTripDetailScreen() {
 
       <ScrollView contentContainerStyle={styles.content}>
         {loading || !trip ? (
-          <ActivityIndicator color={theme.gold} style={{ marginTop: 40 }} />
+          <ActivityIndicator color={theme.dune} style={{ marginTop: 40 }} />
         ) : (
           <>
             <Text style={styles.route}>
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   timeline: { flexDirection: 'row', gap: 4, marginVertical: 8 },
   step: { flex: 1, alignItems: 'center', opacity: 0.35, gap: 4 },
   stepOn: { opacity: 1 },
-  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: theme.gold },
+  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: theme.dune },
   stepLabel: { fontSize: 10, fontWeight: '600', color: theme.ink, textAlign: 'center' },
   pinBox: {
     padding: 14,
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     color: theme.ink,
   },
   cta: {
-    backgroundColor: theme.obsidian,
+    backgroundColor: theme.ink,
     paddingVertical: 14,
     borderRadius: radii.lg,
     alignItems: 'center',

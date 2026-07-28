@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { AppIcon } from '@/components/AppIcon';
 import { useLocale, useT } from '@/lib/locale';
-import { theme, radii } from '@/lib/theme';
+import { theme } from '@/lib/theme';
+import { fonts } from '@/lib/ui';
 
 type Props = {
   onCommunity: () => void;
@@ -13,80 +13,65 @@ export function HomeCommunityBanner({ onCommunity }: Props) {
   const { dir } = useLocale();
 
   return (
-    <LinearGradient
-      colors={['#1f6b4a', '#2d8a62', '#3da87a']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.wrap}
-    >
-      <View style={styles.pattern} pointerEvents="none" />
+    <View style={styles.wrap}>
       <Text style={[styles.ar, dir === 'rtl' && styles.rtl]}>{t('home.communityBannerAr')}</Text>
       <Text style={styles.title}>{t('home.communityBannerTitle')}</Text>
       <Text style={styles.sub}>{t('home.communityBannerSub')}</Text>
-      <View style={styles.actions}>
-        <Pressable style={styles.btnPrimary} onPress={onCommunity}>
-          <AppIcon name="users" size={16} color={theme.oasisDeep} />
-          <Text style={styles.btnPrimaryText}>{t('home.forum')}</Text>
-        </Pressable>
-      </View>
-    </LinearGradient>
+      <Pressable
+        style={({ pressed }) => [styles.cta, pressed && styles.pressed]}
+        onPress={onCommunity}
+      >
+        <Text style={styles.ctaText}>{t('home.forum')}</Text>
+        <AppIcon name="arrow-right" size={15} color={theme.oasisDeep} />
+      </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: {
-    borderRadius: radii.xl,
-    padding: 20,
-    overflow: 'hidden',
+    marginTop: 8,
     marginBottom: 8,
-    shadowColor: theme.oasisDeep,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-    elevation: 6,
-  },
-  pattern: {
-    position: 'absolute',
-    top: -30,
-    right: -20,
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    paddingTop: 22,
+    paddingBottom: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: theme.borderStrong,
   },
   ar: {
+    fontFamily: fonts.display,
     fontSize: 28,
-    fontWeight: '900',
-    color: theme.pearl,
+    letterSpacing: -0.4,
+    color: theme.oasisDeep,
     writingDirection: 'rtl',
-    opacity: 0.95,
-    marginBottom: 4,
+    marginBottom: 8,
   },
   rtl: { writingDirection: 'rtl', textAlign: 'right' },
-  title: { fontSize: 15, fontWeight: '800', color: theme.pearl, lineHeight: 21 },
-  sub: { fontSize: 12.5, color: 'rgba(250,248,244,0.78)', marginTop: 6, lineHeight: 18 },
-  actions: { flexDirection: 'row', gap: 10, marginTop: 16 },
-  btnPrimary: {
-    flex: 1,
+  title: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 16,
+    color: theme.ink,
+    lineHeight: 22,
+  },
+  sub: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: theme.inkMuted,
+    marginTop: 6,
+    lineHeight: 19,
+    maxWidth: 340,
+  },
+  cta: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: theme.pearl,
-    paddingVertical: 12,
-    borderRadius: radii.md,
+    gap: 6,
+    alignSelf: 'flex-start',
+    marginTop: 14,
+    paddingVertical: 8,
   },
-  btnPrimaryText: { fontSize: 14, fontWeight: '800', color: theme.oasisDeep },
-  btnGhost: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    borderRadius: radii.md,
-    borderWidth: 1.5,
-    borderColor: 'rgba(250,248,244,0.35)',
+  ctaText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 14,
+    color: theme.oasisDeep,
   },
-  btnGhostText: { fontSize: 14, fontWeight: '800', color: theme.pearl },
+  pressed: { opacity: 0.7 },
 });

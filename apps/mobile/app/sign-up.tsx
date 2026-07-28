@@ -1,6 +1,7 @@
-import { useSignUp, useAuth } from '@clerk/clerk-expo';
+import { useSignIn, useSignUp, useAuth, useClerk } from '@clerk/clerk-expo';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -14,27 +15,89 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '@/components/AppIcon';
+import { ClerkCaptcha } from '@/components/auth/ClerkCaptcha';
 import { SocialAuthButtons } from '@/components/auth/SocialAuthButtons';
+import { finalizeSignUpAfterEmail, splitDisplayName } from '@/lib/auth-complete';
+import { getClerkErrorMessage, isIdentifierExists, isIdentifierNotFound } from '@/lib/clerk-errors';
 import { useT } from '@/lib/locale';
-import { theme, radii } from '@/lib/theme';
+import { theme, gradients, radii } from '@/lib/theme';
+import { fonts, space } from '@/lib/ui';
 import { API_URL } from '@/lib/api';
+
+const RESEND_SECONDS = 30;
 
 function isValidEmail(input: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.trim());
 }
 
+function digitsOnly(input: string): string {
+  return input.replace(/\D/g, '').slice(0, 6);
+}
+
+type Step = 'email' | 'code' | 'password';
+
 export default function SignUpScreen() {
-  const { signUp, setActive, isLoaded } = useSignUp();
+  const { signUp, isLoaded: signUpLoaded } = useSignUp();
+  const { signIn, isLoaded: signInLoaded } = useSignIn();
+  const { setActive } = useClerk();
   const { getToken } = useAuth();
   const router = useRouter();
   const t = useT();
+  const isLoaded = signUpLoaded && signInLoaded;
+
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
-  const [pendingVerification, setPendingVerification] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [password, setPassword] = useState('');
+  const [password2, setPassword2] = useState('');
+  const [step, setStep] = useState<Step>('email');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [resendIn, setResendIn] = useState(0);
 
-  const onSendCode = async () => {
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const id = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(id);
+  }, [resendIn]);
+
+  const syncToApi = async () => {
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await fetch(`${API_URL}/auth/sync`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch {
+      /* offline */
+    }
+  };
+
+  const finishSession = async (sessionId: string) => {
+    await setActive({ session: sessionId });
+    await syncToApi();
+    router.replace('/');
+  };
+
+  const resetToEmail = () => {
+    setStep('email');
+    setCode('');
+    setFullName('');
+    setPassword('');
+    setPassword2('');
+    setError('');
+    setResendIn(0);
+  };
+
+  const goSignIn = (emailAddress: string) => {
+    setError(t('auth.errors.alreadyRegistered'));
+    router.replace({ pathname: '/sign-in', params: { email: emailAddress } });
+  };
+
+  const startCodeCooldown = () => setResendIn(RESEND_SECONDS);
+
+  const onContinue = async () => {
     if (!isValidEmail(email)) {
       setError(t('auth.errors.emailRequired'));
       return;
@@ -46,21 +109,82 @@ export default function SignUpScreen() {
     setLoading(true);
     setError('');
     const emailAddress = email.trim().toLowerCase();
+    setEmail(emailAddress);
 
     try {
+      if (signIn) {
+        try {
+          await signIn.create({ identifier: emailAddress });
+          goSignIn(emailAddress);
+          return;
+        } catch (probeErr) {
+          if (isIdentifierExists(probeErr)) {
+            goSignIn(emailAddress);
+            return;
+          }
+          if (!isIdentifierNotFound(probeErr)) {
+            // Probe falló por otra razón: intentamos registro
+          }
+        }
+      }
+
       await signUp.create({ emailAddress });
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-      setEmail(emailAddress);
-      setPendingVerification(true);
-    } catch {
-      setError(t('auth.errors.sendFailed'));
+      startCodeCooldown();
+      setStep('code');
+    } catch (err) {
+      if (isIdentifierExists(err)) {
+        goSignIn(emailAddress);
+      } else {
+        setError(getClerkErrorMessage(err, t('auth.errors.sendFailed')));
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const onVerify = async () => {
-    if (code.trim().length < 6) {
+  const onResend = async () => {
+    if (resendIn > 0 || !signUp || loading) return;
+    setLoading(true);
+    setError('');
+    try {
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+      startCodeCooldown();
+    } catch (err) {
+      setError(getClerkErrorMessage(err, t('auth.errors.sendFailed')));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const completeWithOptionalPassword = async (
+    pwd?: string,
+    resource?: NonNullable<typeof signUp>,
+    name?: string,
+  ) => {
+    const target = resource ?? signUp;
+    if (!target) return;
+    const { firstName, lastName } = splitDisplayName(name ?? fullName);
+    const finalized = await finalizeSignUpAfterEmail(target, {
+      password: pwd,
+      firstName: firstName || undefined,
+      lastName,
+    });
+    if (finalized.ok) {
+      await finishSession(finalized.sessionId);
+      return;
+    }
+    if ('needPassword' in finalized && finalized.needPassword) {
+      setStep('password');
+      setError('');
+      return;
+    }
+    setError('error' in finalized ? finalized.error : t('auth.errors.wrongCode'));
+  };
+
+  const onVerify = async (rawCode?: string) => {
+    const digits = digitsOnly(rawCode ?? code);
+    if (digits.length < 6) {
       setError(t('auth.errors.wrongCode'));
       return;
     }
@@ -72,115 +196,252 @@ export default function SignUpScreen() {
     setError('');
 
     try {
-      const result = await signUp.attemptEmailAddressVerification({ code: code.trim() });
-      if (result.status === 'complete' && setActive) {
-        await setActive({ session: result.createdSessionId! });
-        const token = await getToken();
-        if (token) {
-          try {
-            await fetch(`${API_URL}/auth/sync`, {
-              method: 'POST',
-              headers: { Authorization: `Bearer ${token}` },
-            });
-          } catch {
-            /* offline */
-          }
-        }
-        router.replace('/');
+      const attempt = await signUp.attemptEmailAddressVerification({ code: digits });
+      if (attempt.status === 'complete' && attempt.createdSessionId) {
+        await finishSession(attempt.createdSessionId);
+        return;
       }
-    } catch {
-      setError(t('auth.errors.wrongCode'));
+      await completeWithOptionalPassword(undefined, attempt);
+    } catch (err) {
+      setError(getClerkErrorMessage(err, t('auth.errors.wrongCode')));
     } finally {
       setLoading(false);
     }
   };
 
+  const onSetPassword = async () => {
+    if (fullName.trim().length < 2) {
+      setError(t('auth.errors.nameRequired'));
+      return;
+    }
+    if (password.length < 8) {
+      setError(t('auth.errors.passwordMin'));
+      return;
+    }
+    if (password !== password2) {
+      setError(t('auth.errors.passwordMismatch'));
+      return;
+    }
+    if (!isLoaded || !signUp) {
+      setError(t('auth.errors.authLoading'));
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      await completeWithOptionalPassword(password, undefined, fullName);
+    } catch (err) {
+      setError(getClerkErrorMessage(err, t('auth.errors.passwordSaveFailed')));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onChangeCode = (value: string) => {
+    const next = digitsOnly(value);
+    setCode(next);
+    if (next.length === 6 && !loading) {
+      void onVerify(next);
+    }
+  };
+
+  const title =
+    step === 'password'
+      ? t('auth.passwordLabel')
+      : step === 'code'
+        ? t('auth.verify')
+        : t('auth.signUpTitle');
+
+  const subtitle =
+    step === 'password'
+      ? t('auth.passwordStepSubtitle')
+      : step === 'code'
+        ? t('auth.codeStepSubtitle')
+        : t('auth.signUpSubtitle');
+
   return (
-    <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <View style={styles.logoMark}>
-            <Text style={styles.brandGlyph}>ⵣ</Text>
-          </View>
-          <Text style={styles.brand}>LEFRIG</Text>
-          <Text style={styles.title}>{t('auth.signUpTitle')}</Text>
-          <Text style={styles.subtitle}>{t('auth.signUpSubtitle')}</Text>
+    <LinearGradient colors={[...gradients.hero]} style={styles.root}>
+      <SafeAreaView style={styles.safe}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+          <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+            <View style={styles.logoMark}>
+              <Text style={styles.brandGlyph}>ⵣ</Text>
+            </View>
+            <Text style={styles.brand}>LEFRIG</Text>
+            <Text style={styles.title}>{step === 'password' ? t('auth.signUpTitle') : title}</Text>
+            <Text style={styles.subtitle}>{subtitle}</Text>
 
-          {!pendingVerification ? (
-            <>
-              <View style={styles.inputWrap}>
-                <AppIcon name="mail" size={18} color={theme.dune} />
+            {step === 'email' ? (
+              <>
+                <View style={styles.inputWrap}>
+                  <AppIcon name="mail" size={18} color={theme.dune} />
+                  <TextInput
+                    style={styles.inputInner}
+                    placeholder={t('auth.emailPlaceholder')}
+                    placeholderTextColor={theme.inkMuted}
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    autoCorrect={false}
+                    editable={!loading}
+                    onSubmitEditing={() => void onContinue()}
+                  />
+                </View>
+                <ClerkCaptcha />
+                <Pressable
+                  accessibilityRole="button"
+                  style={[styles.btnPrimary, loading && styles.btnDisabled]}
+                  onPress={() => void onContinue()}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color={theme.pearl} />
+                  ) : (
+                    <>
+                      <AppIcon name="arrow-right" size={18} color={theme.pearl} />
+                      <Text style={styles.btnPrimaryText}>{t('common.continue')}</Text>
+                    </>
+                  )}
+                </Pressable>
+                <View style={styles.divider}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>{t('common.or')}</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+                <SocialAuthButtons variant="hero" providers={['google']} disabled={loading} onError={setError} />
+              </>
+            ) : null}
+
+            {step === 'code' ? (
+              <>
+                <View style={styles.codeHeader}>
+                  <AppIcon name="lock" size={20} color={theme.dune} />
+                  <Text style={styles.codeHint}>{t('auth.codeSent', { email })}</Text>
+                </View>
                 <TextInput
-                  style={styles.inputInner}
-                  placeholder={t('auth.emailPlaceholder')}
-                  placeholderTextColor={theme.inkSoft}
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  autoCorrect={false}
+                  style={[styles.input, styles.codeInput]}
+                  placeholder="000000"
+                  placeholderTextColor={theme.inkMuted}
+                  value={code}
+                  onChangeText={onChangeCode}
+                  keyboardType="number-pad"
+                  textContentType="oneTimeCode"
+                  autoComplete="sms-otp"
+                  maxLength={6}
+                  editable={!loading}
+                  onSubmitEditing={() => void onVerify()}
                 />
+                <Pressable
+                  accessibilityRole="button"
+                  style={[styles.btnPrimary, loading && styles.btnDisabled]}
+                  onPress={() => void onVerify()}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color={theme.pearl} />
+                  ) : (
+                    <Text style={styles.btnPrimaryText}>{t('auth.verify')}</Text>
+                  )}
+                </Pressable>
+                <Pressable onPress={() => void onResend()} disabled={loading || resendIn > 0}>
+                  <Text style={[styles.backLink, resendIn > 0 && styles.backLinkMuted]}>
+                    {resendIn > 0 ? t('auth.resendIn', { s: resendIn }) : t('auth.resendCode')}
+                  </Text>
+                </Pressable>
+                <Pressable onPress={resetToEmail} disabled={loading}>
+                  <Text style={styles.backLink}>{t('auth.changeEmail')}</Text>
+                </Pressable>
+              </>
+            ) : null}
+
+            {step === 'password' ? (
+              <>
+                <Text style={styles.passwordEmail}>{email}</Text>
+                <Text style={styles.passwordHint}>{t('auth.passwordVerifiedHint')}</Text>
+                <View style={styles.inputWrap}>
+                  <AppIcon name="user" size={18} color={theme.dune} />
+                  <TextInput
+                    style={styles.inputInner}
+                    placeholder={t('auth.namePlaceholder')}
+                    placeholderTextColor={theme.inkMuted}
+                    value={fullName}
+                    onChangeText={setFullName}
+                    autoCapitalize="words"
+                    autoComplete="name"
+                    editable={!loading}
+                  />
+                </View>
+                <View style={styles.inputWrap}>
+                  <AppIcon name="lock" size={18} color={theme.dune} />
+                  <TextInput
+                    style={styles.inputInner}
+                    placeholder={t('auth.newPasswordPlaceholder')}
+                    placeholderTextColor={theme.inkMuted}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoComplete="new-password"
+                    editable={!loading}
+                  />
+                </View>
+                <View style={styles.inputWrap}>
+                  <AppIcon name="lock" size={18} color={theme.dune} />
+                  <TextInput
+                    style={styles.inputInner}
+                    placeholder={t('auth.confirmPasswordPlaceholder')}
+                    placeholderTextColor={theme.inkMuted}
+                    value={password2}
+                    onChangeText={setPassword2}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoComplete="new-password"
+                    editable={!loading}
+                    onSubmitEditing={() => void onSetPassword()}
+                  />
+                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  style={[styles.btnPrimary, loading && styles.btnDisabled]}
+                  onPress={() => void onSetPassword()}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color={theme.pearl} />
+                  ) : (
+                    <Text style={styles.btnPrimaryText}>{t('auth.createAccount')}</Text>
+                  )}
+                </Pressable>
+              </>
+            ) : null}
+
+            {error ? (
+              <View style={styles.errorWrap}>
+                <AppIcon name="alert-circle" size={16} color={theme.terracotta} />
+                <Text style={styles.error}>{error}</Text>
               </View>
-              <Pressable style={styles.btnPrimary} onPress={onSendCode} disabled={loading}>
-                {loading ? (
-                  <ActivityIndicator color={theme.pearl} />
-                ) : (
-                  <Text style={styles.btnPrimaryText}>{t('auth.sendEmailCode')}</Text>
-                )}
-              </Pressable>
-            </>
-          ) : (
-            <>
-              <Text style={styles.codeHint}>{t('auth.codeSent', { email })}</Text>
-              <TextInput
-                style={[styles.input, styles.codeInput]}
-                placeholder={t('auth.codePlaceholder')}
-                placeholderTextColor={theme.inkSoft}
-                value={code}
-                onChangeText={setCode}
-                keyboardType="number-pad"
-                maxLength={6}
-              />
-              <Pressable style={styles.btnPrimary} onPress={onVerify} disabled={loading}>
-                {loading ? (
-                  <ActivityIndicator color={theme.pearl} />
-                ) : (
-                  <Text style={styles.btnPrimaryText}>{t('auth.verify')}</Text>
-                )}
-              </Pressable>
-              <Pressable onPress={() => setPendingVerification(false)}>
-                <Text style={styles.switchLink}>{t('auth.changeEmail')}</Text>
-              </Pressable>
-            </>
-          )}
+            ) : null}
 
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>{t('common.or')}</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <SocialAuthButtons variant="perla" providers={['google']} disabled={loading} onError={setError} />
-
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-
-          <Pressable onPress={() => router.replace('/sign-in')}>
-            <Text style={styles.switchLink}>{t('auth.hasAccount')}</Text>
-          </Pressable>
-
-          <Pressable onPress={() => router.push('/legal/index' as never)}>
-            <Text style={styles.footer}>{t('auth.termsPrivacy')}</Text>
-          </Pressable>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+            <Text style={styles.footer}>{t('auth.footerTagline')}</Text>
+            <Pressable onPress={() => router.replace('/sign-in')}>
+              <Text style={styles.switchLink}>{t('auth.hasAccount')}</Text>
+            </Pressable>
+            <Pressable onPress={() => router.push('/legal' as never)}>
+              <Text style={styles.legalLink}>{t('auth.legalLink')}</Text>
+            </Pressable>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: theme.canvas },
-  scroll: { flexGrow: 1, padding: 28, justifyContent: 'center', minHeight: '100%' },
+  root: { flex: 1 },
+  safe: { flex: 1 },
+  scroll: { flexGrow: 1, padding: space.xl, justifyContent: 'center', minHeight: '100%' },
   logoMark: {
     width: 72,
     height: 72,
@@ -195,51 +456,146 @@ const styles = StyleSheet.create({
   },
   brandGlyph: { fontSize: 32, color: theme.dune },
   brand: {
+    fontFamily: fonts.bodyBold,
     fontSize: 14,
-    fontWeight: '800',
     color: theme.dune,
     letterSpacing: 4,
     textAlign: 'center',
     marginBottom: 8,
   },
-  title: { fontSize: 32, fontWeight: '800', color: theme.ink, letterSpacing: -1, textAlign: 'center' },
-  subtitle: { fontSize: 16, color: theme.inkMuted, marginTop: 8, marginBottom: 32, textAlign: 'center' },
-  codeHint: { color: theme.inkMuted, fontSize: 14, textAlign: 'center', marginBottom: 12 },
+  title: {
+    fontFamily: fonts.display,
+    fontSize: 34,
+    color: theme.ink,
+    letterSpacing: -1,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontFamily: fonts.body,
+    fontSize: 16,
+    color: theme.inkMuted,
+    marginTop: 8,
+    marginBottom: 32,
+    textAlign: 'center',
+  },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     backgroundColor: theme.surface,
     borderWidth: 1,
-    borderColor: theme.border,
+    borderColor: theme.borderStrong,
     borderRadius: radii.md,
     paddingHorizontal: 16,
     marginBottom: 16,
   },
-  inputInner: { flex: 1, paddingVertical: 18, fontSize: 17, color: theme.ink },
+  inputInner: {
+    flex: 1,
+    paddingVertical: 16,
+    fontFamily: fonts.body,
+    fontSize: 16,
+    color: theme.ink,
+  },
   input: {
     backgroundColor: theme.surface,
     borderWidth: 1,
-    borderColor: theme.border,
+    borderColor: theme.borderStrong,
     borderRadius: radii.md,
-    padding: 18,
-    fontSize: 17,
+    padding: 16,
+    fontFamily: fonts.body,
+    fontSize: 16,
     color: theme.ink,
     marginBottom: 16,
   },
-  codeInput: { textAlign: 'center', fontSize: 28, letterSpacing: 8, fontWeight: '700' },
-  btnPrimary: {
-    backgroundColor: theme.oasisDeep,
-    borderRadius: radii.md,
-    padding: 18,
+  codeInput: {
+    textAlign: 'center',
+    fontFamily: fonts.bodyBold,
+    fontSize: 28,
+    letterSpacing: 8,
+  },
+  codeHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  codeHint: { fontFamily: fonts.body, color: theme.inkMuted, fontSize: 14, flexShrink: 1 },
+  passwordEmail: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 14,
+    color: theme.inkMuted,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  passwordHint: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: theme.inkMuted,
+    textAlign: 'center',
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  btnPrimary: {
+    flexDirection: 'row',
+    gap: 10,
+    backgroundColor: theme.dune,
+    borderRadius: radii.md,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 16,
   },
-  btnPrimaryText: { fontSize: 17, fontWeight: '800', color: theme.pearl },
-  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 24, gap: 12 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: theme.border },
-  dividerText: { color: theme.inkMuted, fontSize: 13 },
-  error: { color: theme.flare, fontWeight: '600', textAlign: 'center', marginTop: 16 },
-  switchLink: { color: theme.dune, textAlign: 'center', marginTop: 20, fontWeight: '700' },
-  footer: { textAlign: 'center', color: theme.inkMuted, marginTop: 32, fontSize: 13 },
+  btnDisabled: { opacity: 0.7 },
+  btnPrimaryText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 16,
+    color: theme.pearl,
+  },
+  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 20, gap: 12 },
+  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: theme.borderStrong },
+  dividerText: { fontFamily: fonts.body, color: theme.inkMuted, fontSize: 13 },
+  errorWrap: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 16,
+    paddingHorizontal: 8,
+  },
+  error: {
+    flex: 1,
+    fontFamily: fonts.bodySemi,
+    color: theme.terracotta,
+    textAlign: 'center',
+  },
+  backLink: {
+    fontFamily: fonts.bodySemi,
+    color: theme.dune,
+    textAlign: 'center',
+    marginTop: 12,
+  },
+  backLinkMuted: { color: theme.inkMuted },
+  footer: {
+    fontFamily: fonts.body,
+    textAlign: 'center',
+    color: theme.inkMuted,
+    marginTop: 40,
+    fontSize: 13,
+  },
+  switchLink: {
+    fontFamily: fonts.bodyBold,
+    color: theme.dune,
+    textAlign: 'center',
+    marginTop: 16,
+    fontSize: 15,
+  },
+  legalLink: {
+    fontFamily: fonts.body,
+    color: theme.inkMuted,
+    textAlign: 'center',
+    marginTop: 12,
+    fontSize: 13,
+    textDecorationLine: 'underline',
+  },
 });

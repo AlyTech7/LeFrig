@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { AppIcon, type FeatherIconName } from '@/components/AppIcon';
 import { useT } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
+import { fonts } from '@/lib/ui';
 
 function useTabs() {
   const t = useT();
@@ -109,12 +110,12 @@ const styles = StyleSheet.create({
   iconSlotActive: { backgroundColor: 'rgba(168,132,45,0.12)' },
   tabLabel: {
     fontSize: 10,
+    fontFamily: fonts.bodySemi,
     color: theme.inkSoft,
     marginTop: 2,
-    fontWeight: '600',
     letterSpacing: 0.2,
   },
-  tabLabelActive: { color: theme.dune, fontWeight: '800' },
+  tabLabelActive: { color: theme.dune, fontFamily: fonts.bodyBold },
   fabWrap: { flex: 1, alignItems: 'center', marginTop: -28 },
   fab: {
     width: 56,
@@ -132,7 +133,7 @@ const styles = StyleSheet.create({
   },
   fabLabel: {
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: fonts.bodyBold,
     color: theme.dune,
     marginTop: 4,
     letterSpacing: 0.2,

@@ -11,10 +11,13 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "eslint . --max-warnings 9999 && tsc --noEmit",
-    "clean": "rimraf .expo node_modules/.cache"
+    "clean": "rimraf .expo node_modules/.cache",
+    "eas-build-post-install": "pnpm --filter @lefrig/shared build"
   },
   "dependencies": {
     "@clerk/clerk-expo": "^2.9.0",
+    "@expo-google-fonts/dm-sans": "^0.4.2",
+    "@expo-google-fonts/fraunces": "^0.4.1",
     "@expo/metro-runtime": "~6.1.2",
     "@lefrig/shared": "workspace:*",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -24,6 +27,7 @@
     "expo-constants": "~18.0.0",
     "expo-crypto": "~15.0.9",
     "expo-device": "^8.0.10",
+    "expo-font": "~14.0.12",
     "expo-image-manipulator": "^14.0.8",
     "expo-image-picker": "^17.0.11",
     "expo-linear-gradient": "~15.0.0",

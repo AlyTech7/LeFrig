@@ -2,6 +2,7 @@
   "expo": {
     "name": "Lefrig",
     "slug": "lefrig",
+    "owner": "alytech7",
     "version": "0.1.0",
     "orientation": "portrait",
     "scheme": "lefrig",
@@ -38,11 +39,18 @@
           "icon": "./assets/icon.png",
           "color": "#1B5E4B"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,
       "autolinkingModuleResolution": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "868fa9b8-5f2f-4862-9e34-e378cc5f186e"
+      }
     }
   }
 }

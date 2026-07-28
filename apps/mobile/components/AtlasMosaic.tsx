@@ -6,6 +6,7 @@ import { AppIcon } from '@/components/AppIcon';
 import { pickName } from '@/lib/bilingual';
 import { useLocale, useT } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
+import { fonts } from '@/lib/ui';
 
 type Props = {
   departments: MarketplaceDepartment[];
@@ -13,8 +14,8 @@ type Props = {
 };
 
 /**
- * Mosaico "bento" del Atlas — 10 salas en un patrón editorial:
- * héroe · pareja · pareja · banner panorámico · pareja · pareja
+ * Mosaico editorial del Atlas — 10 salas:
+ * héroe · pareja · pareja · banner · pareja · pareja
  */
 export function AtlasMosaic({ departments, onPressDept }: Props) {
   const [hero, a, b, c, d, wide, e, f, g, h] = departments;
@@ -47,14 +48,8 @@ export function AtlasMosaic({ departments, onPressDept }: Props) {
   );
 }
 
-function CardChrome({ dept, index }: { dept: MarketplaceDepartment; index: number }) {
-  const num = String(index + 1).padStart(2, '0');
-  return (
-    <View style={styles.chromeHeader}>
-      <Text style={styles.num}>{num}</Text>
-      <Text style={styles.emoji}>{dept.icon}</Text>
-    </View>
-  );
+function IndexMark({ index }: { index: number }) {
+  return <Text style={styles.num}>{String(index + 1).padStart(2, '0')}</Text>;
 }
 
 function CardTitle({
@@ -107,12 +102,12 @@ function HeroCard({
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.card, styles.hero, pressed && styles.pressed]}>
       <ImageBackground source={{ uri: visual.uri }} style={styles.bg} imageStyle={styles.bgImage}>
-        <LinearGradient colors={['rgba(0,0,0,0.05)', theme.scrimDeep]} style={StyleSheet.absoluteFill} />
-        <CardChrome dept={dept} index={index} />
+        <LinearGradient colors={['rgba(8,6,4,0.08)', theme.scrimDeep]} style={StyleSheet.absoluteFill} />
+        <IndexMark index={index} />
         <View style={styles.heroFooter}>
           <CardTitle dept={dept} big itemsHint />
           <View style={styles.heroArrow}>
-            <AppIcon name="arrow-right" size={18} color={theme.pearl} />
+            <AppIcon name="arrow-right" size={16} color={theme.pearl} />
           </View>
         </View>
       </ImageBackground>
@@ -133,8 +128,8 @@ function TileCard({
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.card, styles.tile, pressed && styles.pressed]}>
       <ImageBackground source={{ uri: visual.uri }} style={styles.bg} imageStyle={styles.bgImage}>
-        <LinearGradient colors={['rgba(0,0,0,0.08)', theme.scrimDeep]} style={StyleSheet.absoluteFill} />
-        <CardChrome dept={dept} index={index} />
+        <LinearGradient colors={['rgba(8,6,4,0.12)', theme.scrimDeep]} style={StyleSheet.absoluteFill} />
+        <IndexMark index={index} />
         <CardTitle dept={dept} />
       </ImageBackground>
     </Pressable>
@@ -152,23 +147,19 @@ function BannerCard({
 }) {
   const { locale, dir } = useLocale();
   const visual = getAtlasVisual(dept.id);
-  const num = String(index + 1).padStart(2, '0');
   const [c1, c2] = accentColors(dept.accent);
   const name = pickName(locale, dept);
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.card, styles.banner, pressed && styles.pressed]}>
       <ImageBackground source={{ uri: visual.uri }} style={styles.bannerBg} imageStyle={styles.bgImage}>
         <LinearGradient
-          colors={[theme.scrimDeep, 'rgba(0,0,0,0.15)']}
+          colors={[theme.scrimDeep, 'rgba(8,6,4,0.2)']}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
           style={StyleSheet.absoluteFill}
         />
         <View style={styles.bannerCopy}>
-          <View style={styles.bannerMeta}>
-            <Text style={styles.num}>{num}</Text>
-            <Text style={styles.bannerEmoji}>{dept.icon}</Text>
-          </View>
+          <IndexMark index={index} />
           <Text style={[styles.nameBig, dir === 'rtl' && styles.rtl]} numberOfLines={1}>
             {name}
           </Text>
@@ -180,14 +171,14 @@ function BannerCard({
           />
         </View>
         <View style={styles.heroArrow}>
-          <AppIcon name="arrow-right" size={18} color={theme.pearl} />
+          <AppIcon name="arrow-right" size={16} color={theme.pearl} />
         </View>
       </ImageBackground>
     </Pressable>
   );
 }
 
-const GAP = 10;
+const GAP = 8;
 
 const styles = StyleSheet.create({
   wrap: { gap: GAP },
@@ -196,16 +187,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     overflow: 'hidden',
     backgroundColor: theme.canvasSoft,
-    shadowColor: theme.shadow,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 1,
-    shadowRadius: 12,
-    elevation: 4,
   },
-  pressed: { opacity: 0.92, transform: [{ scale: 0.98 }] },
-  hero: { height: 190 },
-  tile: { flex: 1, height: 150 },
-  banner: { height: 104 },
+  pressed: { opacity: 0.94 },
+  hero: { height: 200 },
+  tile: { flex: 1, height: 148 },
+  banner: { height: 100 },
   bg: { flex: 1, padding: 14, justifyContent: 'space-between' },
   bannerBg: {
     flex: 1,
@@ -215,37 +201,44 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   bgImage: { borderRadius: radii.lg },
-  chromeHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   num: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: theme.pearl,
-    letterSpacing: 1,
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: radii.pill,
-    overflow: 'hidden',
+    fontFamily: fonts.bodySemi,
+    fontSize: 11,
+    letterSpacing: 1.4,
+    color: 'rgba(250,248,244,0.72)',
   },
-  emoji: { fontSize: 20 },
-  bannerEmoji: { fontSize: 18 },
-  bannerMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   titleBlock: { gap: 2 },
-  name: { fontSize: 16, fontWeight: '800', color: theme.pearl },
-  nameBig: { fontSize: 20, fontWeight: '800', color: theme.pearl },
+  name: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 15,
+    letterSpacing: -0.2,
+    color: theme.pearl,
+  },
+  nameBig: {
+    fontFamily: fonts.display,
+    fontSize: 22,
+    letterSpacing: -0.5,
+    color: theme.pearl,
+    marginTop: 4,
+  },
   count: {
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 0.6,
+    fontFamily: fonts.bodySemi,
+    fontSize: 10,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
-    color: 'rgba(250,248,244,0.55)',
+    color: 'rgba(250,248,244,0.5)',
     marginTop: 2,
   },
   rtl: { writingDirection: 'rtl', textAlign: 'right' },
-  itemsHint: { fontSize: 11, color: 'rgba(250,248,244,0.65)', marginTop: 3 },
-  bar: { height: 3, borderRadius: 2, marginTop: 8, width: '100%' },
-  barBig: { width: 120 },
-  barBanner: { width: 96, marginTop: 6 },
+  itemsHint: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: 'rgba(250,248,244,0.62)',
+    marginTop: 4,
+  },
+  bar: { height: 2, borderRadius: 1, marginTop: 10, width: '100%', opacity: 0.9 },
+  barBig: { width: 56 },
+  barBanner: { width: 48, marginTop: 8 },
   heroFooter: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -253,12 +246,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   heroArrow: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.28)',
     alignItems: 'center',
     justifyContent: 'center',
   },

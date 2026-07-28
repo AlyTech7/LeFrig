@@ -7,7 +7,8 @@ export default function MarketplaceLayout() {
     <Stack>
       <Stack.Screen name="index" options={{ title: t('layouts.marketplace'), headerShown: false }} />
       <Stack.Screen name="[id]" options={{ title: t('layouts.listing'), headerShown: false }} />
-      <Stack.Screen name="create" options={{ title: t('layouts.publish') }} />
+      <Stack.Screen name="create" options={{ title: t('layouts.publish'), headerShown: false }} />
+      <Stack.Screen name="mine" options={{ headerShown: false }} />
     </Stack>
   );
 }

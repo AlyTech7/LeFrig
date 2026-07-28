@@ -10,16 +10,16 @@ import {
   Alert,
   Modal,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import type { CampSummary, PaginatedResponse } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
 import { ReportButton } from '@/components/ReportButton';
+import { Hero } from '@/components/ui';
 import { pickName } from '@/lib/bilingual';
 import { useLocale, useT } from '@/lib/locale';
 import { fetchWithMeta, unwrapPaginated } from '@/lib/api';
 import { useAuthApi } from '@/lib/useAuthApi';
-import { theme, gradients } from '@/lib/theme';
+import { theme, radii } from '@/lib/theme';
+import { ui } from '@/lib/ui';
 
 type Post = {
   id: string;
@@ -106,20 +106,18 @@ export default function CommunityScreen() {
   };
 
   return (
-    <View style={styles.root}>
-      <LinearGradient colors={[...gradients.hero]} style={styles.header}>
-        <SafeAreaView edges={['top']}>
-          <View style={styles.headerInner}>
-            <View>
-              <Text style={styles.headerTitle}>{t('community.title')}</Text>
-              <Text style={styles.headerSub}>{t('community.voice')}</Text>
-            </View>
-            <Pressable style={styles.addBtn} onPress={() => setShowForm(true)}>
-              <AppIcon name="plus" size={22} color={theme.obsidian} strokeWidth={2.5} />
-            </Pressable>
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
+    <View style={ui.screen}>
+      <Hero
+        title={t('community.title')}
+        subtitle={t('community.voice')}
+        kicker={t('nav.community')}
+        back={false}
+        right={
+          <Pressable style={styles.addBtn} onPress={() => setShowForm(true)}>
+            <AppIcon name="plus" size={20} color={theme.pearl} strokeWidth={2.5} />
+          </Pressable>
+        }
+      />
 
       <FlatList
         data={posts}
@@ -127,10 +125,10 @@ export default function CommunityScreen() {
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           loading ? (
-            <ActivityIndicator color={theme.gold} style={{ marginTop: 40 }} />
+            <ActivityIndicator color={theme.dune} style={{ marginTop: 40 }} />
           ) : (
             <View style={styles.emptyWrap}>
-              <AppIcon name="users" size={32} color={theme.textDarkMuted} />
+              <AppIcon name="users" size={32} color={theme.inkMuted} />
               <Text style={styles.empty}>{t('community.empty')}</Text>
             </View>
           )
@@ -169,14 +167,14 @@ export default function CommunityScreen() {
             <TextInput
               style={styles.input}
               placeholder={t('publish.listingTitle')}
-              placeholderTextColor={theme.textDarkMuted}
+              placeholderTextColor={theme.inkMuted}
               value={form.title}
               onChangeText={(title) => setForm({ ...form, title })}
             />
             <TextInput
               style={[styles.input, styles.textarea]}
               placeholder={t('community.postPlaceholder')}
-              placeholderTextColor={theme.textDarkMuted}
+              placeholderTextColor={theme.inkMuted}
               value={form.content}
               onChangeText={(content) => setForm({ ...form, content })}
               multiline
@@ -218,7 +216,7 @@ export default function CommunityScreen() {
               </Pressable>
               <Pressable style={styles.submitBtn} onPress={publish} disabled={submitting}>
                 {submitting ? (
-                  <ActivityIndicator color={theme.obsidian} />
+                  <ActivityIndicator color={theme.ink} />
                 ) : (
                   <Text style={styles.submitText}>{t('community.publish')}</Text>
                 )}
@@ -232,43 +230,32 @@ export default function CommunityScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: theme.cream },
-  header: { paddingBottom: 20 },
-  headerInner: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-  },
-  headerTitle: { fontSize: 24, fontWeight: '800', color: theme.text },
-  headerSub: { fontSize: 14, color: theme.textMuted, marginTop: 2 },
   addBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: theme.gold,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.dune,
     alignItems: 'center',
     justifyContent: 'center',
   },
   list: { padding: 16, paddingBottom: 100 },
   emptyWrap: { alignItems: 'center', marginTop: 48, gap: 12 },
-  empty: { textAlign: 'center', color: theme.textDarkMuted },
+  empty: { textAlign: 'center', color: theme.inkMuted },
   card: {
     padding: 16,
-    borderRadius: 16,
-    backgroundColor: '#fff',
+    borderRadius: radii.md,
+    backgroundColor: theme.surface,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
+    borderColor: theme.border,
   },
   cardMeta: { flexDirection: 'row', alignItems: 'center' },
-  type: { fontSize: 11, fontWeight: '700', color: theme.emeraldDeep, textTransform: 'uppercase' },
-  camp: { fontSize: 11, color: theme.textDarkMuted },
-  author: { fontSize: 15, fontWeight: '700', color: theme.emeraldDeep, marginTop: 6 },
-  title: { fontSize: 16, fontWeight: '700', color: theme.textDark, marginTop: 6 },
-  text: { fontSize: 15, lineHeight: 22, color: theme.textDark, marginTop: 8 },
-  time: { fontSize: 13, color: theme.textDarkMuted, marginTop: 12 },
+  type: { fontSize: 11, fontWeight: '700', color: theme.oasisDeep, textTransform: 'uppercase' },
+  camp: { fontSize: 11, color: theme.inkMuted },
+  author: { fontSize: 15, fontWeight: '700', color: theme.oasisDeep, marginTop: 6 },
+  title: { fontSize: 16, fontWeight: '700', color: theme.ink, marginTop: 6 },
+  text: { fontSize: 15, lineHeight: 22, color: theme.ink, marginTop: 8 },
+  time: { fontSize: 13, color: theme.inkMuted, marginTop: 12 },
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -280,14 +267,14 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modal: {
-    backgroundColor: theme.cream,
+    backgroundColor: theme.canvas,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
     paddingBottom: 40,
   },
-  modalTitle: { fontSize: 20, fontWeight: '800', color: theme.textDark, marginBottom: 16 },
-  fieldLabel: { fontSize: 13, fontWeight: '700', color: theme.textDarkMuted, marginBottom: 8 },
+  modalTitle: { fontSize: 20, fontWeight: '800', color: theme.ink, marginBottom: 16 },
+  fieldLabel: { fontSize: 13, fontWeight: '700', color: theme.inkMuted, marginBottom: 8 },
   input: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -296,7 +283,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.08)',
-    color: theme.textDark,
+    color: theme.ink,
   },
   textarea: { minHeight: 100, textAlignVertical: 'top' },
   pickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
@@ -309,8 +296,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0,0,0,0.08)',
   },
   chipActive: { backgroundColor: theme.emeraldDeep, borderColor: theme.emeraldDeep },
-  chipText: { fontSize: 13, fontWeight: '600', color: theme.textDark },
-  chipTextActive: { color: theme.text },
+  chipText: { fontSize: 13, fontWeight: '600', color: theme.ink },
+  chipTextActive: { color: theme.ink },
   modalActions: { flexDirection: 'row', gap: 12 },
   cancelBtn: {
     flex: 1,
@@ -320,13 +307,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.1)',
   },
-  cancelText: { fontWeight: '600', color: theme.textDarkMuted },
+  cancelText: { fontWeight: '600', color: theme.inkMuted },
   submitBtn: {
     flex: 1,
     padding: 16,
     borderRadius: 14,
     alignItems: 'center',
-    backgroundColor: theme.gold,
+    backgroundColor: theme.dune,
   },
-  submitText: { fontWeight: '700', color: theme.obsidian },
+  submitText: { fontWeight: '700', color: theme.ink },
 });

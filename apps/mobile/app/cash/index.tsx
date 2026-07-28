@@ -10,8 +10,6 @@ import {
   Alert,
   Share,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { useT } from '@/lib/locale';
@@ -21,7 +19,9 @@ import {
   clearPendingCashAgreement,
   type PendingCashAgreement,
 } from '@/lib/cash-session';
-import { theme, gradients } from '@/lib/theme';
+import { theme, radii } from '@/lib/theme';
+import { fonts, space, ui } from '@/lib/ui';
+import { Hero, Button, EmptyState } from '@/components/ui';
 
 type CashAgreement = {
   id: string;
@@ -116,21 +116,13 @@ export default function CashScreen() {
     bannerTitle ?? (banner && 'listing' in banner ? banner.listing?.title : undefined);
 
   return (
-    <View style={styles.root}>
-      <LinearGradient colors={[...gradients.gold]} style={styles.header}>
-        <SafeAreaView edges={['top']}>
-          <Text style={styles.title}>{t('cash.title')}</Text>
-          <Text style={styles.sub}>{t('cash.subtitle')}</Text>
-        </SafeAreaView>
-      </LinearGradient>
-
-      <ScrollView contentContainerStyle={styles.content}>
+    <View style={ui.screen}>
+      <Hero title={t('cash.title')} subtitle={t('cash.subtitle')} kicker={t('me.modules.cash')} />
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {banner?.pin ? (
           <View style={styles.banner}>
             <Text style={styles.bannerTitle}>{banner.operationCode}</Text>
-            {bannerListingName ? (
-              <Text style={styles.bannerListing}>{bannerListingName}</Text>
-            ) : null}
+            {bannerListingName ? <Text style={styles.bannerListing}>{bannerListingName}</Text> : null}
             <Text style={styles.bannerPin}>PIN: {banner.pin}</Text>
             <Text style={styles.bannerHint}>{t('cash.sellerPinHint')}</Text>
           </View>
@@ -139,45 +131,40 @@ export default function CashScreen() {
         <Text style={styles.section}>{t('cash.confirmDelivery')}</Text>
         <Text style={styles.hint}>{t('cash.buyerPinHint')}</Text>
         <TextInput
-          style={styles.input}
+          style={ui.input}
           value={lookupCode}
           onChangeText={setLookupCode}
           placeholder="CASH-XXXX"
-          placeholderTextColor={theme.textDarkMuted}
+          placeholderTextColor={theme.inkSoft}
           autoCapitalize="characters"
         />
         <TextInput
-          style={styles.input}
+          style={[ui.input, { marginTop: 10 }]}
           value={pin}
           onChangeText={setPin}
           placeholder={t('cash.pinPlaceholder')}
-          placeholderTextColor={theme.textDarkMuted}
+          placeholderTextColor={theme.inkSoft}
           keyboardType="number-pad"
           maxLength={4}
           secureTextEntry
         />
-        <Pressable style={[styles.cta, confirming && styles.ctaDisabled]} onPress={confirm} disabled={confirming}>
-          {confirming ? (
-            <ActivityIndicator color={theme.obsidian} />
-          ) : (
-            <Text style={styles.ctaText}>{t('cash.confirmPin')}</Text>
-          )}
-        </Pressable>
+        <View style={{ marginTop: 14 }}>
+          <Button label={t('cash.confirmPin')} loading={confirming} onPress={() => void confirm()} fullWidth />
+        </View>
 
         <Text style={styles.section}>{t('cash.myOps')}</Text>
         {loading ? (
-          <ActivityIndicator color={theme.gold} />
+          <ActivityIndicator color={theme.dune} />
         ) : agreements.length === 0 ? (
-          <Pressable onPress={() => router.push('/marketplace')}>
-            <Text style={styles.empty}>{t('cash.emptyOps')}</Text>
-          </Pressable>
+          <EmptyState
+            icon="dollar-sign"
+            title={t('cash.emptyOps')}
+            actionLabel={t('marketplace.mine.browse')}
+            onAction={() => router.push('/marketplace')}
+          />
         ) : (
           agreements.map((a) => (
-            <Pressable
-              key={a.id}
-              style={styles.card}
-              onPress={() => setLookupCode(a.operationCode)}
-            >
+            <Pressable key={a.id} style={styles.card} onPress={() => setLookupCode(a.operationCode)}>
               <Text style={styles.code}>{a.operationCode}</Text>
               <Text style={styles.cardTitle}>{a.listing?.title ?? t('cash.cashOp')}</Text>
               <Text style={styles.amount}>
@@ -197,65 +184,44 @@ export default function CashScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: theme.cream },
-  header: { paddingBottom: 20 },
-  title: { fontSize: 28, fontWeight: '800', color: theme.text, paddingHorizontal: 20, paddingTop: 8 },
-  sub: { fontSize: 14, color: 'rgba(255,255,255,0.85)', paddingHorizontal: 20, marginTop: 4 },
-  content: { padding: 20, paddingBottom: 120 },
+  content: { padding: space.lg, paddingBottom: 120, gap: 4 },
   banner: {
     padding: 16,
-    borderRadius: 14,
-    backgroundColor: 'rgba(232,184,109,0.15)',
+    borderRadius: radii.lg,
+    backgroundColor: theme.warningSoft,
     borderWidth: 1,
-    borderColor: 'rgba(232,184,109,0.35)',
-    marginBottom: 20,
+    borderColor: 'rgba(168,132,45,0.35)',
+    marginBottom: 12,
   },
-  bannerTitle: { fontWeight: '700', color: theme.textDark, fontFamily: 'monospace' },
-  bannerListing: { marginTop: 6, color: theme.textDarkMuted, fontSize: 14 },
-  bannerPin: { fontSize: 28, fontWeight: '800', color: theme.emeraldDeep, marginTop: 8, letterSpacing: 4 },
-  bannerHint: { marginTop: 8, fontSize: 13, color: theme.textDarkMuted, lineHeight: 18 },
-  section: { fontSize: 16, fontWeight: '800', color: theme.textDark, marginBottom: 8, marginTop: 8 },
-  hint: { fontSize: 13, color: theme.textDarkMuted, marginBottom: 12, lineHeight: 18 },
-  input: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
-    padding: 14,
-    fontSize: 16,
-    color: theme.textDark,
-    marginBottom: 10,
+  bannerTitle: { fontFamily: fonts.bodyBold, color: theme.ink, letterSpacing: 1 },
+  bannerListing: { marginTop: 6, color: theme.inkMuted, fontSize: 14, fontFamily: fonts.body },
+  bannerPin: {
+    fontSize: 28,
+    fontFamily: fonts.display,
+    color: theme.oasisDeep,
+    marginTop: 8,
+    letterSpacing: 4,
   },
-  cta: {
-    backgroundColor: theme.gold,
-    borderRadius: 14,
-    padding: 16,
-    alignItems: 'center',
-    marginBottom: 24,
-    minHeight: 52,
-    justifyContent: 'center',
+  bannerHint: { marginTop: 8, fontSize: 13, color: theme.inkMuted, lineHeight: 18, fontFamily: fonts.body },
+  section: {
+    fontFamily: fonts.displaySemi,
+    fontSize: 18,
+    color: theme.ink,
+    marginBottom: 8,
+    marginTop: 16,
   },
-  ctaDisabled: { opacity: 0.7 },
-  ctaText: { fontWeight: '800', color: theme.obsidian, fontSize: 16 },
-  empty: { color: theme.textDarkMuted, textAlign: 'center', marginVertical: 20 },
+  hint: { fontFamily: fonts.body, fontSize: 13, color: theme.inkMuted, marginBottom: 12, lineHeight: 18 },
   card: {
-    padding: 16,
-    borderRadius: 14,
-    backgroundColor: '#fff',
+    padding: 14,
+    borderRadius: radii.md,
+    backgroundColor: theme.surface,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
+    borderColor: theme.border,
     marginBottom: 10,
   },
-  code: { fontFamily: 'monospace', fontWeight: '700', color: theme.gold },
-  cardTitle: { fontSize: 15, fontWeight: '600', color: theme.textDark, marginTop: 4 },
-  amount: { fontSize: 14, color: theme.emeraldDeep, fontWeight: '700', marginTop: 4 },
-  receiptBtn: {
-    marginTop: 10,
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: 'rgba(45,138,98,0.12)',
-  },
-  receiptBtnText: { color: theme.emeraldDeep, fontWeight: '700', fontSize: 13 },
+  code: { fontFamily: fonts.bodyBold, color: theme.dune, letterSpacing: 0.5 },
+  cardTitle: { fontFamily: fonts.bodySemi, color: theme.ink, marginTop: 4 },
+  amount: { fontFamily: fonts.body, color: theme.inkMuted, marginTop: 4, fontSize: 13 },
+  receiptBtn: { marginTop: 10, alignSelf: 'flex-start' },
+  receiptBtnText: { fontFamily: fonts.bodyBold, color: theme.oasisDeep },
 });

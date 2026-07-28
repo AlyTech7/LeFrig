@@ -1,10 +1,13 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import type { ListingSummary } from '@lefrig/shared';
+import { LinearGradient } from 'expo-linear-gradient';
+import { CAMPS, type ListingSummary } from '@lefrig/shared';
 import { resolveImageUrl } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
 import { API_URL } from '@/lib/api';
-import { useT } from '@/lib/locale';
+import { pickName } from '@/lib/bilingual';
+import { useLocale, useT } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
+import { fonts } from '@/lib/ui';
 
 type Props = {
   item: ListingSummary;
@@ -16,101 +19,202 @@ function resolveImage(url?: string): string | undefined {
   return resolveImageUrl(url, API_URL) ?? undefined;
 }
 
+function formatRelative(iso: string, locale: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return '';
+  const mins = Math.max(0, Math.round((Date.now() - then) / 60_000));
+  if (mins < 60) return locale.startsWith('ar') ? `${mins} د` : `${mins}m`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 48) return locale.startsWith('ar') ? `${hrs} س` : `${hrs}h`;
+  const days = Math.round(hrs / 24);
+  return locale.startsWith('ar') ? `${days} ي` : `${days}d`;
+}
+
 export function ListingCard({ item, onPress, grid }: Props) {
   const t = useT();
+  const { locale } = useLocale();
   const imageUri = resolveImage(item.imageUrl);
+  const camp = CAMPS.find((c) => c.slug === item.campId);
+  const campLabel = camp ? pickName(locale, camp) : undefined;
+  const relative = item.createdAt ? formatRelative(item.createdAt, locale) : '';
+  const metaBits = [campLabel, relative].filter(Boolean);
+
+  if (grid) {
+    return (
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [styles.gridWrap, pressed && styles.pressed]}
+        accessibilityRole="button"
+        accessibilityLabel={item.title}
+      >
+        <View style={styles.media}>
+          {imageUri ? (
+            <Image source={{ uri: imageUri }} style={styles.mediaImage} />
+          ) : (
+            <LinearGradient
+              colors={['rgba(168,132,45,0.10)', 'rgba(45,138,98,0.08)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.mediaPlaceholder}
+            >
+              <AppIcon name="image" size={26} color={theme.dune} />
+            </LinearGradient>
+          )}
+          {item.sellerVerified ? (
+            <View style={styles.verifiedDot}>
+              <AppIcon name="check" size={10} color={theme.pearl} strokeWidth={3} />
+            </View>
+          ) : null}
+        </View>
+
+        <Text style={styles.gridTitle} numberOfLines={2}>
+          {item.title}
+        </Text>
+        <Text style={styles.gridPrice}>
+          {item.price.toLocaleString()}{' '}
+          <Text style={styles.gridCurrency}>{item.currency}</Text>
+        </Text>
+        {metaBits.length > 0 ? (
+          <Text style={styles.gridMeta} numberOfLines={1}>
+            {metaBits.join(' · ')}
+          </Text>
+        ) : (
+          <Text style={styles.gridMeta} numberOfLines={1}>
+            {item.sellerName}
+          </Text>
+        )}
+      </Pressable>
+    );
+  }
 
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [grid ? styles.gridWrap : styles.listWrap, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.listWrap, pressed && styles.pressed]}
+      accessibilityRole="button"
+      accessibilityLabel={item.title}
     >
-      <View style={[styles.card, grid && styles.cardGrid]}>
+      <View style={styles.listMedia}>
         {imageUri ? (
-          <Image source={{ uri: imageUri }} style={grid ? styles.imageGrid : styles.imageList} />
+          <Image source={{ uri: imageUri }} style={styles.listImage} />
         ) : (
-          <View style={[grid ? styles.imageGrid : styles.imageList, styles.placeholder]}>
-            <AppIcon name="image" size={grid ? 28 : 24} color={theme.oasis} />
-          </View>
+          <LinearGradient
+            colors={['rgba(168,132,45,0.10)', 'rgba(45,138,98,0.08)']}
+            style={[styles.listImage, styles.listPlaceholder]}
+          >
+            <AppIcon name="image" size={22} color={theme.dune} />
+          </LinearGradient>
         )}
-        <View style={[styles.body, grid && styles.bodyGrid]}>
-          <Text style={styles.title} numberOfLines={grid ? 2 : 2}>
-            {item.title}
-          </Text>
-          {item.attributeLabels && item.attributeLabels.length > 0 ? (
-            <View style={styles.chips}>
-              {item.attributeLabels.slice(0, 3).map((chip) => (
-                <View key={chip} style={styles.chip}>
-                  <Text style={styles.chipText}>{chip}</Text>
-                </View>
-              ))}
-            </View>
-          ) : null}
-          <Text style={styles.price}>
-            {item.price.toLocaleString()} {item.currency}
-          </Text>
-          <View style={styles.meta}>
-            <AppIcon name="user" size={11} color={theme.inkMuted} />
-            <Text style={styles.seller} numberOfLines={1}>
-              {item.sellerName}
-            </Text>
-            <View style={styles.cashBadge}>
-              <Text style={styles.cashText}>{t('common.cash')}</Text>
-            </View>
-          </View>
-        </View>
-        {!grid ? <AppIcon name="chevron-right" size={18} color={theme.inkSoft} /> : null}
       </View>
+      <View style={styles.listBody}>
+        <Text style={styles.listTitle} numberOfLines={2}>
+          {item.title}
+        </Text>
+        <Text style={styles.listPrice}>
+          {item.price.toLocaleString()} {item.currency}
+        </Text>
+        <Text style={styles.listMeta} numberOfLines={1}>
+          {[item.sellerName, campLabel, t('common.cash')].filter(Boolean).join(' · ')}
+        </Text>
+      </View>
+      <AppIcon name="chevron-right" size={16} color={theme.inkSoft} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  listWrap: { marginBottom: 10 },
-  gridWrap: { width: '48%', marginBottom: 12 },
-  pressed: { opacity: 0.94, transform: [{ scale: 0.99 }] },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.surface,
-    borderRadius: radii.md,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: theme.border,
-    gap: 10,
-    shadowColor: theme.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
-    elevation: 2,
+  gridWrap: {
+    width: '48%',
+    marginBottom: 22,
   },
-  cardGrid: { flexDirection: 'column', alignItems: 'stretch', padding: 0, overflow: 'hidden' },
-  imageList: { width: 72, height: 72, borderRadius: radii.sm },
-  imageGrid: { width: '100%', height: 128, borderTopLeftRadius: radii.md, borderTopRightRadius: radii.md },
-  placeholder: {
-    backgroundColor: 'rgba(45,138,98,0.08)',
+  pressed: { opacity: 0.92, transform: [{ scale: 0.985 }] },
+  media: {
+    width: '100%',
+    aspectRatio: 0.86,
+    borderRadius: radii.md,
+    overflow: 'hidden',
+    backgroundColor: theme.canvasSoft,
+    marginBottom: 10,
+  },
+  mediaImage: { width: '100%', height: '100%' },
+  mediaPlaceholder: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  body: { flex: 1 },
-  bodyGrid: { padding: 10 },
-  title: { fontSize: 13.5, fontWeight: '800', color: theme.ink, letterSpacing: -0.2, lineHeight: 18 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 },
-  chip: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: radii.pill,
-    backgroundColor: 'rgba(168,132,45,0.12)',
+  verifiedDot: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: theme.oasisDeep,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  chipText: { fontSize: 9, fontWeight: '700', color: theme.dune },
-  price: { fontSize: 15, fontWeight: '900', color: theme.oasisDeep, marginTop: 5 },
-  meta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6, flexWrap: 'wrap' },
-  seller: { fontSize: 11, color: theme.inkMuted, flex: 1 },
-  cashBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: radii.pill,
-    backgroundColor: 'rgba(45,138,98,0.1)',
+  gridTitle: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 14,
+    lineHeight: 19,
+    letterSpacing: -0.2,
+    color: theme.ink,
+    minHeight: 38,
   },
-  cashText: { fontSize: 9, fontWeight: '800', color: theme.oasisDeep, letterSpacing: 0.3 },
+  gridPrice: {
+    fontFamily: fonts.displaySemi,
+    fontSize: 17,
+    letterSpacing: -0.3,
+    color: theme.ink,
+    marginTop: 6,
+  },
+  gridCurrency: {
+    fontFamily: fonts.bodyMed,
+    fontSize: 12,
+    color: theme.dune,
+  },
+  gridMeta: {
+    fontFamily: fonts.body,
+    fontSize: 11.5,
+    color: theme.inkSoft,
+    marginTop: 4,
+  },
+
+  listWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: theme.border,
+  },
+  listMedia: {
+    width: 78,
+    height: 78,
+    borderRadius: radii.sm,
+    overflow: 'hidden',
+    backgroundColor: theme.canvasSoft,
+  },
+  listImage: { width: '100%', height: '100%' },
+  listPlaceholder: { alignItems: 'center', justifyContent: 'center' },
+  listBody: { flex: 1, gap: 3 },
+  listTitle: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 15,
+    letterSpacing: -0.2,
+    color: theme.ink,
+    lineHeight: 20,
+  },
+  listPrice: {
+    fontFamily: fonts.displaySemi,
+    fontSize: 16,
+    color: theme.ink,
+    marginTop: 2,
+  },
+  listMeta: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: theme.inkSoft,
+    marginTop: 2,
+  },
 });

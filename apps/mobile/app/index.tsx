@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TextInput,
   Pressable,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -20,13 +20,19 @@ import { HomeCommunityBanner } from '@/components/home/HomeCommunityBanner';
 import { AppIcon, type FeatherIconName } from '@/components/AppIcon';
 import { useUser } from '@clerk/clerk-expo';
 import { useAuthApi } from '@/lib/useAuthApi';
-import { demoListingsPage, fetchWithMeta, mapListingsResponse } from '@/lib/api';
+import { demoListingsPage, fetchWithMeta, mapListingsResponse, ALLOW_DEMO_FALLBACK } from '@/lib/api';
 import { getQueueCount } from '@/lib/offline';
 import { getLegacyUser } from '@/lib/legacySession';
 import { useLocale, useT } from '@/lib/locale';
-import { theme, radii, TRUST_PILLS, QUICK_LINKS } from '@/lib/theme';
+import { theme, radii } from '@/lib/theme';
+import { fonts, space } from '@/lib/ui';
 
-const TRUST_ICONS: FeatherIconName[] = ['dollar-sign', 'book-open', 'tag', 'users'];
+const HUB_RAIL: { href: string; icon: FeatherIconName; labelKey: string }[] = [
+  { href: '/orders', icon: 'package', labelKey: 'me.modules.orders' },
+  { href: '/marketplace/mine', icon: 'tag', labelKey: 'me.modules.sales' },
+  { href: '/shops/mine', icon: 'shopping-bag', labelKey: 'me.modules.shops' },
+  { href: '/transport/garage', icon: 'truck', labelKey: 'me.modules.driver' },
+];
 
 function initialsFrom(name: string): string {
   return name
@@ -52,8 +58,21 @@ export default function HomeScreen() {
   const [search, setSearch] = useState('');
   const [listings, setListings] = useState<ListingSummary[]>([]);
 
+  const fade = useRef(new Animated.Value(0)).current;
+  const rise = useRef(new Animated.Value(14)).current;
+
   const avatarInitials = useMemo(() => initialsFrom(name), [name]);
-  const firstName = useMemo(() => name.split(/\s+/)[0] ?? name, [name]);
+  const firstName = useMemo(() => {
+    const raw = name.split(/\s+/)[0] ?? name;
+    return raw.length > 14 ? `${raw.slice(0, 13)}…` : raw;
+  }, [name]);
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fade, { toValue: 1, duration: 520, useNativeDriver: true }),
+      Animated.timing(rise, { toValue: 0, duration: 520, useNativeDriver: true }),
+    ]).start();
+  }, [fade, rise]);
 
   useEffect(() => {
     syncUser()
@@ -90,6 +109,10 @@ export default function HomeScreen() {
 
   useEffect(() => {
     fetchWithMeta('/listings?limit=6', demoListingsPage).then((res) => {
+      if (res.fromFallback && !ALLOW_DEMO_FALLBACK) {
+        setListings([]);
+        return;
+      }
       const page = res.fromFallback ? demoListingsPage : mapListingsResponse(res.data as never);
       setListings(page.data.slice(0, 5));
     });
@@ -106,79 +129,62 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.root}>
+      <LinearGradient
+        colors={['#f7f2e8', theme.canvas, '#f3efe6']}
+        locations={[0, 0.45, 1]}
+        style={StyleSheet.absoluteFill}
+      />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
-        stickyHeaderIndices={[0]}
         keyboardShouldPersistTaps="handled"
       >
-        {/* ── Cabecera ── */}
-        <View style={styles.headerSticky}>
-          <LinearGradient colors={[theme.canvas, theme.canvasSoft, theme.canvas]} style={styles.headerBg}>
-            <SafeAreaView edges={['top']}>
-              <View style={styles.headerTop}>
-                <View style={styles.brandBlock}>
-                  <View style={styles.brandRow}>
-                    <LinearGradient colors={[theme.duneBright, theme.dune]} style={styles.brandMark}>
-                      <Text style={styles.brandGlyph}>ⵣ</Text>
-                    </LinearGradient>
-                    <View>
-                      <View style={styles.brandTitleRow}>
-                        <Text style={styles.brandName}>LEFRIG</Text>
-                        <View style={styles.livePill}>
-                          <View style={styles.liveDot} />
-                          <Text style={styles.liveText}>{t('common.live')}</Text>
-                        </View>
-                      </View>
-                      <Text style={styles.greeting}>
-                        {greeting}, <Text style={styles.greetingName}>{firstName}</Text>
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={[styles.tagline, dir === 'rtl' && styles.rtl]}>{t('home.taglineShort')}</Text>
-                </View>
-
-                <View style={styles.headerActions}>
-                  <Pressable style={styles.iconBtn} onPress={() => router.push('/notifications')}>
-                    <AppIcon name="bell" size={18} color={theme.ink} />
-                    <View style={styles.notifDot} />
-                  </Pressable>
-                  <Pressable style={styles.iconBtn} onPress={() => router.push('/messages')}>
-                    <AppIcon name="message-circle" size={18} color={theme.ink} />
-                  </Pressable>
-                  <Pressable style={styles.avatar} onPress={() => router.push('/profile')}>
-                    <LinearGradient colors={[theme.oasisDeep, theme.oasis]} style={styles.avatarGradient}>
-                      <Text style={styles.avatarText}>{avatarInitials}</Text>
-                    </LinearGradient>
-                  </Pressable>
-                </View>
+        <SafeAreaView edges={['top']}>
+          <Animated.View style={{ opacity: fade, transform: [{ translateY: rise }] }}>
+            <View style={styles.topBar}>
+              <View style={styles.liveRow}>
+                <View style={styles.liveDot} />
+                <Text style={styles.liveText}>{t('common.live')}</Text>
               </View>
+              <View style={styles.headerActions}>
+                <Pressable style={styles.iconBtn} onPress={() => router.push('/notifications')} hitSlop={6}>
+                  <AppIcon name="bell" size={18} color={theme.ink} />
+                </Pressable>
+                <Pressable style={styles.iconBtn} onPress={() => router.push('/messages')} hitSlop={6}>
+                  <AppIcon name="message-circle" size={18} color={theme.ink} />
+                </Pressable>
+                <Pressable style={styles.avatar} onPress={() => router.push('/profile')}>
+                  <Text style={styles.avatarText}>{avatarInitials || 'ⵣ'}</Text>
+                </Pressable>
+              </View>
+            </View>
 
-              <HomeSearchBar
-                value={search}
-                onChangeText={setSearch}
-                onSubmit={submitSearch}
-                onPress={() => router.push('/marketplace')}
-              />
+            <View style={styles.hero}>
+              <Text style={styles.brand} accessibilityRole="header">
+                Lefrig
+              </Text>
+              <View style={styles.brandRule} />
+              <Text style={[styles.headline, dir === 'rtl' && styles.rtl]} numberOfLines={1}>
+                {greeting}, {firstName}
+              </Text>
+              <Text style={[styles.lead, dir === 'rtl' && styles.rtl]}>{t('home.taglineShort')}</Text>
+            </View>
 
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.trustRow}>
-                {TRUST_PILLS.map((pill, i) => (
-                  <View key={pill.labelKey} style={styles.trustPill}>
-                    <AppIcon name={TRUST_ICONS[i] ?? 'shield'} size={12} color={theme.oasisDeep} />
-                    <Text style={[styles.trustText, dir === 'rtl' && styles.rtl]}>{t(pill.labelKey)}</Text>
-                  </View>
-                ))}
-              </ScrollView>
+            <HomeSearchBar
+              value={search}
+              onChangeText={setSearch}
+              onSubmit={submitSearch}
+              onPress={() => router.push('/marketplace')}
+            />
 
-              {offlineCount > 0 ? (
-                <View style={styles.offlineBadge}>
-                  <AppIcon name="cloud-off" size={14} color={theme.dune} />
-                  <Text style={styles.offlineText}>{t('home.offlineQueue', { count: offlineCount })}</Text>
-                </View>
-              ) : null}
-            </SafeAreaView>
-          </LinearGradient>
-        </View>
+            {offlineCount > 0 ? (
+              <View style={styles.offlineBadge}>
+                <AppIcon name="cloud-off" size={14} color={theme.dune} />
+                <Text style={styles.offlineText}>{t('home.offlineQueue', { count: offlineCount })}</Text>
+              </View>
+            ) : null}
+          </Animated.View>
+        </SafeAreaView>
 
         <View style={styles.body}>
           <HomeAtlas
@@ -186,7 +192,24 @@ export default function HomeScreen() {
             onSeeAll={() => router.push('/marketplace')}
           />
 
-          {/* ── Listados ── */}
+          {/* Rail de cuenta — fuera del hero, sin pills */}
+          <View style={styles.rail}>
+            {HUB_RAIL.map((item) => (
+              <Pressable
+                key={item.href}
+                style={({ pressed }) => [styles.railItem, pressed && styles.railPressed]}
+                onPress={() => router.push(item.href as never)}
+              >
+                <View style={styles.railIcon}>
+                  <AppIcon name={item.icon} size={18} color={theme.dune} />
+                </View>
+                <Text style={styles.railLabel} numberOfLines={1}>
+                  {t(item.labelKey)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
           <View style={styles.sectionRow}>
             <SectionHeader eyebrow={t('home.recentEyebrow')} title={t('home.recent')} />
             <Pressable style={styles.seeAllBtn} onPress={() => router.push('/marketplace')}>
@@ -200,30 +223,8 @@ export default function HomeScreen() {
             onSeeAll={() => router.push('/marketplace')}
           />
 
-          {/* ── Comunidad ── */}
           <View style={styles.spacer} />
           <HomeCommunityBanner onCommunity={() => router.push('/community')} />
-
-          {/* ── Acceso rápido ── */}
-          <SectionHeader
-            eyebrow={t('home.yourSpaceEyebrow')}
-            title={t('home.yourSpace')}
-            subtitle={t('home.yourSpaceSub')}
-          />
-          <View style={styles.quickGrid}>
-            {QUICK_LINKS.map((item) => (
-              <Pressable
-                key={item.href}
-                style={({ pressed }) => [styles.quickCard, pressed && styles.quickPressed]}
-                onPress={() => router.push(item.href as never)}
-              >
-                <View style={styles.quickIconWrap}>
-                  <AppIcon name={item.icon} size={19} color={theme.oasisDeep} />
-                </View>
-                <Text style={styles.quickLabel}>{t(item.labelKey)}</Text>
-              </Pressable>
-            ))}
-          </View>
 
           <Text style={styles.footer}>{t('home.footer')}</Text>
         </View>
@@ -234,200 +235,132 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.canvas },
-  scroll: { paddingBottom: 112 },
-  headerSticky: { zIndex: 10 },
-  headerBg: {
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-  },
-  headerTop: {
+  scroll: { paddingBottom: 120 },
+  topBar: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: 20,
-    paddingTop: 6,
+    paddingHorizontal: space.lg,
+    paddingTop: 4,
+    marginBottom: 8,
   },
-  brandBlock: { flex: 1, paddingRight: 8 },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  brandMark: {
-    width: 44,
-    height: 44,
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: theme.dune,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+  liveRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.oasis },
+  liveText: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 11,
+    color: theme.oasisDeep,
+    letterSpacing: 0.4,
   },
-  brandGlyph: { fontSize: 18, color: theme.pearl, fontWeight: '800' },
-  brandTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 11, fontWeight: '900', color: theme.dune, letterSpacing: 3.5 },
-  livePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: radii.pill,
-    backgroundColor: 'rgba(45,138,98,0.1)',
-  },
-  liveDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: theme.oasis },
-  liveText: { fontSize: 9, fontWeight: '800', color: theme.oasisDeep, letterSpacing: 0.3 },
-  greeting: { fontSize: 13.5, color: theme.inkMuted, fontWeight: '600', marginTop: 3 },
-  greetingName: { color: theme.ink, fontWeight: '800' },
-  tagline: {
-    fontSize: 12,
-    color: theme.dune,
-    fontWeight: '700',
-    marginTop: 8,
-    marginLeft: 56,
-    opacity: 0.9,
-  },
-  rtl: { writingDirection: 'rtl', textAlign: 'right' },
-  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   iconBtn: {
     width: 40,
     height: 40,
-    borderRadius: 14,
-    backgroundColor: theme.surface,
-    borderWidth: 1,
-    borderColor: theme.border,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  notifDot: {
-    position: 'absolute',
-    top: 9,
-    right: 9,
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: theme.flare,
-    borderWidth: 1.5,
-    borderColor: theme.surface,
-  },
   avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: 'rgba(45,138,98,0.35)',
-  },
-  avatarGradient: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 14, fontWeight: '800', color: theme.pearl },
-  trustRow: { paddingHorizontal: 20, paddingTop: 12, gap: 8, paddingBottom: 2 },
-  trustPill: {
-    flexDirection: 'row',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.oasisDeep,
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 11,
-    paddingVertical: 8,
-    borderRadius: radii.pill,
-    backgroundColor: theme.surface,
-    borderWidth: 1,
-    borderColor: theme.border,
+    justifyContent: 'center',
   },
-  trustText: { fontSize: 10, fontWeight: '700', color: theme.dune },
+  avatarText: { fontFamily: fonts.bodyBold, fontSize: 13, color: theme.pearl },
+  hero: {
+    paddingHorizontal: space.lg,
+    paddingTop: 4,
+    paddingBottom: 6,
+  },
+  brand: {
+    fontFamily: fonts.display,
+    fontSize: 46,
+    lineHeight: 50,
+    letterSpacing: -1.4,
+    color: theme.ink,
+  },
+  brandRule: {
+    width: 36,
+    height: 2,
+    backgroundColor: theme.dune,
+    marginTop: 12,
+    marginBottom: 2,
+    borderRadius: 1,
+  },
+  headline: {
+    marginTop: 12,
+    fontFamily: fonts.bodyMed,
+    fontSize: 17,
+    lineHeight: 24,
+    color: theme.inkMuted,
+  },
+  lead: {
+    marginTop: 4,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    lineHeight: 20,
+    color: theme.dune,
+  },
+  rtl: { writingDirection: 'rtl', textAlign: 'right' },
   offlineBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: 8,
-    marginHorizontal: 20,
+    marginHorizontal: space.lg,
     marginTop: 10,
     paddingVertical: 10,
+    paddingHorizontal: 12,
     borderRadius: radii.md,
-    backgroundColor: 'rgba(168,132,45,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(168,132,45,0.22)',
+    backgroundColor: theme.warningSoft,
   },
-  offlineText: { fontSize: 12, color: theme.dune, fontWeight: '600' },
-  body: { paddingHorizontal: 20, paddingTop: 22 },
-  atlasIntro: {
-    marginTop: 28,
-    marginBottom: 16,
-    paddingBottom: 4,
+  offlineText: { fontFamily: fonts.bodySemi, fontSize: 12, color: theme.dune },
+  body: { paddingHorizontal: space.lg, paddingTop: 18 },
+  rail: {
+    flexDirection: 'row',
+    marginTop: 6,
+    marginBottom: 22,
+    paddingVertical: 6,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: theme.border,
   },
-  atlasIntroTitle: {
-    fontSize: 36,
-    fontWeight: '900',
-    color: theme.ink,
-    letterSpacing: -1,
-    lineHeight: 42,
+  railItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 14,
   },
-  atlasIntroEs: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: theme.dune,
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-    marginTop: 4,
-  },
-  atlasIntroSub: { fontSize: 13.5, color: theme.inkMuted, marginTop: 4, fontWeight: '500' },
-  trendingHead: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 10 },
-  hotBadge: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: theme.flare,
+  railPressed: { opacity: 0.7 },
+  railIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    backgroundColor: 'rgba(168,132,45,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 6,
-    marginLeft: -4,
   },
-  trendingRow: { paddingRight: 8, marginBottom: 4 },
+  railLabel: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 11,
+    color: theme.inkMuted,
+    textAlign: 'center',
+  },
   sectionRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginTop: 12,
   },
-  seeAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 10, paddingLeft: 8 },
-  seeAll: { fontSize: 13, fontWeight: '800', color: theme.dune },
-  spacer: { height: 8 },
-  quickGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 8,
-  },
-  quickCard: {
-    width: '31%',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 6,
-    borderRadius: radii.lg,
-    backgroundColor: theme.surface,
-    borderWidth: 1,
-    borderColor: theme.border,
-    shadowColor: theme.shadow,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  quickPressed: { opacity: 0.92, transform: [{ scale: 0.97 }] },
-  quickIconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    backgroundColor: 'rgba(45,138,98,0.09)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quickLabel: { fontSize: 11.5, fontWeight: '700', color: theme.ink, textAlign: 'center' },
+  seeAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 28, paddingLeft: 8 },
+  seeAll: { fontFamily: fonts.bodyBold, fontSize: 13, color: theme.dune },
+  spacer: { height: 10 },
   footer: {
     textAlign: 'center',
+    fontFamily: fonts.body,
     fontSize: 12,
     color: theme.inkSoft,
-    marginTop: 20,
+    marginTop: 28,
     marginBottom: 8,
-    fontWeight: '600',
-    letterSpacing: 0.2,
   },
 });
