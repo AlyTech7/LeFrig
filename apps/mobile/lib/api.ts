@@ -147,10 +147,17 @@ export function mapApiShop(raw: Record<string, unknown>) {
     name: String(raw.name),
     camp: camp?.nameEs ?? 'Campamento',
     verified: Boolean(raw.verified),
+    imageUrl: raw.imageUrl != null ? String(raw.imageUrl) : undefined,
   };
 }
 
-export type ShopItem = { id: string; name: string; camp: string; verified: boolean };
+export type ShopItem = {
+  id: string;
+  name: string;
+  camp: string;
+  verified: boolean;
+  imageUrl?: string;
+};
 
 export type JobItem = {
   id: string;
@@ -165,7 +172,20 @@ export type JobItem = {
   posterName?: string;
 };
 
-export type ServiceItem = { id: string; title: string; campName: string; priceFrom: number; rating: number };
+export type ServiceItem = {
+  id: string;
+  title: string;
+  campName: string;
+  campNames: string[];
+  priceFrom: number;
+  priceTo?: number;
+  currency: string;
+  categorySlug?: string;
+  categoryName?: string;
+  images: string[];
+  providerName?: string;
+  rating?: number;
+};
 
 export type NeedItem = {
   id: string;
@@ -180,13 +200,29 @@ export type NeedItem = {
 
 export function mapApiService(raw: Record<string, unknown>): ServiceItem {
   const camps = raw.camps as { camp?: { nameEs?: string } }[] | undefined;
-  const provider = raw.provider as { reputationScore?: number } | undefined;
+  const provider = raw.provider as { displayName?: string; reputationScore?: number } | undefined;
+  const category = raw.category as { slug?: string; nameEs?: string } | undefined;
+  const images = Array.isArray(raw.images) ? (raw.images as unknown[]).map(String).filter(Boolean) : [];
+  const campNames = (camps ?? [])
+    .map((c) => c.camp?.nameEs)
+    .filter((n): n is string => Boolean(n && n.trim()));
+  const score = provider?.reputationScore;
+  const priceFromRaw = raw.priceFrom;
+  const priceToRaw = raw.priceTo;
+
   return {
     id: String(raw.id),
-    title: String(raw.title),
-    campName: camps?.[0]?.camp?.nameEs ?? 'Campamento',
-    priceFrom: Number(raw.priceFrom ?? 200),
-    rating: Number(provider?.reputationScore ?? 4.5),
+    title: String(raw.title ?? ''),
+    campName: campNames[0] ?? 'Campamento',
+    campNames,
+    priceFrom: priceFromRaw != null && priceFromRaw !== '' ? Number(priceFromRaw) : 0,
+    priceTo: priceToRaw != null && priceToRaw !== '' ? Number(priceToRaw) : undefined,
+    currency: String(raw.currency ?? 'DZD'),
+    categorySlug: category?.slug?.replace(/^service-/, '') || undefined,
+    categoryName: category?.nameEs || undefined,
+    images,
+    providerName: provider?.displayName || undefined,
+    rating: typeof score === 'number' && Number.isFinite(score) ? score : undefined,
   };
 }
 

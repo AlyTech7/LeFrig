@@ -68,7 +68,7 @@ export default function NeedDetailScreen() {
   if (loading || !need) {
     return (
       <SafeAreaView style={styles.safe}>
-        <ActivityIndicator color={theme.gold} style={{ marginTop: 80 }} />
+        <ActivityIndicator color={theme.dune} style={{ marginTop: 80 }} />
       </SafeAreaView>
     );
   }
@@ -127,16 +127,16 @@ export default function NeedDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: theme.cream },
-  safe: { flex: 1, backgroundColor: theme.cream },
+  root: { flex: 1, backgroundColor: theme.canvas },
+  safe: { flex: 1, backgroundColor: theme.canvas },
   header: { paddingBottom: 24 },
   back: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, paddingTop: 8 },
   backText: { color: theme.text, fontWeight: '600' },
   title: { fontSize: 24, fontWeight: '800', color: theme.text, paddingHorizontal: 20, marginTop: 12 },
-  meta: { fontSize: 14, color: theme.gold, paddingHorizontal: 20, marginTop: 6, fontWeight: '600' },
+  meta: { fontSize: 14, color: theme.dune, paddingHorizontal: 20, marginTop: 6, fontWeight: '600' },
   content: { padding: 20, paddingBottom: 40 },
-  desc: { fontSize: 16, lineHeight: 24, color: theme.textDarkMuted },
-  requester: { fontSize: 15, color: theme.textDarkMuted, marginTop: 16 },
+  desc: { fontSize: 16, lineHeight: 24, color: theme.inkMuted },
+  requester: { fontSize: 15, color: theme.inkMuted, marginTop: 16 },
   cta: {
     flexDirection: 'row',
     gap: 10,
@@ -150,8 +150,8 @@ const styles = StyleSheet.create({
   },
   ctaDisabled: { opacity: 0.7 },
   ctaText: { color: theme.text, fontSize: 17, fontWeight: '700' },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: theme.textDark, marginTop: 28, marginBottom: 12 },
-  emptyOffers: { color: theme.textDarkMuted, fontSize: 14 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: theme.ink, marginTop: 28, marginBottom: 12 },
+  emptyOffers: { color: theme.inkMuted, fontSize: 14 },
   offerCard: {
     backgroundColor: '#fff',
     borderRadius: 14,
@@ -161,6 +161,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0,0,0,0.05)',
   },
   offerName: { fontWeight: '700', color: theme.emeraldDeep, marginBottom: 4 },
-  offerMsg: { color: theme.textDark, lineHeight: 20 },
-  offerPrice: { marginTop: 6, fontWeight: '600', color: theme.gold },
+  offerMsg: { color: theme.ink, lineHeight: 20 },
+  offerPrice: { marginTop: 6, fontWeight: '600', color: theme.dune },
 });

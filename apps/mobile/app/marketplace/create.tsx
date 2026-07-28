@@ -1,11 +1,10 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TextInput,
   Pressable,
-  Animated,
   Alert,
   ActivityIndicator,
   ScrollView,
@@ -23,6 +22,7 @@ import { ApiError, useAuthApi } from '@/lib/useAuthApi';
 import { prepareListingPhoto } from '@/lib/image-prep';
 import { uploadListingImageFromUri } from '@/lib/uploads';
 import { ListingPhotoPicker, type PhotoSlot } from '@/components/ListingPhotoPicker';
+import { AttributeSelect } from '@/components/AttributeSelect';
 import { CurrencySelect } from '@/components/CurrencySelect';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { AppIcon } from '@/components/AppIcon';
@@ -52,19 +52,7 @@ export default function CreateListingScreen() {
   const [description, setDescription] = useState('');
   const [attributes, setAttributes] = useState<Record<string, string>>({});
   const [photos, setPhotos] = useState<PhotoSlot[]>([]);
-  const [recording, setRecording] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [pulse] = useState(new Animated.Value(1));
-  const pulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
-  const voiceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      pulseLoopRef.current?.stop();
-      if (voiceTimeoutRef.current) clearTimeout(voiceTimeoutRef.current);
-    };
-  }, []);
-
   const selectedCat = LISTING_CATEGORIES.find((c) => c.slug === category);
   const attrSchema = getListingAttributeSchema(category);
   const hasStructured = categoryHasStructuredAttributes(category);
@@ -108,32 +96,6 @@ export default function CreateListingScreen() {
     },
     [getAccessToken, syncUser, t],
   );
-
-  const toggleVoice = () => {
-    setRecording(!recording);
-    if (!recording) {
-      pulseLoopRef.current?.stop();
-      pulseLoopRef.current = Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulse, { toValue: 1.12, duration: 600, useNativeDriver: true }),
-          Animated.timing(pulse, { toValue: 1, duration: 600, useNativeDriver: true }),
-        ]),
-      );
-      pulseLoopRef.current.start();
-      if (voiceTimeoutRef.current) clearTimeout(voiceTimeoutRef.current);
-      voiceTimeoutRef.current = setTimeout(() => {
-        voiceTimeoutRef.current = null;
-        pulseLoopRef.current?.stop();
-        pulseLoopRef.current = null;
-        setTitle('Panel solar 150W en buen estado');
-        setDescription('Panel en perfecto estado, ideal para campamento.');
-        setPrice('12500');
-        setRecording(false);
-        pulse.setValue(1);
-        setStep(2);
-      }, 2200);
-    }
-  };
 
   const imageUrls = photos.filter((p) => p.remoteUrl).map((p) => p.remoteUrl!);
   const photosUploading = photos.some((p) => p.uploading);
@@ -239,140 +201,145 @@ export default function CreateListingScreen() {
       />
       <SafeAreaView edges={['bottom']} style={styles.safe}>
         {step === 1 ? (
-          <ScrollView contentContainerStyle={styles.scroll}>
-            <Text style={styles.stepHint}>{t('publish.categoryHint')}</Text>
-            <View style={styles.catGrid}>
-              {LISTING_CATEGORIES.map((cat) => (
-                <Pressable
-                  key={cat.slug}
-                  style={[styles.catTile, category === cat.slug && styles.catTileOn]}
-                  onPress={() => {
-                    setCategory(cat.slug);
-                    setAttributes({});
-                  }}
-                >
-                  <Text style={styles.catIcon}>{cat.icon}</Text>
-                  <Text style={styles.catName}>{pickName(locale, cat)}</Text>
-                </Pressable>
-              ))}
-            </View>
-            <Pressable style={styles.nextBtn} onPress={() => setStep(2)}>
-              <Text style={styles.nextText}>{t('common.continue')} →</Text>
-            </Pressable>
-          </ScrollView>
-        ) : (
-          <ScrollView contentContainerStyle={styles.scroll}>
-            {selectedCat ? (
-              <View style={styles.selectedCat}>
-                <Text style={styles.selectedCatIcon}>{selectedCat.icon}</Text>
-                <Text style={styles.selectedCatText}>{pickName(locale, selectedCat)}</Text>
-                <Pressable onPress={() => setStep(1)}>
-                  <Text style={styles.changeCat}>{t('common.clear')}</Text>
-                </Pressable>
-              </View>
-            ) : null}
-
-            <ListingPhotoPicker
-              photos={photos}
-              onChange={setPhotos}
-              onUpload={uploadPhoto}
-              disabled={publishing}
-            />
-
-            <Pressable onPress={toggleVoice} style={styles.voiceWrap}>
-              <Animated.View style={[styles.micBtn, recording && { transform: [{ scale: pulse }] }]}>
-                <AppIcon name="mic" size={28} color={theme.pearl} />
-              </Animated.View>
-              <Text style={styles.voiceHint}>
-                {recording ? t('marketplaceExtra.voiceListening') : t('marketplaceExtra.voiceDemo')}
-              </Text>
-            </Pressable>
-
-            {attrSchema ? (
-              <View style={styles.attrBlock}>
-                <Text style={styles.attrTitle}>{t('marketplaceExtra.quickData')}</Text>
-                {attrSchema.fields
-                  .filter((f) => f.key !== 'brandOther' || attributes.brand === 'other')
-                  .map((field) => (
-                    <View key={field.key}>
-                      <Text style={styles.attrLabel}>
-                        {pickLabel(locale, field)}
-                        {field.required ? ' *' : ''}
-                      </Text>
-                      {field.type === 'select' && field.options ? (
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optScroll}>
-                          {field.options.map((opt) => (
-                            <Pressable
-                              key={opt.value}
-                              style={[styles.optChip, attributes[field.key] === opt.value && styles.optChipOn]}
-                              onPress={() => setAttr(field.key, opt.value)}
-                            >
-                              <Text
-                                style={[
-                                  styles.optChipText,
-                                  attributes[field.key] === opt.value && styles.optChipTextOn,
-                                ]}
-                              >
-                                {pickLabel(locale, opt)}
-                              </Text>
-                            </Pressable>
-                          ))}
-                        </ScrollView>
-                      ) : (
-                        <TextInput
-                          style={styles.input}
-                          placeholder={field.placeholder ?? pickLabel(locale, field)}
-                          placeholderTextColor={theme.inkSoft}
-                          keyboardType={field.type === 'number' ? 'numeric' : 'default'}
-                          value={attributes[field.key] ?? ''}
-                          onChangeText={(v) => setAttr(field.key, v)}
-                        />
-                      )}
-                    </View>
-                  ))}
-              </View>
-            ) : null}
-
-            <TextInput
-              style={styles.input}
-              placeholder={t('publish.listingTitle')}
-              placeholderTextColor={theme.inkSoft}
-              value={title}
-              onChangeText={setTitle}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder={t('publish.priceLabel')}
-              placeholderTextColor={theme.inkSoft}
-              keyboardType="numeric"
-              value={price}
-              onChangeText={setPrice}
-            />
-            <CurrencySelect value={currency} onChange={setCurrency} locale={locale} label={t('publish.currencyLabel')} />
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              placeholder={hasStructured ? t('publish.extraNotes') : t('publish.description')}
-              placeholderTextColor={theme.inkSoft}
-              value={description}
-              onChangeText={setDescription}
-              multiline
-            />
-
-            <Pressable
-              style={[styles.publishBtn, (publishing || photosUploading) && styles.publishDisabled]}
-              onPress={publish}
-              disabled={publishing || photosUploading}
+          <>
+            <ScrollView
+              contentContainerStyle={styles.scroll}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
             >
-              {publishing ? (
-                <ActivityIndicator color={theme.pearl} />
-              ) : (
-                <>
-                  <AppIcon name="check" size={20} color={theme.pearl} />
-                  <Text style={styles.publishText}>{t('marketplaceExtra.publishCash')}</Text>
-                </>
-              )}
-            </Pressable>
-          </ScrollView>
+              <Text style={styles.stepHint}>{t('publish.categoryHint')}</Text>
+              <View style={styles.catGrid}>
+                {LISTING_CATEGORIES.map((cat) => (
+                  <Pressable
+                    key={cat.slug}
+                    style={[styles.catTile, category === cat.slug && styles.catTileOn]}
+                    onPress={() => {
+                      setCategory(cat.slug);
+                      setAttributes({});
+                    }}
+                  >
+                    <Text style={styles.catIcon}>{cat.icon}</Text>
+                    <Text style={styles.catName}>{pickName(locale, cat)}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </ScrollView>
+            <View style={styles.ctaBar}>
+              <Pressable style={styles.nextBtn} onPress={() => setStep(2)}>
+                <Text style={styles.nextText}>{t('common.continue')}</Text>
+                <AppIcon name="arrow-right" size={18} color={theme.pearl} />
+              </Pressable>
+            </View>
+          </>
+        ) : (
+          <>
+            <ScrollView
+              contentContainerStyle={styles.scroll}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              {selectedCat ? (
+                <View style={styles.selectedCat}>
+                  <Text style={styles.selectedCatIcon}>{selectedCat.icon}</Text>
+                  <Text style={styles.selectedCatText}>{pickName(locale, selectedCat)}</Text>
+                  <Pressable onPress={() => setStep(1)}>
+                    <Text style={styles.changeCat}>{t('common.clear')}</Text>
+                  </Pressable>
+                </View>
+              ) : null}
+
+              <ListingPhotoPicker
+                photos={photos}
+                onChange={setPhotos}
+                onUpload={uploadPhoto}
+                disabled={publishing}
+              />
+
+              {attrSchema ? (
+                <View style={styles.attrBlock}>
+                  <Text style={styles.attrTitle}>{t('marketplaceExtra.quickData')}</Text>
+                  {attrSchema.fields
+                    .filter((f) => f.key !== 'brandOther' || attributes.brand === 'other')
+                    .map((field) =>
+                      field.type === 'select' && field.options ? (
+                        <AttributeSelect
+                          key={field.key}
+                          label={pickLabel(locale, field)}
+                          required={field.required}
+                          value={attributes[field.key] ?? ''}
+                          options={field.options}
+                          placeholder={t('attributes.choose')}
+                          disabled={publishing}
+                          searchable={
+                            field.key === 'brand' ||
+                            field.key === 'year' ||
+                            field.key === 'propertyType'
+                          }
+                          onChange={(v) => setAttr(field.key, v)}
+                        />
+                      ) : (
+                        <View key={field.key}>
+                          <Text style={styles.attrLabel}>
+                            {pickLabel(locale, field)}
+                            {field.required ? ' *' : ''}
+                          </Text>
+                          <TextInput
+                            style={styles.input}
+                            placeholder={field.placeholder ?? pickLabel(locale, field)}
+                            placeholderTextColor={theme.inkSoft}
+                            keyboardType={field.type === 'number' ? 'numeric' : 'default'}
+                            value={attributes[field.key] ?? ''}
+                            onChangeText={(v) => setAttr(field.key, v)}
+                            editable={!publishing}
+                          />
+                        </View>
+                      ),
+                    )}
+                </View>
+              ) : null}
+
+              <TextInput
+                style={styles.input}
+                placeholder={t('publish.listingTitle')}
+                placeholderTextColor={theme.inkSoft}
+                value={title}
+                onChangeText={setTitle}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder={t('publish.priceLabel')}
+                placeholderTextColor={theme.inkSoft}
+                keyboardType="numeric"
+                value={price}
+                onChangeText={setPrice}
+              />
+              <CurrencySelect value={currency} onChange={setCurrency} locale={locale} label={t('publish.currencyLabel')} />
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                placeholder={hasStructured ? t('publish.extraNotes') : t('publish.description')}
+                placeholderTextColor={theme.inkSoft}
+                value={description}
+                onChangeText={setDescription}
+                multiline
+              />
+            </ScrollView>
+            <View style={styles.ctaBar}>
+              <Pressable
+                style={[styles.publishBtn, (publishing || photosUploading) && styles.publishDisabled]}
+                onPress={publish}
+                disabled={publishing || photosUploading}
+              >
+                {publishing ? (
+                  <ActivityIndicator color={theme.pearl} />
+                ) : (
+                  <>
+                    <AppIcon name="check" size={20} color={theme.pearl} />
+                    <Text style={styles.publishText}>{t('marketplaceExtra.publishCash')}</Text>
+                  </>
+                )}
+              </Pressable>
+            </View>
+          </>
         )}
       </SafeAreaView>
     </View>
@@ -382,9 +349,9 @@ export default function CreateListingScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.canvas },
   safe: { flex: 1 },
-  scroll: { padding: 20, paddingBottom: 40 },
+  scroll: { padding: 20, paddingBottom: 24 },
   stepHint: { fontSize: 15, color: theme.inkMuted, marginBottom: 16 },
-  catGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 },
+  catGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 8 },
   catTile: {
     width: '47%',
     padding: 12,
@@ -396,11 +363,23 @@ const styles = StyleSheet.create({
   catTileOn: { borderColor: theme.oasis, backgroundColor: 'rgba(45,138,98,0.08)' },
   catIcon: { fontSize: 22 },
   catName: { fontSize: 13, fontWeight: '700', color: theme.ink, marginTop: 6, textAlign: 'center' },
+  ctaBar: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: theme.border,
+    backgroundColor: 'rgba(250,248,244,0.96)',
+  },
   nextBtn: {
-    backgroundColor: theme.dune,
-    borderRadius: radii.lg,
-    padding: 16,
+    backgroundColor: theme.ink,
+    borderRadius: radii.md,
+    paddingVertical: 16,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    minHeight: 54,
   },
   nextText: { color: theme.pearl, fontWeight: '800', fontSize: 16 },
   selectedCat: {
@@ -425,29 +404,6 @@ const styles = StyleSheet.create({
   },
   attrTitle: { fontSize: 15, fontWeight: '800', color: theme.ink, marginBottom: 12 },
   attrLabel: { fontSize: 13, fontWeight: '700', color: theme.inkMuted, marginBottom: 6 },
-  optScroll: { marginBottom: 12 },
-  optChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: radii.pill,
-    borderWidth: 1,
-    borderColor: theme.border,
-    marginRight: 8,
-    backgroundColor: theme.canvas,
-  },
-  optChipOn: { borderColor: theme.oasis, backgroundColor: 'rgba(45,138,98,0.12)' },
-  optChipText: { fontSize: 13, color: theme.inkMuted, fontWeight: '600' },
-  optChipTextOn: { color: theme.oasisDeep },
-  voiceWrap: { alignItems: 'center', marginBottom: 24 },
-  micBtn: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: theme.flare,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  voiceHint: { marginTop: 12, fontSize: 14, color: theme.inkMuted, textAlign: 'center' },
   input: {
     borderWidth: 1,
     borderColor: theme.border,

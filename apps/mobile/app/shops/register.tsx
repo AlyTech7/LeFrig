@@ -10,148 +10,310 @@ import {
   Alert,
   Switch,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import type { CampSummary } from '@lefrig/shared';
 import { DEFAULT_PHONE_COUNTRY } from '@lefrig/shared';
 import { PhoneField } from '@/components/PhoneField';
-import { AppIcon } from '@/components/AppIcon';
+import { CountryFlag } from '@/components/CountryFlag';
+import { Hero, Button, StudioSteps } from '@/components/ui';
+import { SingleImagePicker } from '@/components/ui/SingleImagePicker';
 import { pickName } from '@/lib/bilingual';
 import { useLocale, useT } from '@/lib/locale';
 import { fetchWithMeta } from '@/lib/api';
 import { useAuthApi } from '@/lib/useAuthApi';
-import { theme, gradients } from '@/lib/theme';
+import { theme, radii } from '@/lib/theme';
+import { type as typo, space, ui, fonts } from '@/lib/ui';
+
+type Step = 1 | 2 | 3 | 4;
+type ShopType = 'individual' | 'restaurant' | 'cooperative' | 'association' | 'workshop';
+
+const SHOP_TYPES: { id: ShopType; labelKey: string; descKey: string }[] = [
+  { id: 'individual', labelKey: 'shops.typeIndividual', descKey: 'shops.studio.typeIndividualDesc' },
+  { id: 'restaurant', labelKey: 'shops.typeRestaurant', descKey: 'shops.studio.typeRestaurantDesc' },
+  { id: 'cooperative', labelKey: 'shops.typeCooperative', descKey: 'shops.studio.typeCooperativeDesc' },
+  { id: 'workshop', labelKey: 'shops.typeWorkshop', descKey: 'shops.studio.typeWorkshopDesc' },
+  { id: 'association', labelKey: 'shops.typeAssociation', descKey: 'shops.studio.typeAssociationDesc' },
+];
+
+function campCountry(slug: string) {
+  return slug === 'tindouf' ? 'DZ' : 'EH';
+}
 
 export default function RegisterShopScreen() {
   const router = useRouter();
   const t = useT();
   const { locale } = useLocale();
-  const { authFetch, syncUser, isSignedIn } = useAuthApi();
+  const { authFetch, syncUser, isSignedIn, isLoaded, getAccessToken } = useAuthApi();
+
+  const [step, setStep] = useState<Step>(1);
   const [camps, setCamps] = useState<CampSummary[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState<{
-    name: string;
-    description: string;
-    phone: string;
-    campId: string;
-    acceptsCash: boolean;
-  }>({
-    name: '',
-    description: '',
-    phone: DEFAULT_PHONE_COUNTRY.dial,
-    campId: '',
-    acceptsCash: true,
-  });
+  const [shopType, setShopType] = useState<ShopType>('individual');
+  const [campId, setCampId] = useState('');
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [phone, setPhone] = useState<string>(DEFAULT_PHONE_COUNTRY.dial);
+  const [whatsapp, setWhatsapp] = useState('');
+  const [acceptsCash, setAcceptsCash] = useState(true);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isLoaded) return;
     if (!isSignedIn) {
       router.replace('/sign-in');
       return;
     }
     fetchWithMeta<CampSummary[]>('/camps', []).then((res) => {
       setCamps(res.data);
-      setForm((f) => ({ ...f, campId: f.campId || res.data[0]?.id || '' }));
+      setCampId((prev) => prev || res.data[0]?.id || '');
     });
-  }, [isSignedIn, router]);
+  }, [isLoaded, isSignedIn, router]);
+
+  const canNext =
+    step === 1
+      ? !!shopType && !!campId
+      : step === 2
+        ? name.trim().length >= 2 && phone.trim().length >= 8
+        : true;
 
   const submit = async () => {
-    if (!form.name.trim() || !form.phone.trim() || !form.campId) {
+    if (!name.trim() || !phone.trim() || !campId) {
       Alert.alert(t('common.error'), t('publish.completeRequired'));
       return;
     }
     setSubmitting(true);
     try {
       await syncUser();
-      await authFetch('/shops', {
+      const created = await authFetch<{ id: string }>('/shops', {
         method: 'POST',
         body: JSON.stringify({
-          name: form.name.trim(),
-          description: form.description.trim() || undefined,
-          phone: form.phone.trim(),
-          campId: form.campId,
-          acceptsCash: form.acceptsCash,
-          shopType: 'individual',
+          name: name.trim(),
+          description: description.trim() || undefined,
+          phone: phone.trim(),
+          whatsapp: whatsapp.trim() || undefined,
+          campId,
+          acceptsCash,
+          shopType,
+          imageUrl: coverUrl || undefined,
         }),
       });
-      Alert.alert(t('common.success'), t('shops.register.success'), [
-        { text: 'OK', onPress: () => router.replace('/shops') },
-      ]);
+      if (created?.id) {
+        router.replace(`/shops/${created.id}/manage` as never);
+      } else {
+        router.replace('/shops/mine' as never);
+      }
     } catch {
-      Alert.alert(t('common.error'), t('marketplace.publishError'));
+      Alert.alert(t('common.error'), t('shops.studio.registerError'));
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <View style={styles.root}>
-      <LinearGradient colors={[...gradients.hero]} style={styles.header}>
-        <SafeAreaView edges={['top']}>
-          <Pressable style={styles.back} onPress={() => router.back()}>
-            <AppIcon name="arrow-left" size={20} color={theme.text} />
-            <Text style={styles.backText}>{t('shops.title')}</Text>
-          </Pressable>
-          <Text style={styles.title}>{t('shops.register.title')}</Text>
-          <Text style={styles.sub}>{t('shops.verifiedMarsas')}</Text>
-        </SafeAreaView>
-      </LinearGradient>
-
-      <ScrollView contentContainerStyle={styles.form}>
-        <Text style={styles.label}>{t('shops.register.name')}</Text>
-        <TextInput style={styles.input} value={form.name} onChangeText={(name) => setForm({ ...form, name })} placeholder="Marsa Al-Khair" placeholderTextColor={theme.textDarkMuted} />
-
-        <Text style={styles.label}>{t('auth.phonePlaceholder')}</Text>
-        <PhoneField
-          label={t('shops.studio.phone')}
-          value={form.phone}
-          onChange={(phone) => setForm({ ...form, phone })}
-          locale={locale}
+    <View style={ui.screen}>
+      <Hero
+        kicker={t('shops.studio.badge')}
+        title={t('shops.register.title')}
+        subtitle={t('shops.verifiedMarsas')}
+      />
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <StudioSteps
+          current={step}
+          steps={[
+            { n: 1, label: t('shops.studio.stepType') },
+            { n: 2, label: t('shops.studio.stepShop') },
+            { n: 3, label: t('shops.studio.stepPayments') },
+            { n: 4, label: t('shops.studio.stepPublish') },
+          ]}
+          onSelect={(n) => n <= step && setStep(n as Step)}
         />
 
-        <Text style={styles.label}>{t('shops.register.description')} ({t('common.optional')})</Text>
-        <TextInput style={[styles.input, styles.textArea]} value={form.description} onChangeText={(description) => setForm({ ...form, description })} multiline placeholderTextColor={theme.textDarkMuted} />
+        {step === 1 ? (
+          <View style={styles.block}>
+            <Text style={styles.section}>{t('shops.studio.stepType')}</Text>
+            {SHOP_TYPES.map((opt) => (
+              <Pressable
+                key={opt.id}
+                style={[styles.optionRow, shopType === opt.id && styles.optionRowOn]}
+                onPress={() => setShopType(opt.id)}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.optionTitle, shopType === opt.id && styles.optionTitleOn]}>{t(opt.labelKey)}</Text>
+                  <Text style={styles.typeDesc}>{t(opt.descKey)}</Text>
+                </View>
+                <View style={[styles.optionDot, shopType === opt.id && styles.optionDotOn]} />
+              </Pressable>
+            ))}
+            <Text style={[styles.section, { marginTop: 16 }]}>{t('shops.register.camp')}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.campRow}>
+              {camps.map((c) => (
+                <Pressable
+                  key={c.id}
+                  style={[styles.campChip, campId === c.id && styles.campChipOn]}
+                  onPress={() => setCampId(c.id)}
+                >
+                  <CountryFlag country={campCountry(c.slug)} size={14} />
+                  <Text style={[styles.campText, campId === c.id && styles.campTextOn]}>{pickName(locale, c)}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        ) : null}
 
-        <Text style={styles.label}>{t('shops.register.camp')}</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {camps.map((c) => (
-            <Pressable key={c.id} style={[styles.chip, form.campId === c.id && styles.chipActive]} onPress={() => setForm({ ...form, campId: c.id })}>
-              <Text style={[styles.chipText, form.campId === c.id && styles.chipTextActive]}>{pickName(locale, c)}</Text>
-            </Pressable>
-          ))}
-        </ScrollView>
+        {step === 2 ? (
+          <View style={styles.block}>
+            <Text style={styles.label}>{t('shops.register.name')}</Text>
+            <TextInput
+              style={ui.input}
+              value={name}
+              onChangeText={setName}
+              placeholder="Marsa Al-Khair"
+              placeholderTextColor={theme.inkSoft}
+            />
+            <Text style={styles.label}>{t('shops.studio.phone')}</Text>
+            <PhoneField label={t('shops.studio.phone')} value={phone} onChange={setPhone} locale={locale} />
+            <Text style={styles.label}>WhatsApp ({t('common.optional')})</Text>
+            <PhoneField
+              label="WhatsApp"
+              value={whatsapp || phone}
+              onChange={setWhatsapp}
+              locale={locale}
+            />
+            <Text style={styles.label}>
+              {t('shops.register.description')} ({t('common.optional')})
+            </Text>
+            <TextInput
+              style={[ui.input, styles.textArea]}
+              value={description}
+              onChangeText={setDescription}
+              multiline
+              placeholderTextColor={theme.inkSoft}
+            />
+            <SingleImagePicker
+              label={t('publish.coverPhoto')}
+              url={coverUrl}
+              onChange={setCoverUrl}
+              getToken={getAccessToken}
+            />
+          </View>
+        ) : null}
 
-        <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>{t('shops.acceptsCash')}</Text>
-          <Switch value={form.acceptsCash} onValueChange={(acceptsCash) => setForm({ ...form, acceptsCash })} trackColor={{ true: theme.emeraldDeep }} />
+        {step === 3 ? (
+          <View style={styles.block}>
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>{t('shops.acceptsCash')}</Text>
+              <Switch
+                value={acceptsCash}
+                onValueChange={setAcceptsCash}
+                trackColor={{ true: theme.oasisDeep }}
+              />
+            </View>
+            <Text style={styles.hint}>{t('shops.studio.tip3')}</Text>
+          </View>
+        ) : null}
+
+        {step === 4 ? (
+          <View style={styles.block}>
+            <Text style={styles.reviewTitle}>{name || '—'}</Text>
+            <Text style={styles.hint}>
+              {t(SHOP_TYPES.find((x) => x.id === shopType)?.labelKey ?? 'shops.typeIndividual')} ·{' '}
+              {camps.find((c) => c.id === campId) ? pickName(locale, camps.find((c) => c.id === campId)!) : '—'}
+            </Text>
+            <Text style={styles.hint}>{phone}</Text>
+            <Text style={styles.hint}>{t('shops.studio.tip4')}</Text>
+          </View>
+        ) : null}
+
+        <View style={styles.actions}>
+          {step > 1 ? (
+            <Button label={t('transport.driver.prev')} variant="ghost" onPress={() => setStep((s) => (s - 1) as Step)} />
+          ) : null}
+          {step < 4 ? (
+            <Button
+              label={t('transport.driver.next')}
+              disabled={!canNext}
+              onPress={() => setStep((s) => (s + 1) as Step)}
+              fullWidth
+            />
+          ) : (
+            <Button
+              label={t('shops.register.submit')}
+              loading={submitting}
+              onPress={() => void submit()}
+              fullWidth
+            />
+          )}
         </View>
-
-        <Pressable style={[styles.cta, submitting && styles.ctaDisabled]} onPress={submit} disabled={submitting}>
-          {submitting ? <ActivityIndicator color={theme.text} /> : <Text style={styles.ctaText}>{t('shops.register.submit')}</Text>}
-        </Pressable>
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: theme.cream },
-  header: { paddingBottom: 24 },
-  back: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, paddingTop: 8 },
-  backText: { color: theme.text, fontWeight: '600' },
-  title: { fontSize: 28, fontWeight: '800', color: theme.text, paddingHorizontal: 20, marginTop: 12 },
-  sub: { fontSize: 14, color: 'rgba(255,255,255,0.7)', paddingHorizontal: 20, marginTop: 4 },
-  form: { padding: 20, paddingBottom: 40 },
-  label: { fontSize: 13, fontWeight: '700', color: theme.textDarkMuted, marginBottom: 8, marginTop: 16 },
-  input: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(0,0,0,0.06)', padding: 14, fontSize: 16, color: theme.textDark },
-  textArea: { minHeight: 80, textAlignVertical: 'top' },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)', backgroundColor: '#fff', marginRight: 8, marginBottom: 8 },
-  chipActive: { borderColor: theme.gold, backgroundColor: 'rgba(212,175,55,0.12)' },
-  chipText: { fontSize: 14, color: theme.textDarkMuted, fontWeight: '600' },
-  chipTextActive: { color: theme.obsidian },
-  switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10 },
-  switchLabel: { fontSize: 15, fontWeight: '600', color: theme.textDark },
-  cta: { backgroundColor: theme.emeraldDeep, borderRadius: 16, padding: 18, alignItems: 'center', marginTop: 28, minHeight: 56, justifyContent: 'center' },
-  ctaDisabled: { opacity: 0.7 },
-  ctaText: { color: theme.text, fontSize: 17, fontWeight: '700' },
+  content: { paddingHorizontal: space.lg, paddingBottom: 148 },
+  block: { marginTop: 8, gap: 10 },
+  section: { ...typo.label, color: theme.dune, marginBottom: 4 },
+  label: { ...typo.label, marginTop: 8 },
+  textArea: { minHeight: 88, textAlignVertical: 'top' },
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: theme.border,
+    backgroundColor: theme.surface,
+  },
+  optionRowOn: {
+    borderColor: theme.dune,
+    backgroundColor: 'rgba(168,132,45,0.06)',
+  },
+  optionTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: theme.inkMuted },
+  optionTitleOn: { color: theme.ink },
+  typeDesc: { fontFamily: fonts.body, fontSize: 12, color: theme.inkMuted, marginTop: 2 },
+  optionDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    borderColor: theme.borderStrong,
+  },
+  optionDotOn: {
+    borderColor: theme.dune,
+    backgroundColor: theme.dune,
+  },
+  campRow: { gap: 8, paddingRight: 8 },
+  campChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginRight: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: theme.border,
+    backgroundColor: theme.surface,
+  },
+  campChipOn: { borderColor: theme.dune, backgroundColor: 'rgba(168,132,45,0.08)' },
+  campText: { fontFamily: fonts.bodySemi, fontSize: 13, color: theme.inkMuted },
+  campTextOn: { color: theme.ink },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: radii.md,
+    backgroundColor: theme.sand,
+    borderWidth: 1,
+    borderColor: theme.border,
+  },
+  switchLabel: { ...typo.body, flex: 1, paddingRight: 12 },
+  hint: { ...typo.caption, lineHeight: 20 },
+  reviewTitle: { fontFamily: fonts.displaySemi, fontSize: 22, color: theme.ink },
+  actions: { marginTop: 24, marginBottom: 16, gap: 10 },
 });

@@ -98,7 +98,7 @@ export default function LocationsScreen() {
         <ScrollChips camps={camps} campId={campId} onSelect={setCampId} locale={locale} />
 
         {loading ? (
-          <ActivityIndicator color={theme.gold} style={{ marginTop: 24 }} />
+          <ActivityIndicator color={theme.dune} style={{ marginTop: 24 }} />
         ) : (
           <>
             <Text style={styles.sectionTitle}>
@@ -109,7 +109,7 @@ export default function LocationsScreen() {
             ) : (
               markets.map((item) => (
                 <View key={item.id} style={styles.card}>
-                  <AppIcon name="shopping-bag" size={20} color={theme.gold} />
+                  <AppIcon name="shopping-bag" size={20} color={theme.dune} />
                   <View style={styles.cardInfo}>
                     <Text style={styles.cardName}>{item.nameEs}</Text>
                     <Text style={styles.cardDesc}>{item.description ?? t('shops.heroAccent')}</Text>
@@ -141,7 +141,7 @@ export default function LocationsScreen() {
             ) : (
               routes.map((item) => (
                 <View key={item.id} style={styles.card}>
-                  <AppIcon name="navigation" size={20} color={theme.gold} />
+                  <AppIcon name="navigation" size={20} color={theme.dune} />
                   <View style={styles.cardInfo}>
                     <Text style={styles.cardName}>
                       {pickName(locale, {
@@ -165,11 +165,11 @@ export default function LocationsScreen() {
         )}
 
         <Pressable style={styles.link} onPress={() => router.push('/camps')}>
-          <AppIcon name="home" size={18} color={theme.gold} />
+          <AppIcon name="home" size={18} color={theme.dune} />
           <Text style={styles.linkText}>{t('camps.title')}</Text>
         </Pressable>
         <Pressable style={styles.link} onPress={() => router.push('/transport')}>
-          <AppIcon name="truck" size={18} color={theme.gold} />
+          <AppIcon name="truck" size={18} color={theme.dune} />
           <Text style={styles.linkText}>{t('camps.viewTransport')}</Text>
         </Pressable>
       </ScrollView>
@@ -178,9 +178,9 @@ export default function LocationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: theme.cream },
+  root: { flex: 1, backgroundColor: theme.canvas },
   header: { paddingBottom: 20 },
-  title: { fontSize: 28, fontWeight: '900', color: theme.gold, paddingHorizontal: 20, paddingTop: 8 },
+  title: { fontSize: 28, fontWeight: '900', color: theme.dune, paddingHorizontal: 20, paddingTop: 8 },
   sub: { fontSize: 14, color: theme.gray400, paddingHorizontal: 20, marginTop: 4 },
   content: { padding: 20, paddingBottom: 40 },
   chipsScroll: { marginBottom: 16 },
@@ -193,10 +193,10 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.12)',
     marginRight: 8,
   },
-  chipActive: { borderColor: theme.gold, backgroundColor: 'rgba(232,184,109,0.15)' },
+  chipActive: { borderColor: theme.dune, backgroundColor: 'rgba(232,184,109,0.15)' },
   chipText: { color: theme.gray400, fontWeight: '600', fontSize: 13 },
-  chipTextActive: { color: theme.gold },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: theme.obsidian, marginTop: 20, marginBottom: 12 },
+  chipTextActive: { color: theme.dune },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: theme.ink, marginTop: 20, marginBottom: 12 },
   empty: { color: theme.gray500, marginBottom: 8 },
   card: {
     flexDirection: 'row',
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.06)',
   },
   cardInfo: { flex: 1 },
-  cardName: { fontWeight: '700', color: theme.obsidian, fontSize: 15 },
+  cardName: { fontWeight: '700', color: theme.ink, fontSize: 15 },
   cardDesc: { color: theme.gray500, fontSize: 13, marginTop: 4 },
   link: {
     flexDirection: 'row',
@@ -221,5 +221,5 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: 'rgba(232,184,109,0.1)',
   },
-  linkText: { color: theme.gold, fontWeight: '700' },
+  linkText: { color: theme.dune, fontWeight: '700' },
 });

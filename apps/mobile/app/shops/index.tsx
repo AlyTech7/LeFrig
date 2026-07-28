@@ -1,28 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Pressable,
-  ActivityIndicator,
-  TextInput,
-  ScrollView,
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, ActivityIndicator, TextInput, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { fetchWithMeta, mapApiShop, type ShopItem, unwrapPaginated } from '@/lib/api';
+import { resolveImageUrl } from '@lefrig/shared';
+import { API_URL, fetchWithMeta, mapApiShop, type ShopItem, unwrapPaginated } from '@/lib/api';
 import { useAuthApi } from '@/lib/useAuthApi';
 import { pickName } from '@/lib/bilingual';
 import { useLocale, useT } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
 import { AppIcon } from '@/components/AppIcon';
 import { CAMPS } from '@lefrig/shared';
-
-const fallback: ShopItem[] = [
-  { id: '1', name: 'Marsa Al-Khair', camp: 'Rabouni', verified: true },
-  { id: '2', name: 'Electro Smara', camp: 'Smara', verified: true },
-];
+import { fonts, space } from '@/lib/ui';
 
 export default function ShopsScreen() {
   const router = useRouter();
@@ -36,13 +24,16 @@ export default function ShopsScreen() {
   const [campFilter, setCampFilter] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchWithMeta('/shops', { data: fallback, meta: { total: 2, page: 1, limit: 20, totalPages: 1 } }).then(
-      (res) => {
+    fetchWithMeta('/shops', { data: [] as ShopItem[], meta: { total: 0, page: 1, limit: 20, totalPages: 0 } })
+      .then((res) => {
         const raw = unwrapPaginated(res.data as never);
-        setShops(res.fromFallback ? fallback : raw.map((s) => mapApiShop(s as Record<string, unknown>)));
+        setShops(res.fromFallback ? [] : raw.map((s) => mapApiShop(s as Record<string, unknown>)));
         setLoading(false);
-      },
-    );
+      })
+      .catch(() => {
+        setShops([]);
+        setLoading(false);
+      });
     if (isSignedIn) {
       authFetch<{ id: string; name: string }[]>('/shops/mine')
         .then((mine) => setMyShops(Array.isArray(mine) ? mine.map((s) => ({ id: s.id, name: s.name })) : []))
@@ -63,68 +54,78 @@ export default function ShopsScreen() {
 
   return (
     <View style={styles.root}>
-      <SafeAreaView edges={['top']} style={styles.header}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={[styles.heroTitle, dir === 'rtl' && styles.rtl]}>{t('shops.title')}</Text>
+      <SafeAreaView edges={['top']}>
+        <View style={styles.hero}>
+          <View style={styles.heroTop}>
+            <View style={styles.heroCopy}>
+              <Text style={styles.kicker}>Lefrig</Text>
+              <Text style={[styles.heroTitle, dir === 'rtl' && styles.rtl]}>{t('shops.title')}</Text>
+              <View style={styles.rule} />
+              <Text style={[styles.heroSub, dir === 'rtl' && styles.rtl]}>{t('shops.verifiedMarsas')}</Text>
+            </View>
+            <View style={styles.heroActions}>
+              {isSignedIn ? (
+                <Pressable style={styles.secondaryBtn} onPress={() => router.push('/shops/mine')}>
+                  <Text style={styles.secondaryBtnText}>{t('shops.mine.title')}</Text>
+                </Pressable>
+              ) : null}
+              <Pressable style={styles.primaryBtn} onPress={() => router.push('/shops/register')}>
+                <AppIcon name="plus" size={18} color={theme.pearl} strokeWidth={2.5} />
+                <Text style={styles.primaryBtnText}>{t('shops.open')}</Text>
+              </Pressable>
+            </View>
           </View>
-          <Pressable style={styles.registerBtn} onPress={() => router.push('/shops/register')}>
-            <AppIcon name="plus" size={18} color={theme.pearl} strokeWidth={2.5} />
-            <Text style={styles.registerText}>{t('shops.open')}</Text>
-          </Pressable>
-        </View>
-        <Text style={[styles.heroSub, dir === 'rtl' && styles.rtl]}>{t('shops.verifiedMarsas')}</Text>
 
-        <View style={styles.searchWrap}>
-          <AppIcon name="search" size={18} color={theme.inkMuted} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder={t('shops.searchPlaceholder')}
-            placeholderTextColor={theme.inkSoft}
-            value={search}
-            onChangeText={setSearch}
-          />
+          <View style={styles.searchWrap}>
+            <AppIcon name="search" size={18} color={theme.inkSoft} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={t('shops.searchPlaceholder')}
+              placeholderTextColor={theme.inkSoft}
+              value={search}
+              onChangeText={setSearch}
+            />
+          </View>
         </View>
       </SafeAreaView>
 
       {myShops.length > 0 ? (
-        <View style={styles.myShopsWrap}>
-          <Text style={[styles.myShopsTitle, dir === 'rtl' && styles.rtl]}>{t('shops.mine.title')}</Text>
+        <View style={styles.inlineBannerWrap}>
           {myShops.map((shop) => (
             <Pressable
               key={shop.id}
-              style={styles.myShopBanner}
-              onPress={() => router.push(`/shops/${shop.id}/products`)}
+              style={styles.inlineBanner}
+              onPress={() => router.push(`/shops/${shop.id}/manage` as never)}
             >
-              <AppIcon name="edit-3" size={18} color={theme.dune} />
-              <Text style={styles.myShopText} numberOfLines={1}>
-                {myShops.length === 1 ? t('shops.manageMyShop') : shop.name}
-              </Text>
-              <AppIcon name="chevron-right" size={16} color={theme.dune} />
+              <Text style={styles.inlineBannerEyebrow}>{t('shops.mine.title')}</Text>
+              <View style={styles.inlineBannerRow}>
+                <Text style={styles.inlineBannerTitle} numberOfLines={1}>
+                  {myShops.length === 1 ? t('shops.manageMyShop') : shop.name}
+                </Text>
+                <AppIcon name="arrow-right" size={15} color={theme.dune} />
+              </View>
             </Pressable>
           ))}
         </View>
       ) : null}
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.campRow}>
-        <Pressable
-          style={[styles.campChip, !campFilter && styles.campChipOn]}
-          onPress={() => setCampFilter(null)}
-        >
-          <Text style={[styles.campText, !campFilter && styles.campTextOn]}>{t('common.all')}</Text>
-        </Pressable>
-        {CAMPS.map((c) => (
-          <Pressable
-            key={c.slug}
-            style={[styles.campChip, campFilter === c.slug && styles.campChipOn]}
-            onPress={() => setCampFilter(c.slug)}
-          >
-            <Text style={[styles.campText, campFilter === c.slug && styles.campTextOn]}>
-              {pickName(locale, c)}
-            </Text>
+      <View style={styles.filterWrap}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.campRow}>
+          <Pressable style={styles.filterItem} onPress={() => setCampFilter(null)}>
+            <Text style={[styles.filterText, !campFilter && styles.filterTextOn]}>{t('common.all')}</Text>
+            {!campFilter ? <View style={styles.filterRule} /> : <View style={styles.filterRuleGhost} />}
           </Pressable>
-        ))}
-      </ScrollView>
+          {CAMPS.map((c) => {
+            const active = campFilter === c.slug;
+            return (
+              <Pressable key={c.slug} style={styles.filterItem} onPress={() => setCampFilter(c.slug)}>
+                <Text style={[styles.filterText, active && styles.filterTextOn]}>{pickName(locale, c)}</Text>
+                {active ? <View style={styles.filterRule} /> : <View style={styles.filterRuleGhost} />}
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       <FlatList
         data={filtered}
@@ -139,16 +140,20 @@ export default function ShopsScreen() {
         }
         renderItem={({ item }) => (
           <Pressable style={styles.card} onPress={() => router.push(`/shops/${item.id}`)}>
-            <View style={styles.avatar}>
-              <AppIcon name="shopping-bag" size={22} color={theme.oasisDeep} />
-            </View>
+            {item.imageUrl ? (
+              <Image source={{ uri: resolveImageUrl(item.imageUrl, API_URL) ?? item.imageUrl }} style={styles.shopImg} />
+            ) : (
+              <View style={styles.avatar}>
+                <AppIcon name="shopping-bag" size={22} color={theme.oasisDeep} />
+              </View>
+            )}
             <View style={styles.info}>
               <Text style={styles.name}>{item.name}</Text>
               <Text style={styles.camp}>{item.camp}</Text>
-              <View style={styles.tags}>
-                <Text style={styles.tag}>{t('common.cash')}</Text>
-                {item.verified ? <Text style={[styles.tag, styles.tagGold]}>{t('shops.verified')}</Text> : null}
-              </View>
+              <Text style={styles.meta}>
+                {item.verified ? `${t('shops.verified')} · ` : ''}
+                {t('common.cash')}
+              </Text>
             </View>
             <AppIcon name="chevron-right" size={16} color={theme.inkSoft} />
           </Pressable>
@@ -160,17 +165,45 @@ export default function ShopsScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.canvas },
-  header: {
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
+  hero: {
+    paddingHorizontal: space.lg,
+    paddingBottom: 8,
   },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  heroTitle: { fontSize: 26, fontWeight: '800', color: theme.ink },
+  heroTop: {
+    gap: 16,
+  },
+  heroCopy: {
+    paddingTop: 6,
+  },
+  kicker: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 11,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    color: theme.dune,
+  },
+  heroTitle: { fontFamily: fonts.display, fontSize: 34, color: theme.ink, letterSpacing: -0.9, marginTop: 6 },
   rtl: { writingDirection: 'rtl', textAlign: 'right' },
-  heroSub: { fontSize: 14, color: theme.inkMuted, marginTop: 4, marginBottom: 12 },
-  registerBtn: {
+  rule: {
+    width: 34,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: theme.dune,
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  heroSub: { fontFamily: fonts.body, fontSize: 14, color: theme.inkMuted, lineHeight: 21 },
+  heroActions: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 2 },
+  secondaryBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: theme.dune,
+    backgroundColor: theme.surface,
+  },
+  secondaryBtnText: { fontFamily: fonts.bodyBold, fontSize: 13, color: theme.dune },
+  primaryBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -179,68 +212,62 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     backgroundColor: theme.oasisDeep,
   },
-  registerText: { fontSize: 13, fontWeight: '800', color: theme.pearl },
+  primaryBtnText: { fontFamily: fonts.bodyBold, fontSize: 13, color: theme.pearl },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.surface,
-    borderRadius: radii.lg,
+    borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: theme.border,
+    borderColor: theme.borderStrong,
     paddingHorizontal: 14,
     minHeight: 48,
     gap: 10,
+    marginTop: 16,
   },
-  searchInput: { flex: 1, fontSize: 15, color: theme.ink, fontWeight: '500' },
-  myShopsWrap: { marginTop: 4, gap: 0 },
-  myShopsTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: theme.inkMuted,
-    marginHorizontal: 20,
-    marginTop: 12,
-    marginBottom: 2,
+  searchInput: { flex: 1, fontFamily: fonts.body, fontSize: 15, color: theme.ink },
+  inlineBannerWrap: { marginTop: 12, marginHorizontal: space.lg, gap: 10 },
+  inlineBanner: {
+    paddingVertical: 14,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: theme.borderStrong,
+  },
+  inlineBannerEyebrow: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 11,
+    color: theme.dune,
+    letterSpacing: 1.1,
     textTransform: 'uppercase',
-    letterSpacing: 0.4,
   },
-  myShopBanner: {
+  inlineBannerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginHorizontal: 20,
+    justifyContent: 'space-between',
+    marginTop: 6,
+  },
+  inlineBannerTitle: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 16, color: theme.ink, paddingRight: 12 },
+  filterWrap: {
     marginTop: 8,
-    padding: 14,
-    borderRadius: radii.md,
-    backgroundColor: 'rgba(168,132,45,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(168,132,45,0.25)',
+    marginBottom: 4,
   },
-  myShopText: { flex: 1, fontWeight: '700', color: theme.dune },
-  campRow: { paddingHorizontal: 20, paddingVertical: 12, gap: 8 },
-  campChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: radii.pill,
-    backgroundColor: theme.surface,
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  campChipOn: { backgroundColor: 'rgba(45,138,98,0.12)', borderColor: 'rgba(45,138,98,0.35)' },
-  campText: { fontSize: 12, fontWeight: '600', color: theme.inkMuted },
-  campTextOn: { color: theme.oasisDeep, fontWeight: '800' },
-  list: { padding: 20, paddingBottom: 100 },
-  empty: { textAlign: 'center', color: theme.inkMuted, marginTop: 40 },
+  campRow: { paddingHorizontal: space.lg, gap: 18, alignItems: 'center' },
+  filterItem: { paddingBottom: 2 },
+  filterText: { fontFamily: fonts.bodyMed, fontSize: 13, color: theme.inkSoft },
+  filterTextOn: { fontFamily: fonts.bodyBold, color: theme.ink },
+  filterRule: { height: 2, backgroundColor: theme.dune, borderRadius: 1, marginTop: 6 },
+  filterRuleGhost: { height: 2, marginTop: 6 },
+  list: { padding: space.lg, paddingBottom: 100 },
+  empty: { textAlign: 'center', color: theme.inkMuted, marginTop: 40, fontFamily: fonts.body },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: radii.lg,
-    backgroundColor: theme.surface,
-    borderWidth: 1,
+    paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderColor: theme.border,
-    marginBottom: 10,
     gap: 12,
   },
+  shopImg: { width: 48, height: 48, borderRadius: 14, backgroundColor: theme.canvasSoft },
   avatar: {
     width: 48,
     height: 48,
@@ -250,17 +277,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   info: { flex: 1 },
-  name: { fontSize: 17, fontWeight: '700', color: theme.ink },
-  camp: { fontSize: 14, color: theme.inkMuted, marginTop: 2 },
-  tags: { flexDirection: 'row', gap: 6, marginTop: 8 },
-  tag: {
-    fontSize: 11,
-    fontWeight: '600',
-    backgroundColor: theme.oasisDeep,
-    color: theme.pearl,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  tagGold: { backgroundColor: theme.dune, color: theme.pearl },
+  name: { fontFamily: fonts.bodyBold, fontSize: 18, color: theme.ink },
+  camp: { fontFamily: fonts.body, fontSize: 14, color: theme.inkMuted, marginTop: 2 },
+  meta: { fontFamily: fonts.bodySemi, fontSize: 12, color: theme.dune, marginTop: 8 },
 });

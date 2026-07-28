@@ -114,7 +114,7 @@ export default function ShopProductsScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.safe}>
-        <ActivityIndicator color={theme.gold} style={{ marginTop: 80 }} />
+        <ActivityIndicator color={theme.dune} style={{ marginTop: 80 }} />
       </SafeAreaView>
     );
   }
@@ -132,7 +132,7 @@ export default function ShopProductsScreen() {
       </LinearGradient>
       <ScrollView contentContainerStyle={styles.content}>
         <Pressable style={styles.addBtn} onPress={() => setShowForm(!showForm)}>
-          <AppIcon name="plus" size={20} color={theme.obsidian} />
+          <AppIcon name="plus" size={20} color={theme.ink} />
           <Text style={styles.addText}>{showForm ? t('common.cancel') : t('shops.productName')}</Text>
         </Pressable>
 
@@ -141,14 +141,14 @@ export default function ShopProductsScreen() {
             <TextInput
               style={styles.input}
               placeholder={t('shops.productName')}
-              placeholderTextColor={theme.textDarkMuted}
+              placeholderTextColor={theme.inkMuted}
               value={form.name}
               onChangeText={(name) => setForm({ ...form, name })}
             />
             <TextInput
               style={styles.input}
               placeholder={t('shops.price')}
-              placeholderTextColor={theme.textDarkMuted}
+              placeholderTextColor={theme.inkMuted}
               keyboardType="numeric"
               value={form.price}
               onChangeText={(price) => setForm({ ...form, price })}
@@ -156,14 +156,14 @@ export default function ShopProductsScreen() {
             <TextInput
               style={styles.input}
               placeholder={t('shops.stock')}
-              placeholderTextColor={theme.textDarkMuted}
+              placeholderTextColor={theme.inkMuted}
               keyboardType="numeric"
               value={form.stock}
               onChangeText={(stock) => setForm({ ...form, stock })}
             />
             <Pressable style={styles.submit} onPress={addProduct} disabled={submitting}>
               {submitting ? (
-                <ActivityIndicator color={theme.obsidian} />
+                <ActivityIndicator color={theme.ink} />
               ) : (
                 <Text style={styles.submitText}>{t('shops.saveProduct')}</Text>
               )}
@@ -230,24 +230,24 @@ export default function ShopProductsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: theme.cream },
+  root: { flex: 1, backgroundColor: theme.canvas },
   header: { paddingBottom: 16 },
   back: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, paddingTop: 8 },
   backText: { color: theme.text, fontWeight: '600' },
   heroTitle: { fontSize: 24, fontWeight: '800', color: theme.text, paddingHorizontal: 20, marginTop: 8 },
-  safe: { flex: 1, backgroundColor: theme.cream },
+  safe: { flex: 1, backgroundColor: theme.canvas },
   content: { padding: 20, paddingBottom: 100 },
   addBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: theme.gold,
+    backgroundColor: theme.dune,
     borderRadius: 14,
     padding: 14,
     marginBottom: 16,
   },
-  addText: { fontWeight: '800', color: theme.obsidian },
+  addText: { fontWeight: '800', color: theme.ink },
   form: { marginBottom: 20, gap: 10 },
   input: {
     backgroundColor: '#fff',
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.08)',
-    color: theme.textDark,
+    color: theme.ink,
   },
   submit: {
     backgroundColor: theme.emeraldDeep,
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   submitText: { color: theme.text, fontWeight: '700' },
-  empty: { textAlign: 'center', color: theme.textDarkMuted, marginTop: 24 },
+  empty: { textAlign: 'center', color: theme.inkMuted, marginTop: 24 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.05)',
   },
-  name: { fontSize: 16, fontWeight: '600', color: theme.textDark },
+  name: { fontSize: 16, fontWeight: '600', color: theme.ink },
   price: { fontSize: 14, color: theme.emeraldDeep, marginTop: 2, fontWeight: '600' },
   cancelBtn: {
     flex: 1,
@@ -286,5 +286,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.1)',
   },
-  cancelText: { color: theme.textDarkMuted, fontWeight: '600' },
+  cancelText: { color: theme.inkMuted, fontWeight: '600' },
 });

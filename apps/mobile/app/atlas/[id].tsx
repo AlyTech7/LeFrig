@@ -15,6 +15,7 @@ import { pickName } from '@/lib/bilingual';
 import { useLocale, useT } from '@/lib/locale';
 import { hrefFromWeb } from '@/lib/mobile-nav';
 import { theme, radii } from '@/lib/theme';
+import { fonts } from '@/lib/ui';
 
 const SERVICES_GROUPS = [
   { key: 'shops', labelKey: 'atlas.groups.shops', slugs: ['shops', 'shops-register', 'services-all'] },
@@ -108,7 +109,10 @@ export default function AtlasDepartmentScreen() {
           ))
         )}
 
-        <Text style={styles.allTitle}>{t('atlas.allRooms')}</Text>
+        <View style={styles.allHeader}>
+          <Text style={styles.allTitle}>{t('atlas.allRooms')}</Text>
+          <View style={styles.allRule} />
+        </View>
         <View style={styles.allGrid}>
           {MARKETPLACE_DEPARTMENTS.map((d, i) => (
             <View key={d.id} style={styles.allTile}>
@@ -116,7 +120,11 @@ export default function AtlasDepartmentScreen() {
                 dept={d}
                 index={i}
                 compact
-                onPress={() => router.replace(`/atlas/${d.id}` as never)}
+                active={d.id === dept.id}
+                onPress={() => {
+                  if (d.id === dept.id) return;
+                  router.replace(`/atlas/${d.id}` as never);
+                }}
               />
             </View>
           ))}
@@ -160,13 +168,26 @@ const styles = StyleSheet.create({
   itemIcon: { fontSize: 22, width: 32, textAlign: 'center' },
   itemCopy: { flex: 1 },
   itemName: { fontSize: 16, fontWeight: '700', color: theme.ink },
-  allTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: theme.ink,
-    marginTop: 12,
-    marginBottom: 12,
+  allHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 20,
+    marginBottom: 16,
   },
-  allGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  allTile: { width: '48%' },
+  allTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 11,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: theme.dune,
+  },
+  allRule: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: theme.borderStrong },
+  allGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: 18,
+  },
+  allTile: { width: '47.5%' },
 });

@@ -1,27 +1,35 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   Pressable,
-  ActivityIndicator,
   TextInput,
   ScrollView,
   Modal,
-  Image,
   ImageBackground,
+  Animated,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { LISTING_CATEGORIES, CAMPS, MARKETPLACE_DEPARTMENTS, getListingAttributeFilters, listingAttributeFilterSchema, resolveImageUrl, type ListingAttributeFilterValues } from '@lefrig/shared';
+import {
+  LISTING_CATEGORIES,
+  CAMPS,
+  MARKETPLACE_DEPARTMENTS,
+  getListingAttributeFilters,
+  listingAttributeFilterSchema,
+  resolveImageUrl,
+  type ListingAttributeFilterValues,
+} from '@lefrig/shared';
 import type { ListingSummary } from '@lefrig/shared';
 import { API_URL, demoListingsPage, fetchWithMeta, mapListingsResponse } from '@/lib/api';
-import { accentColors, getAtlasVisual } from '@/lib/home-visuals';
 import { pickLabel, pickName } from '@/lib/bilingual';
 import { useLocale, useT } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
+import { fonts, space } from '@/lib/ui';
 import { AppIcon, type FeatherIconName } from '@/components/AppIcon';
 import { ListingCard } from '@/components/ListingCard';
 
@@ -29,21 +37,10 @@ function resolveImage(url?: string): string | undefined {
   return resolveImageUrl(url, API_URL) ?? undefined;
 }
 
-/** Tintes rotativos para los círculos de categoría */
-const CAT_TINTS: [string, string][] = [
-  ['rgba(168,132,45,0.14)', 'rgba(168,132,45,0.4)'],
-  ['rgba(45,138,98,0.13)', 'rgba(45,138,98,0.38)'],
-  ['rgba(196,92,58,0.12)', 'rgba(196,92,58,0.36)'],
-  ['rgba(59,130,246,0.11)', 'rgba(59,130,246,0.34)'],
-  ['rgba(147,51,234,0.1)', 'rgba(147,51,234,0.32)'],
-];
-
-/** Categorías de anuncios agrupadas por sala del Atlas (solo kind listing) */
 const CATEGORY_GROUPS = MARKETPLACE_DEPARTMENTS.map((dept) => ({
   id: dept.id,
   nameEs: dept.nameEs,
   nameAr: dept.nameAr,
-  icon: dept.icon,
   categories: dept.items.filter((i) => i.kind === 'listing'),
 })).filter((g) => g.categories.length > 0);
 
@@ -60,6 +57,17 @@ const SORT_ICON: Record<SortMode, FeatherIconName> = {
   price_asc: 'trending-up',
   price_desc: 'trending-down',
 };
+
+function SkeletonCard() {
+  return (
+    <View style={styles.skelCard}>
+      <View style={styles.skelMedia} />
+      <View style={styles.skelLineWide} />
+      <View style={styles.skelLineMid} />
+      <View style={styles.skelLineShort} />
+    </View>
+  );
+}
 
 export default function MarketplaceScreen() {
   const router = useRouter();
@@ -84,8 +92,28 @@ export default function MarketplaceScreen() {
   const [pendingCamp, setPendingCamp] = useState<string | undefined>(camp || undefined);
   const [pendingCategory, setPendingCategory] = useState<string | undefined>(category || undefined);
   const [sort, setSort] = useState<SortMode>('recent');
-
   const [pendingAttr, setPendingAttr] = useState<ListingAttributeFilterValues>({});
+  const [searchFocused, setSearchFocused] = useState(false);
+
+  const enter = useRef(new Animated.Value(0)).current;
+  const searchPulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(enter, {
+      toValue: 1,
+      duration: 620,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [enter]);
+
+  useEffect(() => {
+    Animated.timing(searchPulse, {
+      toValue: searchFocused ? 1 : 0,
+      duration: 180,
+      useNativeDriver: false,
+    }).start();
+  }, [searchFocused, searchPulse]);
 
   const activeAttrFilters = useMemo(
     () =>
@@ -150,11 +178,26 @@ export default function MarketplaceScreen() {
     return { featured: hero, rest: copy };
   }, [sorted, sort]);
 
+  const featuredCamp = featured
+    ? CAMPS.find((c) => c.slug === featured.campId)
+    : undefined;
+  const featuredCategory = featured
+    ? LISTING_CATEGORIES.find((c) => c.slug === featured.category)
+    : undefined;
+
   const selectCategory = (slug?: string) => {
     router.setParams({
       q: search || undefined,
       category: slug === category ? undefined : slug,
       camp: camp || undefined,
+    });
+  };
+
+  const selectCamp = (slug?: string) => {
+    router.setParams({
+      q: search || undefined,
+      category: category || undefined,
+      camp: slug === camp ? undefined : slug,
     });
   };
 
@@ -202,145 +245,226 @@ export default function MarketplaceScreen() {
     });
   };
 
-  // Rail de categorías en 2 filas horizontales
-  const catRail = useMemo(() => {
-    const all = [{ slug: '', nameEs: t('common.all'), nameAr: t('common.all'), icon: '🛍️' }, ...LISTING_CATEGORIES];
-    const top: typeof all = [];
-    const bottom: typeof all = [];
-    all.forEach((c, i) => (i % 2 === 0 ? top : bottom).push(c));
-    return { top, bottom };
-  }, []);
+  const categories = useMemo(
+    () => [{ slug: '', nameEs: t('common.all'), nameAr: t('common.all') }, ...LISTING_CATEGORIES],
+    [t],
+  );
 
-  const CategoryTile = ({
-    cat,
-    index,
-  }: {
-    cat: { slug: string; nameEs: string; nameAr: string; icon: string };
-    index: number;
-  }) => {
-    const selected = cat.slug === '' ? !category : category === cat.slug;
-    const [bg, ring] = CAT_TINTS[index % CAT_TINTS.length]!;
-    return (
-      <Pressable
-        style={({ pressed }) => [styles.catTile, pressed && styles.catPressed]}
-        onPress={() => selectCategory(cat.slug || undefined)}
-      >
-        <View
-          style={[
-            styles.catCircle,
-            { backgroundColor: bg, borderColor: selected ? theme.oasisDeep : ring },
-            selected && styles.catCircleOn,
-          ]}
-        >
-          <Text style={styles.catEmoji}>{cat.icon}</Text>
-          {selected ? (
-            <View style={styles.catCheck}>
-              <AppIcon name="check" size={10} color={theme.pearl} strokeWidth={3} />
-            </View>
-          ) : null}
-        </View>
-        <Text style={[styles.catName, selected && styles.catNameOn]} numberOfLines={1}>
-          {pickName(locale, cat)}
-        </Text>
-      </Pressable>
-    );
+  const searchBorder = searchPulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [theme.borderStrong, theme.dune],
+  });
+
+  const heroMotion = {
+    opacity: enter,
+    transform: [
+      {
+        translateY: enter.interpolate({
+          inputRange: [0, 1],
+          outputRange: [18, 0],
+        }),
+      },
+    ],
   };
 
   return (
     <View style={styles.root}>
-      <SafeAreaView edges={['top']} style={styles.header}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.heroEyebrow}>{t('marketplace.kicker')}</Text>
-            <Text style={[styles.heroAr, dir === 'rtl' && styles.rtl]}>{t('marketplaceExtra.heroAr')}</Text>
-          </View>
-          <Pressable style={styles.createBtn} onPress={() => router.push('/marketplace/create')}>
-            <AppIcon name="plus" size={16} color={theme.pearl} strokeWidth={2.5} />
-            <Text style={styles.createText}>{t('nav.sell')}</Text>
-          </Pressable>
-        </View>
+      <LinearGradient
+        colors={['#f7f1e4', theme.canvas, theme.canvas]}
+        locations={[0, 0.28, 1]}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+      <View style={styles.orb} pointerEvents="none" />
 
-        <View style={styles.searchRow}>
-          <View style={styles.searchWrap}>
-            <AppIcon name="search" size={18} color={theme.inkMuted} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder={t('marketplace.searchPlaceholder')}
-              placeholderTextColor={theme.inkSoft}
-              value={search}
-              onChangeText={setSearch}
-              onSubmitEditing={() =>
-                router.setParams({ q: search || undefined, category: category || undefined, camp: camp || undefined })
-              }
-              returnKeyType="search"
-            />
-            {search.length > 0 ? (
-              <Pressable onPress={() => { setSearch(''); router.setParams({ q: undefined }); }} hitSlop={8}>
-                <AppIcon name="x" size={16} color={theme.inkMuted} />
+      <SafeAreaView edges={['top']}>
+        <Animated.View style={[styles.hero, heroMotion]}>
+          <View style={styles.brandRow}>
+            <View style={styles.brandCopy}>
+              <Text style={styles.kicker}>{t('marketplace.kicker')}</Text>
+              <Text style={[styles.brandAr, dir === 'rtl' && styles.rtl]} accessibilityRole="header">
+                {t('marketplaceExtra.heroAr')}
+              </Text>
+              <Text style={[styles.brandEs, dir === 'rtl' && styles.rtl]}>{t('nav.marketplace')}</Text>
+              <View style={styles.rule} />
+            </View>
+            <View style={styles.actions}>
+              <Pressable
+                style={({ pressed }) => [styles.ghostBtn, pressed && styles.pressed]}
+                onPress={() => router.push('/marketplace/mine')}
+              >
+                <Text style={styles.ghostBtnText}>{t('marketplace.mine.manage')}</Text>
               </Pressable>
-            ) : null}
+              <Pressable
+                style={({ pressed }) => [styles.sellBtn, pressed && styles.pressed]}
+                onPress={() => router.push('/marketplace/create')}
+              >
+                <AppIcon name="plus" size={15} color={theme.pearl} strokeWidth={2.5} />
+                <Text style={styles.sellBtnText}>{t('nav.sell')}</Text>
+              </Pressable>
+            </View>
           </View>
-          <Pressable style={[styles.filterBtn, filterCount > 0 && styles.filterBtnOn]} onPress={openSheet}>
-            <AppIcon name="sliders" size={18} color={filterCount > 0 ? theme.pearl : theme.ink} />
-            {filterCount > 0 ? (
-              <View style={styles.filterBadge}>
-                <Text style={styles.filterBadgeText}>{filterCount}</Text>
-              </View>
-            ) : null}
-          </Pressable>
-        </View>
+
+          <Text style={[styles.trustLine, dir === 'rtl' && styles.rtl]}>
+            {t('common.cashOnReceive')} · {t('trust.community')}
+          </Text>
+
+          <View style={styles.searchRow}>
+            <Animated.View style={[styles.searchWrap, { borderColor: searchBorder }]}>
+              <AppIcon name="search" size={17} color={searchFocused ? theme.dune : theme.inkSoft} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder={t('marketplace.searchPlaceholder')}
+                placeholderTextColor={theme.inkSoft}
+                value={search}
+                onChangeText={setSearch}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                onSubmitEditing={() =>
+                  router.setParams({
+                    q: search || undefined,
+                    category: category || undefined,
+                    camp: camp || undefined,
+                  })
+                }
+                returnKeyType="search"
+              />
+              {search.length > 0 ? (
+                <Pressable
+                  onPress={() => {
+                    setSearch('');
+                    router.setParams({ q: undefined });
+                  }}
+                  hitSlop={8}
+                >
+                  <AppIcon name="x" size={15} color={theme.inkMuted} />
+                </Pressable>
+              ) : null}
+            </Animated.View>
+            <Pressable
+              style={({ pressed }) => [
+                styles.filterBtn,
+                filterCount > 0 && styles.filterBtnOn,
+                pressed && styles.pressed,
+              ]}
+              onPress={openSheet}
+            >
+              <AppIcon name="sliders" size={17} color={filterCount > 0 ? theme.pearl : theme.ink} />
+              {filterCount > 0 ? (
+                <View style={styles.filterBadge}>
+                  <Text style={styles.filterBadgeText}>{filterCount}</Text>
+                </View>
+              ) : null}
+            </Pressable>
+          </View>
+        </Animated.View>
       </SafeAreaView>
 
       <FlatList
-        data={rest}
+        data={loading ? [] : rest}
         keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={styles.gridRow}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
-          <View>
-            <View style={styles.railHeader}>
-              <Text style={styles.railTitle}>{t('marketplaceExtra.categories')}</Text>
+          <Animated.View
+            style={{
+              opacity: enter,
+              transform: [
+                {
+                  translateY: enter.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [10, 0],
+                  }),
+                },
+              ],
+            }}
+          >
+            <Text style={styles.sectionLabel}>{t('marketplaceExtra.categories')}</Text>
+            <View style={styles.railWrap}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.catRow}
+              >
+                {categories.map((cat) => {
+                  const selected = cat.slug === '' ? !category : category === cat.slug;
+                  return (
+                    <Pressable
+                      key={cat.slug || 'all'}
+                      style={styles.catItem}
+                      onPress={() => selectCategory(cat.slug || undefined)}
+                    >
+                      <Text style={[styles.catText, selected && styles.catTextOn]} numberOfLines={1}>
+                        {pickName(locale, cat)}
+                      </Text>
+                      <View style={[styles.catRule, selected ? styles.catRuleOn : null]} />
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+              <LinearGradient
+                pointerEvents="none"
+                colors={['rgba(250,248,244,0)', theme.canvas]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.railFade}
+              />
             </View>
+
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.catRail}
+              contentContainerStyle={styles.campRow}
             >
-              <View style={styles.catColumns}>
-                <View style={styles.catRow}>
-                  {catRail.top.map((c, i) => (
-                    <CategoryTile key={c.slug || 'all'} cat={c} index={i} />
-                  ))}
-                </View>
-                <View style={styles.catRow}>
-                  {catRail.bottom.map((c, i) => (
-                    <CategoryTile key={c.slug} cat={c} index={i + 1} />
-                  ))}
-                </View>
-              </View>
+              <Pressable style={styles.campItem} onPress={() => selectCamp(undefined)}>
+                <Text style={[styles.campText, !camp && styles.campTextOn]}>{t('marketplace.allCamps')}</Text>
+              </Pressable>
+              {CAMPS.filter((c) => !c.isTindouf).map((c) => {
+                const on = camp === c.slug;
+                return (
+                  <Pressable key={c.slug} style={styles.campItem} onPress={() => selectCamp(c.slug)}>
+                    <Text style={[styles.campText, on && styles.campTextOn]}>{pickName(locale, c)}</Text>
+                  </Pressable>
+                );
+              })}
             </ScrollView>
 
-            {activeCamp ? (
+            {(activeCategory || activeCamp) && (
               <View style={styles.activeRow}>
-                <Pressable style={styles.activeChip} onPress={() => router.setParams({ camp: undefined })}>
-                  <Text style={styles.activeChipText}>📍 {pickName(locale, activeCamp)}</Text>
-                  <AppIcon name="x" size={13} color={theme.dune} />
-                </Pressable>
+                {activeCategory ? (
+                  <Pressable style={styles.activePill} onPress={() => selectCategory(undefined)}>
+                    <Text style={styles.activePillText}>{pickName(locale, activeCategory)}</Text>
+                    <AppIcon name="x" size={12} color={theme.dune} />
+                  </Pressable>
+                ) : null}
+                {activeCamp ? (
+                  <Pressable style={styles.activePill} onPress={() => selectCamp(undefined)}>
+                    <Text style={styles.activePillText}>{pickName(locale, activeCamp)}</Text>
+                    <AppIcon name="x" size={12} color={theme.dune} />
+                  </Pressable>
+                ) : null}
               </View>
-            ) : null}
+            )}
 
             {usingDemo ? (
               <View style={styles.demoBanner}>
-                <AppIcon name="wifi-off" size={14} color={theme.dune} />
+                <AppIcon name="wifi-off" size={13} color={theme.dune} />
                 <Text style={styles.demoText}>{t('common.demo')}</Text>
               </View>
             ) : null}
 
-            {featured ? (
+            {loading ? (
+              <View style={styles.skelRow}>
+                <SkeletonCard />
+                <SkeletonCard />
+              </View>
+            ) : null}
+
+            {!loading && featured ? (
               <Pressable
-                style={({ pressed }) => [styles.featured, pressed && styles.catPressed]}
+                style={({ pressed }) => [styles.featured, pressed && styles.pressed]}
                 onPress={() => router.push(`/marketplace/${featured.id}`)}
               >
                 <ImageBackground
@@ -349,25 +473,30 @@ export default function MarketplaceScreen() {
                   imageStyle={styles.featuredImage}
                 >
                   <LinearGradient
-                    colors={['rgba(0,0,0,0.0)', theme.scrimDeep]}
+                    colors={['rgba(8,6,4,0.05)', 'rgba(8,6,4,0.55)', 'rgba(8,6,4,0.92)']}
+                    locations={[0, 0.45, 1]}
                     style={StyleSheet.absoluteFill}
                   />
-                  <View style={styles.featuredBadge}>
-                    <AppIcon name="star" size={12} color={theme.pearl} />
-                    <Text style={styles.featuredBadgeText}>{t('common.featured')}</Text>
+                  <View style={styles.featuredTop}>
+                    <Text style={styles.featuredEyebrow}>
+                      {[
+                        featuredCategory ? pickName(locale, featuredCategory) : null,
+                        featuredCamp ? pickName(locale, featuredCamp) : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ') || t('common.featured')}
+                    </Text>
                   </View>
                   <View style={styles.featuredFooter}>
-                    <View style={styles.featuredCopy}>
-                      <Text style={styles.featuredTitle} numberOfLines={2}>
-                        {featured.title}
-                      </Text>
-                      <Text style={styles.featuredSeller} numberOfLines={1}>
-                        {featured.sellerName} · {t('common.cashOnReceive')}
-                      </Text>
-                    </View>
-                    <View style={styles.featuredPricePill}>
+                    <Text style={styles.featuredTitle} numberOfLines={2}>
+                      {featured.title}
+                    </Text>
+                    <View style={styles.featuredMeta}>
                       <Text style={styles.featuredPrice}>
                         {featured.price.toLocaleString()} {featured.currency}
+                      </Text>
+                      <Text style={styles.featuredSeller} numberOfLines={1}>
+                        {featured.sellerName}
                       </Text>
                     </View>
                   </View>
@@ -375,61 +504,28 @@ export default function MarketplaceScreen() {
               </Pressable>
             ) : null}
 
-            <View style={styles.resultRow}>
-              <Text style={styles.resultCount}>
-                {loading
-                  ? t('marketplaceExtra.searching')
-                  : `${t(listings.length === 1 ? 'common.results' : 'common.results_plural', { count: listings.length })}${activeCategory ? ` · ${pickName(locale, activeCategory)}` : ''}`}
-              </Text>
-              <View style={styles.resultDivider} />
-              <Pressable style={styles.sortBtn} onPress={cycleSort} hitSlop={6}>
-                <AppIcon name={SORT_ICON[sort]} size={13} color={theme.oasisDeep} />
-                <Text style={styles.sortText}>{t(SORT_KEYS[sort])}</Text>
-              </Pressable>
-            </View>
-          </View>
-        }
-        ListFooterComponent={
-          rest.length > 0 ? (
-            <View>
-              <View style={styles.salasHeader}>
-                <Text style={styles.railTitle}>{t('marketplaceExtra.exploreRooms')}</Text>
+            {!loading ? (
+              <View style={styles.resultRow}>
+                <View style={styles.resultLeft}>
+                  <Text style={styles.resultCount}>
+                    {t(listings.length === 1 ? 'common.results' : 'common.results_plural', {
+                      count: listings.length,
+                    })}
+                  </Text>
+                  <View style={styles.resultRule} />
+                </View>
+                <Pressable style={styles.sortBtn} onPress={cycleSort} hitSlop={8}>
+                  <AppIcon name={SORT_ICON[sort]} size={13} color={theme.dune} />
+                  <Text style={styles.sortText}>{t(SORT_KEYS[sort])}</Text>
+                </Pressable>
               </View>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.salasRow}
-              >
-                {MARKETPLACE_DEPARTMENTS.map((dept) => {
-                  const visual = getAtlasVisual(dept.id);
-                  const [c1, c2] = accentColors(dept.accent);
-                  return (
-                    <Pressable
-                      key={dept.id}
-                      style={({ pressed }) => [styles.sala, pressed && styles.catPressed]}
-                      onPress={() => router.push(`/atlas/${dept.id}` as never)}
-                    >
-                      <LinearGradient colors={[c1, c2]} style={styles.salaRing}>
-                        <Image source={{ uri: visual.uri }} style={styles.salaImage} />
-                      </LinearGradient>
-                      <Text style={styles.salaName} numberOfLines={1}>
-                        {dept.icon} {pickName(locale, dept)}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
-            </View>
-          ) : null
+            ) : null}
+          </Animated.View>
         }
         ListEmptyComponent={
-          loading ? (
-            <ActivityIndicator color={theme.dune} style={{ marginTop: 40 }} />
-          ) : (
+          loading ? null : (
             <View style={styles.emptyWrap}>
-              <View style={styles.emptyIcon}>
-                <AppIcon name="package" size={30} color={theme.dune} />
-              </View>
+              <Text style={styles.emptyAr}>{t('marketplaceExtra.heroAr')}</Text>
               <Text style={styles.emptyTitle}>{t('empty.nothingHere')}</Text>
               <Text style={styles.emptySub}>
                 {activeCategory || activeCamp ? t('empty.tryFilters') : t('empty.beFirst')}
@@ -441,6 +537,7 @@ export default function MarketplaceScreen() {
               ) : (
                 <Pressable style={styles.emptyBtn} onPress={() => router.push('/marketplace/create')}>
                   <Text style={styles.emptyBtnText}>{t('marketplace.publishListing')}</Text>
+                  <AppIcon name="arrow-right" size={14} color={theme.dune} />
                 </Pressable>
               )}
             </View>
@@ -452,141 +549,155 @@ export default function MarketplaceScreen() {
       />
 
       <Modal visible={sheetOpen} animationType="slide" transparent onRequestClose={() => setSheetOpen(false)}>
-        <Pressable style={styles.sheetBackdrop} onPress={() => setSheetOpen(false)} />
-        <View style={styles.sheet}>
-          <View style={styles.sheetHandle} />
-          <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle}>{t('common.filters')}</Text>
-            <Pressable onPress={clearFilters} hitSlop={8}>
-              <Text style={styles.sheetClear}>{t('common.clearAll')}</Text>
-            </Pressable>
-          </View>
-
-          <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
-            <Text style={styles.sheetLabel}>{t('marketplace.camp')}</Text>
-            <View style={styles.sheetChips}>
-              <Pressable
-                style={[styles.sheetChip, !pendingCamp && styles.sheetChipOn]}
-                onPress={() => setPendingCamp(undefined)}
-              >
-                <Text style={[styles.sheetChipText, !pendingCamp && styles.sheetChipTextOn]}>{t('common.all')}</Text>
+        <View style={styles.sheetRoot}>
+          <Pressable style={styles.sheetBackdrop} onPress={() => setSheetOpen(false)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <View style={styles.sheetHeader}>
+              <View>
+                <Text style={styles.sheetKicker}>{t('common.filters')}</Text>
+                <Text style={styles.sheetTitle}>{t('marketplace.quickFilters')}</Text>
+              </View>
+              <Pressable onPress={clearFilters} hitSlop={8}>
+                <Text style={styles.sheetClear}>{t('common.clearAll')}</Text>
               </Pressable>
-              {CAMPS.map((c) => (
-                <Pressable
-                  key={c.slug}
-                  style={[styles.sheetChip, pendingCamp === c.slug && styles.sheetChipOn]}
-                  onPress={() => setPendingCamp(pendingCamp === c.slug ? undefined : c.slug)}
-                >
-                  <Text style={[styles.sheetChipText, pendingCamp === c.slug && styles.sheetChipTextOn]}>
-                    {pickName(locale, c)}
-                  </Text>
-                </Pressable>
-              ))}
             </View>
 
-            <Text style={styles.sheetLabel}>{t('publish.categoryHint')}</Text>
-            <Pressable
-              style={[styles.sheetChip, styles.sheetAllCat, !pendingCategory && styles.sheetChipOn]}
-              onPress={() => setPendingCategory(undefined)}
-            >
-              <Text style={[styles.sheetChipText, !pendingCategory && styles.sheetChipTextOn]}>
-                {t('marketplaceExtra.allCategories')}
-              </Text>
-            </Pressable>
-            {CATEGORY_GROUPS.map((group) => (
-              <View key={group.id} style={styles.sheetGroup}>
-                <View style={styles.sheetGroupHeader}>
-                  <Text style={styles.sheetGroupIcon}>{group.icon}</Text>
-                  <Text style={styles.sheetGroupName}>{pickName(locale, group)}</Text>
-                </View>
-                <View style={styles.sheetChips}>
-                  {group.categories.map((cat) => (
-                    <Pressable
-                      key={cat.slug}
-                      style={[styles.sheetChip, pendingCategory === cat.slug && styles.sheetChipOn]}
-                      onPress={() =>
-                        setPendingCategory(pendingCategory === cat.slug ? undefined : cat.slug)
-                      }
-                    >
-                      <Text
-                        style={[styles.sheetChipText, pendingCategory === cat.slug && styles.sheetChipTextOn]}
-                      >
-                        {cat.icon} {pickName(locale, cat)}
-            </Text>
-                    </Pressable>
-                  ))}
-                </View>
+            <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
+              <Text style={styles.sheetLabel}>{t('marketplace.camp')}</Text>
+              <View style={styles.sheetChips}>
+                <Pressable
+                  style={[styles.sheetChip, !pendingCamp && styles.sheetChipOn]}
+                  onPress={() => setPendingCamp(undefined)}
+                >
+                  <Text style={[styles.sheetChipText, !pendingCamp && styles.sheetChipTextOn]}>
+                    {t('common.all')}
+                  </Text>
+                </Pressable>
+                {CAMPS.map((c) => (
+                  <Pressable
+                    key={c.slug}
+                    style={[styles.sheetChip, pendingCamp === c.slug && styles.sheetChipOn]}
+                    onPress={() => setPendingCamp(pendingCamp === c.slug ? undefined : c.slug)}
+                  >
+                    <Text style={[styles.sheetChipText, pendingCamp === c.slug && styles.sheetChipTextOn]}>
+                      {pickName(locale, c)}
+                    </Text>
+                  </Pressable>
+                ))}
               </View>
-            ))}
 
-            {getListingAttributeFilters(pendingCategory ?? category ?? '').length > 0 ? (
-              <>
-                <Text style={styles.sheetLabel}>{t('marketplaceExtra.categoryFilters')}</Text>
-                {getListingAttributeFilters(pendingCategory ?? category ?? '').map((def) => (
-                  <View key={def.param} style={styles.sheetGroup}>
-                    <Text style={styles.sheetGroupName}>{pickLabel(locale, def)}</Text>
-                    {def.type === 'select' && def.options ? (
-                      <View style={styles.sheetChips}>
-                        <Pressable
-                          style={[styles.sheetChip, !pendingAttr[def.param as keyof ListingAttributeFilterValues] && styles.sheetChipOn]}
-                          onPress={() =>
-                            setPendingAttr((prev) => {
-                              const next = { ...prev };
-                              delete next[def.param as keyof ListingAttributeFilterValues];
-                              return next;
-                            })
-                          }
+              <Text style={styles.sheetLabel}>{t('publish.categoryHint')}</Text>
+              <Pressable
+                style={[styles.sheetChip, styles.sheetAllCat, !pendingCategory && styles.sheetChipOn]}
+                onPress={() => setPendingCategory(undefined)}
+              >
+                <Text style={[styles.sheetChipText, !pendingCategory && styles.sheetChipTextOn]}>
+                  {t('marketplaceExtra.allCategories')}
+                </Text>
+              </Pressable>
+              {CATEGORY_GROUPS.map((group) => (
+                <View key={group.id} style={styles.sheetGroup}>
+                  <Text style={styles.sheetGroupName}>{pickName(locale, group)}</Text>
+                  <View style={styles.sheetChips}>
+                    {group.categories.map((cat) => (
+                      <Pressable
+                        key={cat.slug}
+                        style={[styles.sheetChip, pendingCategory === cat.slug && styles.sheetChipOn]}
+                        onPress={() =>
+                          setPendingCategory(pendingCategory === cat.slug ? undefined : cat.slug)
+                        }
+                      >
+                        <Text
+                          style={[
+                            styles.sheetChipText,
+                            pendingCategory === cat.slug && styles.sheetChipTextOn,
+                          ]}
                         >
-                          <Text style={styles.sheetChipText}>{t('common.all')}</Text>
-                        </Pressable>
-                        {def.options.map((opt) => (
+                          {pickName(locale, cat)}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              ))}
+
+              {getListingAttributeFilters(pendingCategory ?? category ?? '').length > 0 ? (
+                <>
+                  <Text style={styles.sheetLabel}>{t('marketplaceExtra.categoryFilters')}</Text>
+                  {getListingAttributeFilters(pendingCategory ?? category ?? '').map((def) => (
+                    <View key={def.param} style={styles.sheetGroup}>
+                      <Text style={styles.sheetGroupName}>{pickLabel(locale, def)}</Text>
+                      {def.type === 'select' && def.options ? (
+                        <View style={styles.sheetChips}>
                           <Pressable
-                            key={opt.value}
                             style={[
                               styles.sheetChip,
-                              pendingAttr[def.param as keyof ListingAttributeFilterValues] === opt.value &&
+                              !pendingAttr[def.param as keyof ListingAttributeFilterValues] &&
                                 styles.sheetChipOn,
                             ]}
                             onPress={() =>
-                              setPendingAttr((prev) => ({
-                                ...prev,
-                                [def.param]: def.type === 'number' ? Number(opt.value) : opt.value,
-                              }))
+                              setPendingAttr((prev) => {
+                                const next = { ...prev };
+                                delete next[def.param as keyof ListingAttributeFilterValues];
+                                return next;
+                              })
                             }
                           >
-                            <Text style={styles.sheetChipText}>{pickLabel(locale, opt)}</Text>
+                            <Text style={styles.sheetChipText}>{t('common.all')}</Text>
                           </Pressable>
-                        ))}
-                      </View>
-                    ) : (
-                      <TextInput
-                        style={styles.sheetInput}
-                        placeholder={def.placeholder}
-                        keyboardType="numeric"
-                        value={
-                          pendingAttr[def.param as keyof ListingAttributeFilterValues] != null
-                            ? String(pendingAttr[def.param as keyof ListingAttributeFilterValues])
-                            : ''
-                        }
-                        onChangeText={(v) =>
-                          setPendingAttr((prev) => {
-                            const next = { ...prev };
-                            if (!v.trim()) delete next[def.param as keyof ListingAttributeFilterValues];
-                            else next[def.param as keyof ListingAttributeFilterValues] = Number(v) as never;
-                            return next;
-                          })
-                        }
-                      />
-                    )}
-                  </View>
-                ))}
-              </>
-            ) : null}
-          </ScrollView>
+                          {def.options.map((opt) => (
+                            <Pressable
+                              key={opt.value}
+                              style={[
+                                styles.sheetChip,
+                                pendingAttr[def.param as keyof ListingAttributeFilterValues] ===
+                                  opt.value && styles.sheetChipOn,
+                              ]}
+                              onPress={() =>
+                                setPendingAttr((prev) => ({
+                                  ...prev,
+                                  [def.param]: def.type === 'number' ? Number(opt.value) : opt.value,
+                                }))
+                              }
+                            >
+                              <Text style={styles.sheetChipText}>{pickLabel(locale, opt)}</Text>
+                            </Pressable>
+                          ))}
+                        </View>
+                      ) : (
+                        <TextInput
+                          style={styles.sheetInput}
+                          placeholder={def.placeholder}
+                          keyboardType="numeric"
+                          value={
+                            pendingAttr[def.param as keyof ListingAttributeFilterValues] != null
+                              ? String(pendingAttr[def.param as keyof ListingAttributeFilterValues])
+                              : ''
+                          }
+                          onChangeText={(v) =>
+                            setPendingAttr((prev) => {
+                              const next = { ...prev };
+                              if (!v.trim()) delete next[def.param as keyof ListingAttributeFilterValues];
+                              else
+                                next[def.param as keyof ListingAttributeFilterValues] = Number(
+                                  v,
+                                ) as never;
+                              return next;
+                            })
+                          }
+                        />
+                      )}
+                    </View>
+                  ))}
+                </>
+              ) : null}
+            </ScrollView>
 
-          <Pressable style={styles.sheetApply} onPress={applyFilters}>
-            <Text style={styles.sheetApplyText}>{t('marketplaceExtra.viewResults')}</Text>
-          </Pressable>
+            <Pressable style={styles.sheetApply} onPress={applyFilters}>
+              <Text style={styles.sheetApplyText}>{t('marketplaceExtra.viewResults')}</Text>
+            </Pressable>
+          </View>
         </View>
       </Modal>
     </View>
@@ -595,59 +706,106 @@ export default function MarketplaceScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.canvas },
-  header: {
-    paddingHorizontal: 20,
-    paddingBottom: 14,
-    backgroundColor: theme.canvas,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
+  orb: {
+    position: 'absolute',
+    top: -80,
+    right: -60,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: 'rgba(168,132,45,0.07)',
   },
-  headerRow: {
+  hero: {
+    paddingHorizontal: space.lg,
+    paddingTop: 4,
+    paddingBottom: 8,
+  },
+  brandRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginBottom: 14,
-    paddingTop: 4,
+    alignItems: 'flex-start',
+    gap: 12,
   },
-  heroEyebrow: { fontSize: 10, fontWeight: '800', color: theme.dune, letterSpacing: 2 },
-  heroAr: { fontSize: 30, fontWeight: '900', color: theme.ink, writingDirection: 'rtl', marginTop: 2 },
+  brandCopy: { flex: 1 },
+  kicker: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 10,
+    letterSpacing: 1.6,
+    textTransform: 'uppercase',
+    color: theme.dune,
+  },
+  brandAr: {
+    fontFamily: fonts.display,
+    fontSize: 40,
+    letterSpacing: -0.5,
+    color: theme.ink,
+    marginTop: 2,
+    writingDirection: 'rtl',
+    lineHeight: 48,
+  },
+  brandEs: {
+    fontFamily: fonts.bodyMed,
+    fontSize: 15,
+    color: theme.inkMuted,
+    marginTop: -2,
+  },
+  rule: {
+    width: 28,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: theme.dune,
+    marginTop: 10,
+  },
   rtl: { writingDirection: 'rtl', textAlign: 'right' },
-  createBtn: {
+  actions: { alignItems: 'flex-end', gap: 8, paddingTop: 6 },
+  ghostBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: 'rgba(168,132,45,0.35)',
+  },
+  ghostBtnText: { fontFamily: fonts.bodyBold, fontSize: 12, color: theme.dune },
+  sellBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 11,
-    borderRadius: radii.pill,
-    backgroundColor: theme.oasisDeep,
-    shadowColor: theme.oasisDeep,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    gap: 5,
+    paddingHorizontal: 13,
+    paddingVertical: 9,
+    borderRadius: radii.md,
+    backgroundColor: theme.ink,
   },
-  createText: { fontSize: 13, fontWeight: '800', color: theme.pearl },
+  sellBtnText: { fontFamily: fonts.bodyBold, fontSize: 12, color: theme.pearl },
+  trustLine: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: theme.inkSoft,
+    marginTop: 12,
+    marginBottom: 14,
+    lineHeight: 17,
+  },
+  pressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
+
   searchRow: { flexDirection: 'row', gap: 10 },
   searchWrap: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.surface,
-    borderRadius: radii.lg,
+    backgroundColor: 'rgba(255,255,255,0.72)',
+    borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: theme.border,
     paddingHorizontal: 14,
-    minHeight: 50,
+    minHeight: 48,
     gap: 10,
   },
-  searchInput: { flex: 1, fontSize: 15, color: theme.ink, fontWeight: '500' },
+  searchInput: { flex: 1, fontFamily: fonts.body, fontSize: 15, color: theme.ink },
   filterBtn: {
-    width: 50,
-    height: 50,
-    borderRadius: radii.lg,
-    backgroundColor: theme.surface,
+    width: 48,
+    height: 48,
+    borderRadius: radii.md,
+    backgroundColor: 'rgba(255,255,255,0.72)',
     borderWidth: 1,
-    borderColor: theme.border,
+    borderColor: theme.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -656,259 +814,237 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -5,
     right: -5,
-    minWidth: 18,
-    height: 18,
+    minWidth: 17,
+    height: 17,
     borderRadius: 9,
-    backgroundColor: theme.flare,
+    backgroundColor: theme.ink,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
   },
-  filterBadgeText: { fontSize: 10, fontWeight: '800', color: theme.pearl },
-  railHeader: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-    marginTop: 16,
-    marginBottom: 4,
+  filterBadgeText: { fontFamily: fonts.bodyBold, fontSize: 10, color: theme.pearl },
+
+  sectionLabel: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 10,
+    letterSpacing: 1.3,
+    textTransform: 'uppercase',
+    color: theme.dune,
+    marginTop: 10,
+    marginBottom: 10,
   },
-  railTitle: { fontSize: 16, fontWeight: '800', color: theme.ink, letterSpacing: -0.3 },
-  railTitleAr: { fontSize: 13, fontWeight: '700', color: theme.dune, writingDirection: 'rtl' },
-  catRail: { paddingVertical: 10, paddingRight: 8 },
-  catColumns: { gap: 12 },
-  catRow: { flexDirection: 'row', gap: 12 },
-  catTile: { alignItems: 'center', width: 66 },
-  catPressed: { opacity: 0.9, transform: [{ scale: 0.97 }] },
-  catCircle: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-  },
-  catCircleOn: {
-    borderWidth: 2.5,
-    shadowColor: theme.oasisDeep,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  catEmoji: { fontSize: 24 },
-  catCheck: {
+  railWrap: { position: 'relative', marginBottom: 6 },
+  catRow: { gap: 18, paddingBottom: 4, paddingRight: 28 },
+  catItem: { flexShrink: 0 },
+  catText: { fontFamily: fonts.bodyMed, fontSize: 14, color: theme.inkSoft },
+  catTextOn: { fontFamily: fonts.bodyBold, color: theme.ink },
+  catRule: { height: 2, marginTop: 7, borderRadius: 1, backgroundColor: 'transparent' },
+  catRuleOn: { backgroundColor: theme.dune },
+  railFade: {
     position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: theme.oasisDeep,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: theme.canvas,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 28,
   },
-  catName: { fontSize: 10.5, fontWeight: '700', color: theme.inkMuted, marginTop: 5, textAlign: 'center' },
-  catNameOn: { color: theme.oasisDeep, fontWeight: '800' },
-  activeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 },
-  activeChip: {
+
+  campRow: { gap: 14, paddingVertical: 8, paddingRight: 8 },
+  campItem: { flexShrink: 0 },
+  campText: { fontFamily: fonts.body, fontSize: 12.5, color: theme.inkSoft },
+  campTextOn: { fontFamily: fonts.bodyBold, color: theme.dune },
+
+  activeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 8, marginTop: 2 },
+  activePill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: radii.pill,
-    backgroundColor: 'rgba(168,132,45,0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(168,132,45,0.3)',
+    paddingVertical: 4,
   },
-  activeChipText: { fontSize: 12, fontWeight: '700', color: theme.dune },
+  activePillText: { fontFamily: fonts.bodyBold, fontSize: 13, color: theme.dune },
+
   demoBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: 8,
-    paddingVertical: 10,
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  demoText: { fontFamily: fonts.bodySemi, fontSize: 12, color: theme.dune },
+
+  skelRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, marginBottom: 8 },
+  skelCard: { width: '48%', gap: 8 },
+  skelMedia: {
+    width: '100%',
+    aspectRatio: 0.86,
     borderRadius: radii.md,
-    backgroundColor: 'rgba(168,132,45,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(168,132,45,0.25)',
-    marginBottom: 12,
+    backgroundColor: 'rgba(168,132,45,0.08)',
   },
-  demoText: { fontSize: 12, color: theme.dune, fontWeight: '600' },
+  skelLineWide: { height: 12, borderRadius: 6, backgroundColor: 'rgba(26,22,18,0.06)', width: '92%' },
+  skelLineMid: { height: 12, borderRadius: 6, backgroundColor: 'rgba(26,22,18,0.05)', width: '70%' },
+  skelLineShort: { height: 10, borderRadius: 5, backgroundColor: 'rgba(168,132,45,0.12)', width: '44%' },
+
   featured: {
-    borderRadius: radii.xl,
+    borderRadius: radii.lg,
     overflow: 'hidden',
-    marginBottom: 16,
-    marginTop: 4,
-    shadowColor: theme.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 1,
-    shadowRadius: 16,
-    elevation: 5,
+    marginTop: 10,
+    marginBottom: 18,
   },
-  featuredBg: { height: 210, justifyContent: 'space-between', padding: 14 },
-  featuredImage: { borderRadius: radii.xl },
-  featuredBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: radii.pill,
-    backgroundColor: 'rgba(168,132,45,0.9)',
+  featuredBg: { height: 248, justifyContent: 'space-between', padding: 18 },
+  featuredImage: { borderRadius: radii.lg },
+  featuredTop: { alignSelf: 'flex-start' },
+  featuredEyebrow: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    textTransform: 'uppercase',
+    color: 'rgba(250,248,244,0.72)',
   },
-  featuredBadgeText: { fontSize: 11, fontWeight: '800', color: theme.pearl, letterSpacing: 0.4 },
-  featuredFooter: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    gap: 12,
+  featuredFooter: { gap: 10 },
+  featuredTitle: {
+    fontFamily: fonts.display,
+    fontSize: 26,
+    letterSpacing: -0.5,
+    color: theme.pearl,
+    lineHeight: 30,
   },
-  featuredCopy: { flex: 1 },
-  featuredTitle: { fontSize: 19, fontWeight: '800', color: theme.pearl, letterSpacing: -0.3 },
-  featuredSeller: { fontSize: 12, color: 'rgba(250,248,244,0.8)', marginTop: 4 },
-  featuredPricePill: {
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: radii.pill,
-    backgroundColor: theme.pearl,
-  },
-  featuredPrice: { fontSize: 14, fontWeight: '900', color: theme.oasisDeep },
-  resultRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  resultCount: { fontSize: 13, fontWeight: '800', color: theme.ink },
-  resultDivider: { flex: 1, height: 1, backgroundColor: theme.border },
-  sortBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: radii.pill,
-    backgroundColor: 'rgba(45,138,98,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(45,138,98,0.25)',
-  },
-  sortText: { fontSize: 11.5, fontWeight: '800', color: theme.oasisDeep },
-  list: { paddingHorizontal: 20, paddingBottom: 110 },
-  gridRow: { justifyContent: 'space-between' },
-  salasHeader: {
+  featuredMeta: {
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'space-between',
-    marginTop: 12,
-    marginBottom: 4,
+    gap: 12,
   },
-  salasRow: { paddingVertical: 12, gap: 14, paddingRight: 8 },
-  sala: { alignItems: 'center', width: 72 },
-  salaRing: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  featuredPrice: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 16,
+    color: theme.duneBright,
+  },
+  featuredSeller: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: 'rgba(250,248,244,0.62)',
+    flexShrink: 1,
+  },
+
+  resultRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+    gap: 12,
   },
-  salaImage: {
-    width: 53,
-    height: 53,
-    borderRadius: 27,
-    borderWidth: 2,
-    borderColor: theme.canvas,
+  resultLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  resultCount: { fontFamily: fonts.bodyBold, fontSize: 13, color: theme.ink },
+  resultRule: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: theme.borderStrong },
+  sortBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 4 },
+  sortText: { fontFamily: fonts.bodyBold, fontSize: 12, color: theme.dune },
+
+  list: { paddingHorizontal: space.lg, paddingBottom: 120 },
+  gridRow: { justifyContent: 'space-between' },
+
+  emptyWrap: { alignItems: 'center', paddingVertical: 56, gap: 6 },
+  emptyAr: {
+    fontFamily: fonts.display,
+    fontSize: 36,
+    color: 'rgba(168,132,45,0.28)',
+    writingDirection: 'rtl',
+    marginBottom: 8,
   },
-  salaName: { fontSize: 10.5, fontWeight: '700', color: theme.inkMuted, marginTop: 6, textAlign: 'center' },
-  emptyWrap: { alignItems: 'center', paddingVertical: 40, gap: 10 },
-  emptyIcon: {
-    width: 68,
-    height: 68,
-    borderRadius: 24,
-    backgroundColor: 'rgba(168,132,45,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
+  emptyTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: theme.ink },
+  emptySub: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: theme.inkMuted,
+    textAlign: 'center',
+    maxWidth: 260,
+    lineHeight: 20,
   },
-  emptyTitle: { fontSize: 17, fontWeight: '800', color: theme.ink },
-  emptySub: { fontSize: 14, color: theme.inkMuted, textAlign: 'center', maxWidth: 260 },
   emptyBtn: {
-    marginTop: 8,
-    paddingHorizontal: 22,
-    paddingVertical: 12,
-    borderRadius: radii.pill,
-    backgroundColor: theme.oasisDeep,
+    marginTop: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
   },
-  emptyBtnText: { fontSize: 14, fontWeight: '800', color: theme.pearl },
-  sheetBackdrop: { flex: 1, backgroundColor: theme.scrim },
+  emptyBtnText: { fontFamily: fonts.bodyBold, fontSize: 14, color: theme.dune },
+
+  sheetRoot: { flex: 1, justifyContent: 'flex-end' },
+  sheetBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: theme.scrim },
   sheet: {
     backgroundColor: theme.canvas,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingHorizontal: 20,
-    paddingBottom: 28,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: space.lg,
+    paddingBottom: 24,
     maxHeight: '82%',
+    zIndex: 1,
   },
   sheetHandle: {
-    width: 44,
-    height: 5,
-    borderRadius: 3,
+    width: 36,
+    height: 4,
+    borderRadius: 2,
     backgroundColor: theme.borderStrong,
     alignSelf: 'center',
     marginTop: 10,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   sheetHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
+    alignItems: 'flex-start',
+    paddingVertical: 8,
   },
-  sheetTitle: { fontSize: 20, fontWeight: '800', color: theme.ink },
-  sheetClear: { fontSize: 13, fontWeight: '700', color: theme.flare },
+  sheetKicker: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 10,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: theme.dune,
+  },
+  sheetTitle: { fontFamily: fonts.display, fontSize: 24, color: theme.ink, marginTop: 2 },
+  sheetClear: { fontFamily: fonts.bodyBold, fontSize: 13, color: theme.flare, marginTop: 8 },
   sheetScroll: { marginBottom: 12 },
   sheetLabel: {
-    fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.bodySemi,
+    fontSize: 10,
     color: theme.dune,
-    letterSpacing: 1,
+    letterSpacing: 1.1,
     textTransform: 'uppercase',
     marginTop: 14,
     marginBottom: 10,
   },
   sheetChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   sheetChip: {
-    paddingHorizontal: 13,
+    paddingHorizontal: 12,
     paddingVertical: 9,
-    borderRadius: radii.pill,
+    borderRadius: radii.md,
     backgroundColor: theme.surface,
     borderWidth: 1,
     borderColor: theme.border,
   },
   sheetAllCat: { alignSelf: 'flex-start', marginBottom: 4 },
-  sheetChipOn: { backgroundColor: 'rgba(45,138,98,0.14)', borderColor: theme.oasisDeep },
-  sheetChipText: { fontSize: 13, fontWeight: '600', color: theme.inkMuted },
-  sheetChipTextOn: { color: theme.oasisDeep, fontWeight: '800' },
+  sheetChipOn: { backgroundColor: 'rgba(168,132,45,0.1)', borderColor: theme.dune },
+  sheetChipText: { fontFamily: fonts.bodySemi, fontSize: 13, color: theme.inkMuted },
+  sheetChipTextOn: { color: theme.ink, fontFamily: fonts.bodyBold },
   sheetGroup: { marginTop: 14 },
-  sheetGroupHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  sheetGroupName: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 14,
+    color: theme.ink,
     marginBottom: 8,
   },
-  sheetGroupIcon: { fontSize: 16 },
-  sheetGroupName: { fontSize: 14, fontWeight: '800', color: theme.ink, flex: 1 },
-  sheetGroupAr: { fontSize: 12, fontWeight: '700', color: theme.dune, writingDirection: 'rtl' },
   sheetApply: {
     paddingVertical: 16,
-    borderRadius: radii.lg,
-    backgroundColor: theme.oasisDeep,
+    borderRadius: radii.md,
+    backgroundColor: theme.ink,
     alignItems: 'center',
   },
-  sheetApplyText: { fontSize: 16, fontWeight: '800', color: theme.pearl },
+  sheetApplyText: { fontFamily: fonts.bodyBold, fontSize: 16, color: theme.pearl },
   sheetInput: {
     borderWidth: 1,
     borderColor: theme.border,
     borderRadius: radii.md,
     padding: 12,
+    fontFamily: fonts.body,
     fontSize: 15,
     color: theme.ink,
     backgroundColor: theme.surface,

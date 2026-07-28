@@ -1,7 +1,18 @@
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import { tokenCache as clerkNativeTokenCache } from '@clerk/clerk-expo/token-cache';
+import {
+  useFonts,
+  Fraunces_600SemiBold,
+  Fraunces_700Bold,
+} from '@expo-google-fonts/fraunces';
+import {
+  DMSans_400Regular,
+  DMSans_500Medium,
+  DMSans_600SemiBold,
+  DMSans_700Bold,
+} from '@expo-google-fonts/dm-sans';
 import * as WebBrowser from 'expo-web-browser';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { Platform, View, StyleSheet, ActivityIndicator } from 'react-native';
@@ -33,9 +44,15 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const segments = useSegments();
   const router = useRouter();
   const [legacyAuthed, setLegacyAuthed] = useState<boolean | null>(null);
+  const [bootTimedOut, setBootTimedOut] = useState(false);
 
   useEffect(() => {
-    if (!isLoaded) return;
+    const t = setTimeout(() => setBootTimedOut(true), 8000);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (!isLoaded && !bootTimedOut) return;
     let cancelled = false;
     hasLegacySession().then((v) => {
       if (!cancelled) setLegacyAuthed(v);
@@ -43,11 +60,11 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [isLoaded, isSignedIn, segments]);
+  }, [isLoaded, bootTimedOut, isSignedIn, segments]);
 
   useEffect(() => {
-    if (!isLoaded || legacyAuthed === null) return;
-    const authed = isSignedIn || legacyAuthed;
+    if ((!isLoaded && !bootTimedOut) || legacyAuthed === null) return;
+    const authed = Boolean(isSignedIn) || legacyAuthed;
     const segs = segments as string[];
     const needsAuth = routeRequiresAuth(segs);
     const onAuthScreen = isAuthScreen(segs);
@@ -57,9 +74,9 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     } else if (authed && (segs[0] === 'sign-in' || segs[0] === 'sign-up')) {
       router.replace('/');
     }
-  }, [isLoaded, isSignedIn, legacyAuthed, segments, router]);
+  }, [isLoaded, bootTimedOut, isSignedIn, legacyAuthed, segments, router]);
 
-  if (!isLoaded || legacyAuthed === null) {
+  if ((!isLoaded && !bootTimedOut) || legacyAuthed === null) {
     return (
       <View style={styles.boot}>
         <ActivityIndicator color={theme.dune} size="large" />
@@ -72,14 +89,24 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
 function RootNavigator() {
   const segments = useSegments();
+  const pathname = usePathname();
   const root = segments[0] ?? 'index';
   const hideNav =
     root === 'sign-in' ||
     root === 'sign-up' ||
+    root === 'sso-callback' ||
     root === 'onboarding' ||
     root === 'atlas' ||
     root === 'legal' ||
-    root === 'messages';
+    (root === 'messages' && segments.length > 1) ||
+    pathname === '/marketplace/create' ||
+    pathname === '/jobs/create' ||
+    pathname === '/services/create' ||
+    (root === 'services' && segments.length > 1) ||
+    pathname === '/profile/personal' ||
+    pathname === '/profile/security' ||
+    pathname === '/profile/privacy' ||
+    pathname === '/profile/delete';
 
   return (
     <View style={styles.root}>
@@ -101,6 +128,7 @@ function RootNavigator() {
             <Stack.Screen name="atlas/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="sign-in" options={{ headerShown: false }} />
             <Stack.Screen name="sign-up" options={{ headerShown: false }} />
+            <Stack.Screen name="sso-callback" options={{ headerShown: false }} />
             <Stack.Screen name="onboarding" options={{ headerShown: false }} />
             <Stack.Screen name="legal/index" options={{ headerShown: false }} />
             <Stack.Screen name="legal/[id]" options={{ headerShown: false }} />
@@ -117,7 +145,7 @@ function RootNavigator() {
             <Stack.Screen name="cash" options={{ headerShown: false }} />
             <Stack.Screen name="camps" options={{ headerShown: false }} />
             <Stack.Screen name="locations/index" options={{ headerShown: false }} />
-            <Stack.Screen name="profile/index" options={{ headerShown: false }} />
+            <Stack.Screen name="profile" options={{ headerShown: false }} />
             <Stack.Screen name="messages/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="messages/index" options={{ headerShown: false }} />
             <Stack.Screen name="favorites/index" options={{ headerShown: false }} />
@@ -141,8 +169,25 @@ const styles = StyleSheet.create({
 });
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Fraunces_600SemiBold,
+    Fraunces_700Bold,
+    DMSans_400Regular,
+    DMSans_500Medium,
+    DMSans_600SemiBold,
+    DMSans_700Bold,
+  });
+
   if (!publishableKey) {
     console.warn('EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY missing');
+  }
+
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.boot}>
+        <ActivityIndicator color={theme.dune} size="large" />
+      </View>
+    );
   }
 
   return (

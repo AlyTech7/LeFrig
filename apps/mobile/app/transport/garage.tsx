@@ -8,21 +8,29 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { AppIcon } from '@/components/AppIcon';
+import { Screen, Hero, Button, EmptyState } from '@/components/ui';
 import { useAuthApi } from '@/lib/useAuthApi';
 import { useT } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
+import { fonts } from '@/lib/ui';
+
+type DriverStatus = 'none' | 'basic' | 'pending' | 'verified' | 'rejected';
 
 type HubDriver = {
-  driverStatus: 'none' | 'pending' | 'verified';
+  driverStatus: DriverStatus;
   driver: {
     vehicleType: string | null;
     vehiclePlate: string | null;
     seatsCapacity: number;
     rating: number;
     totalTrips: number;
+    contactPhone?: string | null;
+    coverageMode?: string | null;
+    coverageZones?: string[];
+    coverageScope?: string | null;
+    coverageOriginHubSlug?: string | null;
     frequentRoutes: {
       id: string;
       frequency: string;
@@ -43,6 +51,47 @@ type OpenTrip = {
 };
 
 type PaginatedTrips = { data: OpenTrip[] };
+
+function statusTone(status: DriverStatus): { bg: string; fg: string } {
+  if (status === 'verified') return { bg: theme.successSoft, fg: theme.success };
+  if (status === 'basic') return { bg: theme.infoSoft, fg: theme.info };
+  if (status === 'pending') return { bg: theme.warningSoft, fg: theme.warning };
+  if (status === 'rejected') return { bg: theme.dangerSoft, fg: theme.danger };
+  return { bg: theme.sand, fg: theme.inkMuted };
+}
+
+function statusTitleKey(status: DriverStatus) {
+  if (status === 'verified') return 'me.driver.statusVerified' as const;
+  if (status === 'pending') return 'me.driver.statusPending' as const;
+  if (status === 'basic') return 'me.driver.statusBasic' as const;
+  if (status === 'rejected') return 'me.driver.statusRejected' as const;
+  return 'me.driver.statusNone' as const;
+}
+
+function coverageSummary(
+  driver: HubDriver['driver'],
+  t: (k: string, p?: Record<string, string | number>) => string,
+): string | null {
+  if (!driver?.coverageMode) return null;
+  if (driver.coverageMode === 'zone') {
+    const zones = (driver.coverageZones ?? []).map((z) => t(`transport.zones.${z}` as 'transport.zones.wilaya')).join(', ');
+    return `${driver.coverageOriginHubSlug ?? '—'} → ${zones || '—'}`;
+  }
+  if (driver.coverageMode === 'flexible') {
+    return t(
+      driver.coverageScope === 'international'
+        ? 'transport.driver.scopeInternational'
+        : 'transport.driver.scopeLocal',
+    );
+  }
+  if (driver.frequentRoutes?.length) {
+    return driver.frequentRoutes
+      .slice(0, 2)
+      .map((r) => `${r.origin.nameEs} → ${r.destination.nameEs}`)
+      .join(' · ');
+  }
+  return t('transport.driver.modeCorridors');
+}
 
 export default function DriverGarageScreen() {
   const router = useRouter();
@@ -87,37 +136,28 @@ export default function DriverGarageScreen() {
     load();
   }, [load]);
 
-  const claimTrip = async (tripId: string) => {
+  const claim = async (tripId: string) => {
     setClaimingId(tripId);
     setClaimMsg('');
     try {
-      await authFetch(`/transport/${tripId}/claim`, { method: 'PATCH' });
+      await authFetch(`/transport/${tripId}/claim`, { method: 'POST', body: '{}' });
       setClaimMsg(t('me.driver.claimSuccess'));
       await load();
-    } catch {
-      setClaimMsg(t('me.driver.claimError'));
+    } catch (err) {
+      setClaimMsg(err instanceof Error ? err.message : t('me.driver.claimError'));
     } finally {
       setClaimingId(null);
     }
   };
 
   const status = hub?.driverStatus ?? 'none';
-  const driver = hub?.driver;
-  const claimable =
-    status === 'verified'
-      ? openBoard.filter((tr) => tr.status === 'requested' || tr.status === 'open')
-      : [];
+  const canOperate = status === 'basic' || status === 'pending' || status === 'verified';
+  const tone = statusTone(status);
+  const cover = coverageSummary(hub?.driver ?? null, t);
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView edges={['top']} style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.back}>
-          <AppIcon name="arrow-left" size={22} color={theme.ink} />
-        </Pressable>
-        <Text style={styles.title}>{t('me.driver.title')}</Text>
-        <Text style={styles.sub}>{t('me.driver.subtitle')}</Text>
-      </SafeAreaView>
-
+    <Screen edges={['top']}>
+      <Hero kicker={t('me.modules.driver')} title={t('me.driver.title')} subtitle={t('me.driver.subtitle')} />
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={
@@ -127,204 +167,172 @@ export default function DriverGarageScreen() {
               setRefreshing(true);
               load();
             }}
-            tintColor={theme.gold}
+            tintColor={theme.dune}
           />
         }
       >
-        {!isSignedIn ? (
-          <Pressable style={styles.cta} onPress={() => router.push('/sign-in')}>
-            <Text style={styles.ctaText}>{t('me.signInPrompt')}</Text>
-          </Pressable>
-        ) : loading ? (
-          <ActivityIndicator color={theme.gold} style={{ marginTop: 40 }} />
+        {loading ? (
+          <ActivityIndicator color={theme.dune} style={{ marginTop: 24 }} />
         ) : loadError ? (
-          <Text style={styles.factMuted}>{t('errors.apiUnavailable')}</Text>
+          <EmptyState
+            icon="alert-circle"
+            title={t('common.error')}
+            actionLabel={t('common.retry')}
+            onAction={() => load()}
+          />
+        ) : status === 'none' ? (
+          <View style={styles.panel}>
+            <Text style={styles.panelTitle}>{t('me.driver.statusNone')}</Text>
+            <Text style={styles.panelBody}>{t('me.driver.statusNoneBody')}</Text>
+            <Button label={t('me.driver.registerCta')} onPress={() => router.push('/transport/register')} />
+          </View>
         ) : (
           <>
-            <View
-              style={[
-                styles.banner,
-                status === 'verified' && styles.bannerVerified,
-                status === 'pending' && styles.bannerPending,
-              ]}
-            >
-              <Text style={styles.bannerTitle}>
-                {status === 'verified'
-                  ? t('me.driver.statusVerified')
-                  : status === 'pending'
-                    ? t('me.driver.statusPending')
-                    : t('me.driver.statusNone')}
+            <View style={styles.panel}>
+              <View style={[styles.badge, { backgroundColor: tone.bg }]}>
+                <Text style={[styles.badgeText, { color: tone.fg }]}>{t(statusTitleKey(status))}</Text>
+              </View>
+              <Text style={styles.vehicle}>
+                {hub?.driver?.vehicleType ?? '—'} · {hub?.driver?.vehiclePlate ?? '—'}
               </Text>
-              <Text style={styles.bannerBody}>
-                {status === 'verified'
-                  ? t('me.driver.statusVerifiedBody')
-                  : status === 'pending'
-                    ? t('me.driver.statusPendingBody')
-                    : t('me.driver.statusNoneBody')}
+              <Text style={styles.meta}>
+                {t('me.driver.seats')}: {hub?.driver?.seatsCapacity ?? 0} · {t('me.driver.rating')}:{' '}
+                {(hub?.driver?.rating ?? 0).toFixed(1)} · {t('me.driver.trips')}: {hub?.driver?.totalTrips ?? 0}
               </Text>
+              {cover ? (
+                <Text style={styles.meta}>
+                  {t('me.driver.coverage')}: {cover}
+                </Text>
+              ) : null}
+              {hub?.driver?.contactPhone ? (
+                <Text style={styles.meta}>
+                  {t('me.driver.phone')}: {hub.driver.contactPhone}
+                </Text>
+              ) : null}
+              {status === 'basic' || status === 'rejected' ? (
+                <View style={{ marginTop: 12 }}>
+                  <Button
+                    label={t('me.driver.verifyCta')}
+                    variant="ghost"
+                    onPress={() => router.push('/transport/register')}
+                  />
+                </View>
+              ) : (
+                <View style={{ marginTop: 12 }}>
+                  <Button
+                    label={t('me.driver.editProfile')}
+                    variant="ghost"
+                    onPress={() => router.push('/transport/register')}
+                  />
+                </View>
+              )}
             </View>
 
-            {driver ? (
-              <View style={styles.panel}>
-                <Text style={styles.panelTitle}>{t('me.driver.vehicle')}</Text>
-                <Text style={styles.fact}>
-                  {driver.vehicleType ?? '—'} · {driver.vehiclePlate ?? '—'} · {driver.seatsCapacity}{' '}
-                  {t('me.driver.seats').toLowerCase()}
-                </Text>
-                <Text style={styles.factMuted}>
-                  {t('me.driver.rating')}: {Number(driver.rating).toFixed(1)} · {t('me.driver.trips')}:{' '}
-                  {driver.totalTrips}
-                </Text>
-              </View>
-            ) : null}
-
-            {driver ? (
-              <View style={styles.panel}>
-                <Text style={styles.panelTitle}>{t('me.driver.routes')}</Text>
-                {driver.frequentRoutes.length === 0 ? (
-                  <Text style={styles.factMuted}>{t('me.driver.noRoutes')}</Text>
+            {canOperate ? (
+              <>
+                <Text style={styles.section}>{t('me.driver.openBoard')}</Text>
+                {openBoard.length === 0 ? (
+                  <Text style={styles.empty}>{t('me.driver.noOpenTrips')}</Text>
                 ) : (
-                  driver.frequentRoutes.map((r) => (
-                    <Text key={r.id} style={styles.route}>
-                      {r.origin.nameEs} → {r.destination.nameEs}
-                    </Text>
-                  ))
-                )}
-              </View>
-            ) : null}
-
-            {status === 'verified' ? (
-              <View style={styles.panel}>
-                <Text style={styles.panelTitle}>{t('me.driver.openBoard')}</Text>
-                {claimMsg ? <Text style={styles.factMuted}>{claimMsg}</Text> : null}
-                {claimable.length === 0 ? (
-                  <Text style={styles.factMuted}>{t('me.driver.noOpenTrips')}</Text>
-                ) : (
-                  claimable.map((tr) => (
-                    <View key={tr.id} style={styles.claimRow}>
-                      <Pressable style={{ flex: 1 }} onPress={() => router.push(`/transport/${tr.id}` as never)}>
-                        <Text style={styles.route}>
-                          {(tr.originLabel ?? tr.originHubSlug) ?? '?'} →{' '}
-                          {(tr.destinationLabel ?? tr.destinationHubSlug) ?? '?'}
+                  openBoard.map((trip) => (
+                    <View key={trip.id} style={styles.tripCard}>
+                      <Pressable style={{ flex: 1 }} onPress={() => router.push(`/transport/${trip.id}`)}>
+                        <Text style={styles.tripRoute}>
+                          {trip.originLabel ?? trip.originHubSlug ?? '—'} →{' '}
+                          {trip.destinationLabel ?? trip.destinationHubSlug ?? '—'}
                         </Text>
+                        <Text style={styles.tripMeta}>{trip.requesterName ?? '—'}</Text>
                       </Pressable>
                       <Pressable
                         style={styles.claimBtn}
-                        disabled={claimingId === tr.id}
-                        onPress={() => void claimTrip(tr.id)}
+                        disabled={claimingId === trip.id}
+                        onPress={() => claim(trip.id)}
                       >
-                        <Text style={styles.claimBtnText}>
-                          {claimingId === tr.id ? t('me.driver.claiming') : t('me.driver.claimCta')}
-                        </Text>
+                        {claimingId === trip.id ? (
+                          <ActivityIndicator color={theme.canvas} size="small" />
+                        ) : (
+                          <Text style={styles.claimText}>{t('me.driver.claimCta')}</Text>
+                        )}
                       </Pressable>
                     </View>
                   ))
                 )}
-              </View>
-            ) : null}
+                {claimMsg ? <Text style={styles.claimMsg}>{claimMsg}</Text> : null}
 
-            {trips.length > 0 ? (
-              <View style={styles.panel}>
-                <Text style={styles.panelTitle}>{t('me.driver.myTrips')}</Text>
-                {trips
-                  .filter((tr) => tr.status !== 'completed' && tr.status !== 'cancelled')
-                  .slice(0, 8)
-                  .map((tr) => (
-                    <Pressable key={tr.id} onPress={() => router.push(`/transport/${tr.id}` as never)}>
-                      <Text style={styles.route}>
-                        {(tr.originLabel ?? tr.originHubSlug) ?? '?'} →{' '}
-                        {(tr.destinationLabel ?? tr.destinationHubSlug) ?? '?'} · {tr.status}
+                <Text style={styles.section}>{t('me.driver.myTrips')}</Text>
+                {trips.length === 0 ? (
+                  <Text style={styles.empty}>{t('me.driver.noOpenTrips')}</Text>
+                ) : (
+                  trips.map((trip) => (
+                    <Pressable
+                      key={trip.id}
+                      style={styles.tripCard}
+                      onPress={() => router.push(`/transport/${trip.id}`)}
+                    >
+                      <Text style={styles.tripRoute}>
+                        {trip.originLabel ?? trip.originHubSlug ?? '—'} →{' '}
+                        {trip.destinationLabel ?? trip.destinationHubSlug ?? '—'}
                       </Text>
+                      <Text style={styles.tripMeta}>{trip.status}</Text>
+                      <AppIcon name="chevron-right" size={16} color={theme.stone} />
                     </Pressable>
-                  ))}
-              </View>
+                  ))
+                )}
+              </>
             ) : null}
-
-            <Pressable
-              style={styles.cta}
-              onPress={() => router.push('/transport/register' as never)}
-            >
-              <Text style={styles.ctaText}>
-                {status === 'none' ? t('me.driver.registerCta') : t('me.driver.editProfile')}
-              </Text>
-            </Pressable>
-            <Pressable style={styles.ghost} onPress={() => router.push('/transport' as never)}>
-              <Text style={styles.ghostText}>{t('me.driver.openTransport')}</Text>
-            </Pressable>
           </>
         )}
       </ScrollView>
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: theme.canvas },
-  header: { paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: theme.border },
-  back: { marginBottom: 8, width: 36 },
-  title: { fontSize: 22, fontWeight: '800', color: theme.ink },
-  sub: { fontSize: 13, color: theme.inkMuted, marginTop: 4 },
-  content: { padding: 16, paddingBottom: 100, gap: 12 },
-  banner: {
-    padding: 16,
-    borderRadius: radii.lg,
-    backgroundColor: theme.surface,
-    borderWidth: 1,
-    borderColor: theme.border,
-    gap: 6,
-  },
-  bannerVerified: {
-    backgroundColor: 'rgba(45,138,98,0.08)',
-    borderColor: 'rgba(45,138,98,0.3)',
-  },
-  bannerPending: {
-    backgroundColor: 'rgba(168,132,45,0.1)',
-    borderColor: 'rgba(168,132,45,0.35)',
-  },
-  bannerTitle: { fontSize: 17, fontWeight: '800', color: theme.ink },
-  bannerBody: { fontSize: 14, color: theme.inkMuted, lineHeight: 20 },
+  content: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 0 },
   panel: {
-    padding: 16,
+    marginTop: 8,
+    padding: 18,
     borderRadius: radii.lg,
-    backgroundColor: theme.surface,
+    backgroundColor: theme.sand,
     borderWidth: 1,
-    borderColor: theme.border,
+    borderColor: theme.line,
     gap: 8,
   },
-  panelTitle: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: theme.dune,
+  panelTitle: { fontFamily: fonts.displaySemi, fontSize: 20, color: theme.ink },
+  panelBody: { fontFamily: fonts.body, fontSize: 14, color: theme.inkMuted, lineHeight: 20, marginBottom: 8 },
+  badge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: radii.pill },
+  badgeText: { fontFamily: fonts.bodySemi, fontSize: 12 },
+  vehicle: { fontFamily: fonts.displaySemi, fontSize: 18, color: theme.ink },
+  meta: { fontFamily: fonts.body, fontSize: 13, color: theme.inkMuted },
+  section: {
+    marginTop: 22,
+    marginBottom: 10,
+    fontFamily: fonts.displaySemi,
+    fontSize: 18,
+    color: theme.ink,
   },
-  fact: { fontSize: 15, fontWeight: '700', color: theme.ink },
-  factMuted: { fontSize: 13, color: theme.inkMuted },
-  route: { fontSize: 14, fontWeight: '600', color: theme.ink, flex: 1 },
-  claimRow: { gap: 8, paddingVertical: 6, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border },
-  claimBtn: {
-    alignSelf: 'flex-start',
-    backgroundColor: theme.dune,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: radii.md,
-  },
-  claimBtnText: { color: theme.pearl, fontWeight: '800', fontSize: 13 },
-  cta: {
-    marginTop: 4,
-    padding: 16,
-    borderRadius: radii.lg,
-    backgroundColor: theme.dune,
+  empty: { fontFamily: fonts.body, fontSize: 14, color: theme.stone, marginBottom: 8 },
+  tripCard: {
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  ctaText: { color: theme.pearl, fontWeight: '800', fontSize: 15 },
-  ghost: {
+    gap: 10,
     padding: 14,
-    borderRadius: radii.lg,
+    marginBottom: 8,
+    borderRadius: radii.md,
+    backgroundColor: theme.sand,
     borderWidth: 1,
-    borderColor: theme.border,
-    alignItems: 'center',
-    backgroundColor: theme.surface,
+    borderColor: theme.line,
   },
-  ghostText: { color: theme.ink, fontWeight: '700', fontSize: 14 },
+  tripRoute: { flex: 1, fontFamily: fonts.bodySemi, fontSize: 14, color: theme.ink },
+  tripMeta: { fontFamily: fonts.body, fontSize: 12, color: theme.stone },
+  claimBtn: {
+    backgroundColor: theme.dune,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radii.sm,
+    minWidth: 72,
+    alignItems: 'center',
+  },
+  claimText: { fontFamily: fonts.bodySemi, fontSize: 12, color: theme.canvas },
+  claimMsg: { marginTop: 8, fontFamily: fonts.body, fontSize: 13, color: theme.inkMuted },
 });

@@ -85,7 +85,7 @@ export default function CreateNeedScreen() {
       <LinearGradient colors={[...gradients.hero]} style={styles.header}>
         <SafeAreaView edges={['top']}>
           <Pressable style={styles.back} onPress={() => router.back()}>
-            <AppIcon name="arrow-left" size={20} color={theme.text} />
+            <AppIcon name="arrow-left" size={20} color={theme.ink} />
             <Text style={styles.backText}>{t('needs.title')}</Text>
           </Pressable>
           <Text style={styles.title}>{t('needs.create')}</Text>
@@ -113,7 +113,7 @@ export default function CreateNeedScreen() {
           value={form.title}
           onChangeText={(title) => setForm({ ...form, title })}
           placeholder={t('publish.titlePlaceholder')}
-          placeholderTextColor={theme.textDarkMuted}
+          placeholderTextColor={theme.inkMuted}
         />
 
         <Text style={styles.label}>{t('publish.description')}</Text>
@@ -123,7 +123,7 @@ export default function CreateNeedScreen() {
           onChangeText={(description) => setForm({ ...form, description })}
           multiline
           placeholder={t('publish.descPlaceholder')}
-          placeholderTextColor={theme.textDarkMuted}
+          placeholderTextColor={theme.inkMuted}
         />
 
         <Text style={styles.label}>{t('community.camp')}</Text>
@@ -141,7 +141,7 @@ export default function CreateNeedScreen() {
 
         <Pressable style={[styles.cta, submitting && styles.ctaDisabled]} onPress={submit} disabled={submitting}>
           {submitting ? (
-            <ActivityIndicator color={theme.text} />
+            <ActivityIndicator color={theme.ink} />
           ) : (
             <Text style={styles.ctaText}>{t('needs.create')}</Text>
           )}
@@ -152,14 +152,14 @@ export default function CreateNeedScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: theme.cream },
+  root: { flex: 1, backgroundColor: theme.canvas },
   header: { paddingBottom: 24 },
   back: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, paddingTop: 8 },
-  backText: { color: theme.text, fontWeight: '600' },
-  title: { fontSize: 28, fontWeight: '800', color: theme.text, paddingHorizontal: 20, marginTop: 12 },
+  backText: { color: theme.ink, fontWeight: '600' },
+  title: { fontSize: 28, fontWeight: '800', color: theme.ink, paddingHorizontal: 20, marginTop: 12 },
   sub: { fontSize: 14, color: 'rgba(255,255,255,0.7)', paddingHorizontal: 20, marginTop: 4 },
   form: { padding: 20, paddingBottom: 40 },
-  label: { fontSize: 13, fontWeight: '700', color: theme.textDarkMuted, marginBottom: 8, marginTop: 16 },
+  label: { fontSize: 13, fontWeight: '700', color: theme.inkMuted, marginBottom: 8, marginTop: 16 },
   input: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0,0,0,0.06)',
     padding: 14,
     fontSize: 16,
-    color: theme.textDark,
+    color: theme.ink,
   },
   textArea: { minHeight: 100, textAlignVertical: 'top' },
   chipsScroll: { marginBottom: 4 },
@@ -181,9 +181,9 @@ const styles = StyleSheet.create({
     marginRight: 8,
     marginBottom: 8,
   },
-  chipActive: { borderColor: theme.gold, backgroundColor: 'rgba(212,175,55,0.12)' },
-  chipText: { fontSize: 14, color: theme.textDarkMuted, fontWeight: '600' },
-  chipTextActive: { color: theme.obsidian },
+  chipActive: { borderColor: theme.dune, backgroundColor: 'rgba(212,175,55,0.12)' },
+  chipText: { fontSize: 14, color: theme.inkMuted, fontWeight: '600' },
+  chipTextActive: { color: theme.ink },
   cta: {
     backgroundColor: theme.emeraldDeep,
     borderRadius: 16,
@@ -194,5 +194,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ctaDisabled: { opacity: 0.7 },
-  ctaText: { color: theme.text, fontSize: 17, fontWeight: '700' },
+  ctaText: { color: theme.ink, fontSize: 17, fontWeight: '700' },
 });

@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { fetchWithMeta } from '@/lib/api';
+import { fetchWithMeta, API_URL } from '@/lib/api';
 import { useAuthApi } from '@/lib/useAuthApi';
 import { theme, gradients } from '@/lib/theme';
 import { AppIcon } from '@/components/AppIcon';
 import { useT } from '@/lib/locale';
+import { resolveImageUrl } from '@lefrig/shared';
 
 type ShopDetail = {
   id: string;
   name: string;
   description?: string;
+  imageUrl?: string | null;
   verified?: boolean;
   acceptsCash?: boolean;
   acceptsFiado?: boolean;
@@ -117,7 +119,7 @@ export default function ShopDetailScreen() {
   if (loading || !shop) {
     return (
       <SafeAreaView style={styles.safe}>
-        <ActivityIndicator color={theme.gold} style={{ marginTop: 80 }} />
+        <ActivityIndicator color={theme.dune} style={{ marginTop: 80 }} />
       </SafeAreaView>
     );
   }
@@ -131,9 +133,13 @@ export default function ShopDetailScreen() {
             <Text style={styles.backText}>{t('shops.title')}</Text>
           </Pressable>
           <View style={styles.headerRow}>
-            <View style={styles.iconWrap}>
-              <AppIcon name="shopping-bag" size={28} color={theme.gold} />
-            </View>
+            {shop.imageUrl ? (
+              <Image source={{ uri: resolveImageUrl(shop.imageUrl, API_URL) ?? shop.imageUrl }} style={styles.coverImg} />
+            ) : (
+              <View style={styles.iconWrap}>
+                <AppIcon name="shopping-bag" size={28} color={theme.dune} />
+              </View>
+            )}
             <View style={styles.headerInfo}>
               <Text style={styles.name}>{shop.name}</Text>
               <Text style={styles.camp}>
@@ -175,9 +181,9 @@ export default function ShopDetailScreen() {
         )}
 
         {isOwner && (
-          <Pressable style={styles.manageBtn} onPress={() => router.push(`/shops/${id}/products`)}>
-            <AppIcon name="edit-3" size={18} color={theme.gold} />
-            <Text style={styles.manageText}>{t('shops.manageProducts')}</Text>
+          <Pressable style={styles.manageBtn} onPress={() => router.push(`/shops/${id}/manage` as never)}>
+            <AppIcon name="edit-3" size={18} color={theme.dune} />
+            <Text style={styles.manageText}>{t('shops.manageMyShop')}</Text>
           </Pressable>
         )}
 
@@ -191,10 +197,10 @@ export default function ShopDetailScreen() {
 
         <Pressable style={[styles.contactBtn, contacting && styles.btnDisabled]} onPress={contactOwner} disabled={contacting}>
           {contacting ? (
-            <ActivityIndicator color={theme.gold} />
+            <ActivityIndicator color={theme.dune} />
           ) : (
             <>
-              <AppIcon name="message-circle" size={18} color={theme.gold} />
+              <AppIcon name="message-circle" size={18} color={theme.dune} />
               <Text style={styles.contactText}>{t('shops.contactShop')}</Text>
             </>
           )}
@@ -205,25 +211,26 @@ export default function ShopDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: theme.cream },
-  safe: { flex: 1, backgroundColor: theme.cream },
+  root: { flex: 1, backgroundColor: theme.canvas },
+  safe: { flex: 1, backgroundColor: theme.canvas },
   header: { paddingBottom: 24 },
   back: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, paddingTop: 8 },
   backText: { color: theme.text, fontWeight: '600' },
   headerRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, marginTop: 12, gap: 14 },
   iconWrap: { width: 56, height: 56, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
+  coverImg: { width: 56, height: 56, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.12)' },
   headerInfo: { flex: 1 },
   name: { fontSize: 24, fontWeight: '800', color: theme.text },
-  camp: { fontSize: 14, color: theme.textMuted, marginTop: 4 },
+  camp: { fontSize: 14, color: theme.inkMuted, marginTop: 4 },
   content: { padding: 20, paddingBottom: 100 },
-  desc: { fontSize: 15, color: theme.textDarkMuted, lineHeight: 22, marginBottom: 16 },
+  desc: { fontSize: 15, color: theme.inkMuted, lineHeight: 22, marginBottom: 16 },
   badges: { flexDirection: 'row', gap: 8, marginBottom: 20 },
   badge: { backgroundColor: 'rgba(52,211,153,0.15)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
   badgeMuted: { backgroundColor: 'rgba(0,0,0,0.04)' },
   badgeText: { color: theme.emeraldDeep, fontWeight: '600', fontSize: 13 },
-  badgeTextMuted: { color: theme.textDarkMuted, fontWeight: '600', fontSize: 13 },
-  section: { fontSize: 16, fontWeight: '800', color: theme.textDark, marginBottom: 12 },
-  empty: { color: theme.textDarkMuted, marginBottom: 20 },
+  badgeTextMuted: { color: theme.inkMuted, fontWeight: '600', fontSize: 13 },
+  section: { fontSize: 16, fontWeight: '800', color: theme.ink, marginBottom: 12 },
+  empty: { color: theme.inkMuted, marginBottom: 20 },
   product: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -235,7 +242,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   productActive: { borderColor: theme.emeraldDeep, backgroundColor: 'rgba(13,148,136,0.06)' },
-  productName: { fontSize: 16, fontWeight: '600', color: theme.textDark },
+  productName: { fontSize: 16, fontWeight: '600', color: theme.ink },
   productPrice: { fontSize: 14, color: theme.emeraldDeep, marginTop: 2, fontWeight: '600' },
   manageBtn: {
     flexDirection: 'row',
@@ -249,7 +256,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(232,184,109,0.4)',
     backgroundColor: 'rgba(232,184,109,0.08)',
   },
-  manageText: { color: theme.gold, fontWeight: '700', fontSize: 16 },
+  manageText: { color: theme.dune, fontWeight: '700', fontSize: 16 },
   orderBtn: {
     backgroundColor: theme.emeraldDeep,
     borderRadius: 16,
@@ -271,6 +278,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(232,184,109,0.35)',
   },
-  contactText: { color: theme.gold, fontWeight: '700', fontSize: 16 },
+  contactText: { color: theme.dune, fontWeight: '700', fontSize: 16 },
   btnDisabled: { opacity: 0.7 },
 });

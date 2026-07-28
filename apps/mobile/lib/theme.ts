@@ -55,6 +55,18 @@ export const theme = {
   gray400: 'rgba(26,22,18,0.38)',
   gray500: '#8a8074',
   gray600: 'rgba(26,22,18,0.52)',
+
+  // Tokens semánticos (hub / garage / badges)
+  line: 'rgba(26,22,18,0.08)',
+  stone: 'rgba(26,22,18,0.42)',
+  success: '#2d8a62',
+  successSoft: 'rgba(45,138,98,0.12)',
+  warning: '#a8842d',
+  warningSoft: 'rgba(168,132,45,0.14)',
+  danger: '#c45c3a',
+  dangerSoft: 'rgba(196,92,58,0.12)',
+  info: '#0c4a6e',
+  infoSoft: 'rgba(12,74,110,0.1)',
 };
 
 export const radii = {
@@ -102,6 +114,7 @@ export const TRUST_PILLS: { labelKey: string }[] = [
 
 export const QUICK_LINKS: { icon: FeatherIconName; labelKey: string; href: string }[] = [
   { icon: 'package', labelKey: 'nav.orders', href: '/orders' },
+  { icon: 'tag', labelKey: 'me.modules.sales', href: '/marketplace/mine' },
   { icon: 'heart', labelKey: 'nav.favorites', href: '/favorites' },
   { icon: 'users', labelKey: 'nav.community', href: '/community' },
   { icon: 'message-circle', labelKey: 'nav.messages', href: '/messages' },

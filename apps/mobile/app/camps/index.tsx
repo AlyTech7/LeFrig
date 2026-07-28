@@ -64,14 +64,14 @@ export default function CampsScreen() {
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           loading ? (
-            <ActivityIndicator color={theme.gold} style={{ marginTop: 20 }} />
+            <ActivityIndicator color={theme.dune} style={{ marginTop: 20 }} />
           ) : (
             <Text style={styles.empty}>{t('camps.empty')}</Text>
           )
         }
         renderItem={({ item }) => (
           <View style={styles.marketCard}>
-            <AppIcon name="shopping-bag" size={20} color={theme.gold} />
+            <AppIcon name="shopping-bag" size={20} color={theme.dune} />
             <View style={styles.marketInfo}>
               <Text style={styles.marketName}>{item.nameEs}</Text>
               <Text style={styles.marketDesc}>{item.description ?? t('shops.heroAccent')}</Text>
@@ -81,11 +81,11 @@ export default function CampsScreen() {
         ListFooterComponent={
           <>
             <Pressable style={styles.transportLink} onPress={() => router.push('/locations')}>
-              <AppIcon name="navigation" size={18} color={theme.gold} />
+              <AppIcon name="navigation" size={18} color={theme.dune} />
               <Text style={styles.transportText}>{t('camps.viewMap')}</Text>
             </Pressable>
             <Pressable style={styles.transportLink} onPress={() => router.push('/transport')}>
-              <AppIcon name="truck" size={18} color={theme.gold} />
+              <AppIcon name="truck" size={18} color={theme.dune} />
               <Text style={styles.transportText}>{t('camps.viewTransport')}</Text>
             </Pressable>
           </>
@@ -130,10 +130,10 @@ function ScrollChips({
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: theme.cream },
+  root: { flex: 1, backgroundColor: theme.canvas },
   header: { paddingBottom: 16 },
-  title: { fontSize: 28, fontWeight: '800', color: theme.text, paddingHorizontal: 20, paddingTop: 8 },
-  sub: { fontSize: 14, color: theme.textMuted, paddingHorizontal: 20, marginTop: 4 },
+  title: { fontSize: 28, fontWeight: '800', color: theme.ink, paddingHorizontal: 20, paddingTop: 8 },
+  sub: { fontSize: 14, color: theme.inkMuted, paddingHorizontal: 20, marginTop: 4 },
   list: { padding: 16, paddingBottom: 100 },
   chips: { paddingHorizontal: 4, paddingBottom: 16, gap: 8 },
   chip: {
@@ -145,12 +145,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     marginRight: 8,
   },
-  chipActive: { borderColor: theme.gold, backgroundColor: 'rgba(232,184,109,0.12)' },
+  chipActive: { borderColor: theme.dune, backgroundColor: 'rgba(232,184,109,0.12)' },
   chipTindouf: { borderColor: 'rgba(232,184,109,0.35)' },
-  chipText: { fontWeight: '600', color: theme.textDarkMuted },
-  chipTextActive: { color: theme.obsidian },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: theme.textDark, marginBottom: 12 },
-  empty: { textAlign: 'center', color: theme.textDarkMuted, marginTop: 20 },
+  chipText: { fontWeight: '600', color: theme.inkMuted },
+  chipTextActive: { color: theme.ink },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: theme.ink, marginBottom: 12 },
+  empty: { textAlign: 'center', color: theme.inkMuted, marginTop: 20 },
   marketCard: {
     flexDirection: 'row',
     gap: 12,
@@ -162,8 +162,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   marketInfo: { flex: 1 },
-  marketName: { fontSize: 16, fontWeight: '700', color: theme.textDark },
-  marketDesc: { fontSize: 13, color: theme.textDarkMuted, marginTop: 2 },
+  marketName: { fontSize: 16, fontWeight: '700', color: theme.ink },
+  marketDesc: { fontSize: 13, color: theme.inkMuted, marginTop: 2 },
   transportLink: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -175,5 +175,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(232,184,109,0.35)',
   },
-  transportText: { color: theme.gold, fontWeight: '700' },
+  transportText: { color: theme.dune, fontWeight: '700' },
 });

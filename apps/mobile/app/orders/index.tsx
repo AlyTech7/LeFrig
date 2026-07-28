@@ -1,19 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, Pressable } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthApi } from '@/lib/useAuthApi';
 import { unwrapPaginated } from '@/lib/api';
-import { useLocale, useT } from '@/lib/locale';
+import { useT } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
+import { fonts, space, ui } from '@/lib/ui';
 import { AppIcon } from '@/components/AppIcon';
+import { Hero, EmptyState, SegmentTabs } from '@/components/ui';
 import { useRouter } from 'expo-router';
 
 type Order = {
   id: string;
+  buyerId?: string;
+  beneficiaryId?: string;
   status: string;
   totalAmount: number | string;
   createdAt: string;
-  shop?: { name: string };
+  shop?: { name: string; ownerId?: string };
   listing?: { title: string };
 };
 
@@ -28,47 +31,99 @@ const STATUS_KEYS: Record<string, string> = {
 
 export default function OrdersScreen() {
   const router = useRouter();
-  const { authFetch } = useAuthApi();
+  const { authFetch, syncUser, isSignedIn, isLoaded } = useAuthApi();
   const t = useT();
-  const { dir } = useLocale();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [userId, setUserId] = useState('');
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<'buy' | 'sell'>('buy');
+
+  const load = useCallback(async () => {
+    if (!isSignedIn) {
+      setOrders([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const sync = await syncUser();
+      const uid =
+        sync && typeof sync.user === 'object' && sync.user && 'id' in sync.user
+          ? String((sync.user as { id: string }).id)
+          : '';
+      setUserId(uid);
+      const res = await authFetch<{ data: Order[] }>('/orders?limit=50');
+      const list = unwrapPaginated(res as never).map((raw: unknown) => {
+        const o = raw as Order & { total?: number };
+        return { ...o, totalAmount: o.total ?? o.totalAmount };
+      });
+      setOrders(list);
+    } catch {
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [authFetch, isSignedIn, syncUser]);
 
   useEffect(() => {
-    authFetch<{ data: Order[]; meta?: unknown }>('/orders')
-      .then((res) => {
-        const list = unwrapPaginated(res as never).map((raw: unknown) => {
-          const o = raw as Order & { total?: number };
-          return { ...o, totalAmount: o.total ?? o.totalAmount };
-        });
-        setOrders(list);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [authFetch]);
+    if (!isLoaded) return;
+    void load();
+  }, [isLoaded, load]);
+
+  const buyOrders = useMemo(
+    () => orders.filter((o) => !userId || o.buyerId === userId || o.beneficiaryId === userId),
+    [orders, userId],
+  );
+  const sellOrders = useMemo(
+    () => orders.filter((o) => userId && o.shop?.ownerId === userId),
+    [orders, userId],
+  );
+  const visible = tab === 'buy' ? buyOrders : sellOrders;
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView edges={['top']} style={styles.header}>
-        <Text style={[styles.title, dir === 'rtl' && styles.rtl]}>{t('orders.title')}</Text>
-        <Text style={[styles.sub, dir === 'rtl' && styles.rtl]}>{t('orders.sub')}</Text>
-      </SafeAreaView>
-
+    <View style={ui.screen}>
+      <Hero
+        title={t('orders.title')}
+        subtitle={t('orders.sub')}
+        kicker={t('me.modules.orders')}
+        back={false}
+        right={
+          <Pressable onPress={() => router.push('/shops')} hitSlop={8}>
+            <Text style={styles.link}>{t('orders.exploreShops')}</Text>
+          </Pressable>
+        }
+      />
+      <View style={styles.tabs}>
+        <SegmentTabs
+          tabs={[
+            { id: 'buy', label: t('orders.tabBuy') },
+            { id: 'sell', label: t('orders.tabSell') },
+          ]}
+          value={tab}
+          onChange={(id) => setTab(id as 'buy' | 'sell')}
+        />
+      </View>
       <FlatList
-        data={orders}
+        data={visible}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           loading ? (
             <ActivityIndicator color={theme.dune} style={{ marginTop: 40 }} />
+          ) : !isSignedIn ? (
+            <EmptyState
+              icon="log-in"
+              title={t('me.signInPrompt')}
+              actionLabel={t('nav.signIn')}
+              onAction={() => router.push('/sign-in')}
+            />
           ) : (
-            <View style={styles.emptyWrap}>
-              <AppIcon name="package" size={32} color={theme.inkSoft} />
-              <Text style={styles.empty}>{t('orders.empty')}</Text>
-              <Pressable style={styles.browseBtn} onPress={() => router.push('/marketplace')}>
-                <Text style={styles.browseText}>{t('orders.browseMarket')}</Text>
-              </Pressable>
-            </View>
+            <EmptyState
+              icon="package"
+              title={tab === 'buy' ? t('orders.emptyBuy') : t('orders.emptySell')}
+              actionLabel={t('orders.exploreShops')}
+              onAction={() => router.push('/shops')}
+            />
           )
         }
         renderItem={({ item }) => {
@@ -77,7 +132,9 @@ export default function OrdersScreen() {
           return (
             <Pressable style={styles.card} onPress={() => router.push(`/orders/${item.id}`)}>
               <View style={styles.row}>
-                <Text style={styles.shop}>{item.shop?.name ?? item.listing?.title ?? t('orders.title')}</Text>
+                <Text style={styles.shop} numberOfLines={1}>
+                  {item.shop?.name ?? item.listing?.title ?? t('orders.title')}
+                </Text>
                 <View style={styles.rowEnd}>
                   <View style={styles.badge}>
                     <Text style={styles.badgeText}>{label}</Text>
@@ -85,8 +142,11 @@ export default function OrdersScreen() {
                   <AppIcon name="chevron-right" size={16} color={theme.inkSoft} />
                 </View>
               </View>
+              <Text style={styles.ref}>
+                {t('orders.ref', { ref: item.id.slice(0, 8).toUpperCase(), status: label })}
+              </Text>
               <Text style={styles.total}>
-                {Number(item.totalAmount).toLocaleString()} {t('common.currency')}
+                {Number(item.totalAmount).toLocaleString()} {t('orders.currency')}
               </Text>
               <Text style={styles.date}>
                 {new Date(item.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
@@ -100,27 +160,9 @@ export default function OrdersScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: theme.canvas },
-  header: {
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-  },
-  title: { fontSize: 26, fontWeight: '800', color: theme.ink },
-  rtl: { writingDirection: 'rtl', textAlign: 'right' },
-  sub: { fontSize: 14, color: theme.inkMuted, marginTop: 4 },
-  list: { padding: 20, paddingBottom: 100 },
-  emptyWrap: { alignItems: 'center', marginTop: 48, gap: 12 },
-  empty: { color: theme.inkMuted, fontSize: 15 },
-  browseBtn: {
-    marginTop: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: radii.pill,
-    backgroundColor: theme.oasisDeep,
-  },
-  browseText: { color: theme.pearl, fontWeight: '800' },
+  tabs: { paddingHorizontal: space.lg, paddingTop: space.sm },
+  link: { fontFamily: fonts.bodyBold, fontSize: 12, color: theme.dune },
+  list: { padding: space.lg, paddingBottom: 110 },
   card: {
     padding: 16,
     borderRadius: radii.lg,
@@ -131,9 +173,15 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   rowEnd: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  shop: { fontSize: 16, fontWeight: '700', flex: 1, color: theme.ink },
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: 'rgba(45,138,98,0.12)' },
-  badgeText: { color: theme.oasisDeep, fontSize: 12, fontWeight: '700' },
-  total: { fontSize: 18, fontWeight: '800', color: theme.oasisDeep, marginTop: 8 },
-  date: { fontSize: 13, color: theme.inkMuted, marginTop: 4 },
+  shop: { fontFamily: fonts.bodyBold, fontSize: 16, flex: 1, color: theme.ink },
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: 'rgba(45,138,98,0.12)',
+  },
+  badgeText: { color: theme.oasisDeep, fontSize: 12, fontFamily: fonts.bodyBold },
+  ref: { fontFamily: fonts.body, fontSize: 12, color: theme.inkSoft, marginTop: 6 },
+  total: { fontFamily: fonts.displaySemi, fontSize: 18, color: theme.oasisDeep, marginTop: 6 },
+  date: { fontFamily: fonts.body, fontSize: 13, color: theme.inkMuted, marginTop: 4 },
 });
