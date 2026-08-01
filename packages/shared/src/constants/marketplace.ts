@@ -1,4 +1,4 @@
-/** Árbol de departamentos del mercado — El Atlas Lefrig (10 salas) */
+/** Árbol de departamentos del mercado — El Atlas Lefrig */
 
 export type MarketplaceItemKind = 'listing' | 'service' | 'job';
 
@@ -19,7 +19,7 @@ export type MarketplaceDepartment = {
   items: MarketplaceItem[];
 };
 
-/** Orden fijo del Atlas: 1 Vehículos … 10 Otros */
+/** Orden fijo del Atlas: 1 Vehículos … N salas */
 export const MARKETPLACE_DEPARTMENTS: MarketplaceDepartment[] = [
   {
     id: 'vehicles',
@@ -95,6 +95,13 @@ export const MARKETPLACE_DEPARTMENTS: MarketplaceDepartment[] = [
       { slug: 'residential-sale', nameEs: 'Venta residencial', nameAr: 'بيع سكني', icon: '🏡', kind: 'listing' },
       { slug: 'lands', nameEs: 'Terrenos', nameAr: 'أراضي', icon: '🏜️', kind: 'listing' },
       { slug: 'furniture', nameEs: 'Muebles', nameAr: 'أثاث', icon: '🛋️', kind: 'listing' },
+      {
+        slug: 'salons-carpets',
+        nameEs: 'Salones y alfombras',
+        nameAr: 'صالونات وسجاد',
+        icon: '🧶',
+        kind: 'listing',
+      },
       { slug: 'residential-rent', nameEs: 'Alquiler residencial', nameAr: 'إيجار سكني', icon: '🔑', kind: 'listing' },
       { slug: 'commercial-sale', nameEs: 'Venta comercial', nameAr: 'بيع تجاري', icon: '🏢', kind: 'listing' },
       { slug: 'commercial-rent', nameEs: 'Alquiler comercial', nameAr: 'إيجار تجاري', icon: '🏪', kind: 'listing' },
@@ -140,13 +147,35 @@ export const MARKETPLACE_DEPARTMENTS: MarketplaceDepartment[] = [
   },
   {
     id: 'sport',
-    nameEs: 'Deporte y salud',
-    nameAr: 'رياضة وصحة',
+    nameEs: 'Deporte y fitness',
+    nameAr: 'رياضة ولياقة',
     icon: '💪',
     accent: 'linear-gradient(135deg, #0f766e 0%, #2dd4bf 100%)',
     items: [
-      { slug: 'health', nameEs: 'Salud', nameAr: 'صحة', icon: '🩺', kind: 'listing' },
       { slug: 'sports-fitness', nameEs: 'Deporte y fitness', nameAr: 'رياضة ولياقة', icon: '🏋️', kind: 'listing' },
+    ],
+  },
+  {
+    id: 'health',
+    nameEs: 'Salud',
+    nameAr: 'صحة',
+    icon: '🩺',
+    accent: 'linear-gradient(135deg, #9f1239 0%, #fb7185 100%)',
+    items: [
+      {
+        slug: 'health',
+        nameEs: 'Necesidades médicas',
+        nameAr: 'احتياجات طبية',
+        icon: '🩺',
+        kind: 'listing',
+      },
+      {
+        slug: 'pharmacies',
+        nameEs: 'Farmacias',
+        nameAr: 'صيدليات',
+        icon: '💊',
+        kind: 'service',
+      },
     ],
   },
   {
@@ -163,11 +192,14 @@ export const MARKETPLACE_DEPARTMENTS: MarketplaceDepartment[] = [
   },
 ];
 
+export const ATLAS_ROOM_COUNT = MARKETPLACE_DEPARTMENTS.length;
+
 /** Enlaces de navegación del Atlas (no son categorías de listado) */
 const ATLAS_NAV_HREFS: Record<string, string> = {
   shops: '/shops',
   'services-all': '/services',
   'shops-register': '/shops/register',
+  pharmacies: '/shops?shopType=pharmacy',
   'transport-local': '/transport?scope=local',
   'transport-international': '/transport?scope=international',
   'transport-register': '/transport/register',

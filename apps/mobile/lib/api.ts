@@ -147,6 +147,7 @@ export function mapApiShop(raw: Record<string, unknown>) {
     name: String(raw.name),
     camp: camp?.nameEs ?? 'Campamento',
     verified: Boolean(raw.verified),
+    shopType: raw.shopType != null ? String(raw.shopType) : 'individual',
     imageUrl: raw.imageUrl != null ? String(raw.imageUrl) : undefined,
   };
 }
@@ -156,6 +157,7 @@ export type ShopItem = {
   name: string;
   camp: string;
   verified: boolean;
+  shopType?: string;
   imageUrl?: string;
 };
 

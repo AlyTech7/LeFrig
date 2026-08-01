@@ -28,6 +28,7 @@ const TYPE_KEYS: Record<string, string> = {
   cooperative: 'shops.typeCooperative',
   association: 'shops.typeAssociation',
   workshop: 'shops.typeWorkshop',
+  pharmacy: 'shops.typePharmacy',
 };
 
 const TYPE_ICONS: Record<string, string> = {
@@ -36,6 +37,7 @@ const TYPE_ICONS: Record<string, string> = {
   cooperative: '🤝',
   association: '👥',
   workshop: '🔧',
+  pharmacy: '💊',
 };
 
 export function MyShopsStudio() {

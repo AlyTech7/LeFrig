@@ -25,11 +25,12 @@ import { theme, radii } from '@/lib/theme';
 import { type as typo, space, ui, fonts } from '@/lib/ui';
 
 type Step = 1 | 2 | 3 | 4;
-type ShopType = 'individual' | 'restaurant' | 'cooperative' | 'association' | 'workshop';
+type ShopType = 'individual' | 'restaurant' | 'cooperative' | 'association' | 'workshop' | 'pharmacy';
 
 const SHOP_TYPES: { id: ShopType; labelKey: string; descKey: string }[] = [
   { id: 'individual', labelKey: 'shops.typeIndividual', descKey: 'shops.studio.typeIndividualDesc' },
   { id: 'restaurant', labelKey: 'shops.typeRestaurant', descKey: 'shops.studio.typeRestaurantDesc' },
+  { id: 'pharmacy', labelKey: 'shops.typePharmacy', descKey: 'shops.studio.typePharmacyDesc' },
   { id: 'cooperative', labelKey: 'shops.typeCooperative', descKey: 'shops.studio.typeCooperativeDesc' },
   { id: 'workshop', labelKey: 'shops.typeWorkshop', descKey: 'shops.studio.typeWorkshopDesc' },
   { id: 'association', labelKey: 'shops.typeAssociation', descKey: 'shops.studio.typeAssociationDesc' },

@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react';
 import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { MarketplaceDepartment } from '@lefrig/shared';
@@ -13,37 +14,60 @@ type Props = {
   onPressDept: (id: string) => void;
 };
 
+const WIDE_GLOBAL_INDEX = 5;
+
 /**
- * Mosaico editorial del Atlas — 10 salas:
- * héroe · pareja · pareja · banner · pareja · pareja
+ * Mosaico editorial del Atlas — N salas:
+ * héroe · pares · banner (índice 5) · resto
  */
 export function AtlasMosaic({ departments, onPressDept }: Props) {
-  const [hero, a, b, c, d, wide, e, f, g, h] = departments;
+  const [hero, ...rest] = departments;
   if (!hero) return null;
+
+  const rows: { key: string; nodes: ReactNode }[] = [];
+  let i = 0;
+  while (i < rest.length) {
+    const globalIndex = i + 1;
+    const dept = rest[i]!;
+
+    if (globalIndex === WIDE_GLOBAL_INDEX) {
+      rows.push({
+        key: dept.id,
+        nodes: <BannerCard dept={dept} index={globalIndex} onPress={() => onPressDept(dept.id)} />,
+      });
+      i += 1;
+      continue;
+    }
+
+    const next = rest[i + 1];
+    const nextGlobal = globalIndex + 1;
+    if (next && nextGlobal !== WIDE_GLOBAL_INDEX) {
+      rows.push({
+        key: `pair-${dept.id}`,
+        nodes: (
+          <View style={styles.row}>
+            <TileCard dept={dept} index={globalIndex} onPress={() => onPressDept(dept.id)} />
+            <TileCard dept={next} index={nextGlobal} onPress={() => onPressDept(next.id)} />
+          </View>
+        ),
+      });
+      i += 2;
+      continue;
+    }
+
+    rows.push({
+      key: dept.id,
+      nodes: <BannerCard dept={dept} index={globalIndex} onPress={() => onPressDept(dept.id)} />,
+    });
+    i += 1;
+  }
 
   return (
     <View style={styles.wrap}>
       <HeroCard dept={hero} index={0} onPress={() => onPressDept(hero.id)} />
-
-      <View style={styles.row}>
-        {a ? <TileCard dept={a} index={1} onPress={() => onPressDept(a.id)} /> : null}
-        {b ? <TileCard dept={b} index={2} onPress={() => onPressDept(b.id)} /> : null}
-      </View>
-      <View style={styles.row}>
-        {c ? <TileCard dept={c} index={3} onPress={() => onPressDept(c.id)} /> : null}
-        {d ? <TileCard dept={d} index={4} onPress={() => onPressDept(d.id)} /> : null}
-      </View>
-
-      {wide ? <BannerCard dept={wide} index={5} onPress={() => onPressDept(wide.id)} /> : null}
-
-      <View style={styles.row}>
-        {e ? <TileCard dept={e} index={6} onPress={() => onPressDept(e.id)} /> : null}
-        {f ? <TileCard dept={f} index={7} onPress={() => onPressDept(f.id)} /> : null}
-      </View>
-      <View style={styles.row}>
-        {g ? <TileCard dept={g} index={8} onPress={() => onPressDept(g.id)} /> : null}
-        {h ? <TileCard dept={h} index={9} onPress={() => onPressDept(h.id)} /> : null}
-      </View>
+      {rows.map((row) => (
+        <View key={row.key}>{row.nodes}</View>
+      ))}
     </View>
   );
 }
@@ -63,7 +87,6 @@ function CardTitle({
 }) {
   const { locale, dir } = useLocale();
   const t = useT();
-  const [c1, c2] = accentColors(dept.accent);
   const name = pickName(locale, dept);
   return (
     <View style={styles.titleBlock}>
@@ -79,12 +102,6 @@ function CardTitle({
             .join(' · ')}
         </Text>
       ) : null}
-      <LinearGradient
-        colors={[c1, c2]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={[styles.bar, big && styles.barBig]}
-      />
     </View>
   );
 }
@@ -99,16 +116,19 @@ function HeroCard({
   onPress: () => void;
 }) {
   const visual = getAtlasVisual(dept.id);
+  const [c1, c2] = accentColors(dept.accent);
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.card, styles.hero, pressed && styles.pressed]}>
-      <ImageBackground source={{ uri: visual.uri }} style={styles.bg} imageStyle={styles.bgImage}>
-        <LinearGradient colors={['rgba(8,6,4,0.08)', theme.scrimDeep]} style={StyleSheet.absoluteFill} />
-        <IndexMark index={index} />
-        <View style={styles.heroFooter}>
-          <CardTitle dept={dept} big itemsHint />
-          <View style={styles.heroArrow}>
-            <AppIcon name="arrow-right" size={16} color={theme.pearl} />
-          </View>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.hero, pressed && styles.pressed]}>
+      <ImageBackground source={{ uri: visual.uri }} style={styles.heroImg} imageStyle={styles.heroRadius}>
+        <LinearGradient colors={['rgba(0,0,0,0.1)', theme.scrimDeep]} style={StyleSheet.absoluteFill} />
+        <View style={styles.heroTop}>
+          <IndexMark index={index} />
+          <LinearGradient colors={[c1, c2]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.accentBar} />
+        </View>
+        <CardTitle dept={dept} big itemsHint />
+        <View style={styles.enterRow}>
+          <Text style={styles.enter}>Entrar</Text>
+          <AppIcon name="arrow-right" size={16} color={theme.pearl} />
         </View>
       </ImageBackground>
     </Pressable>
@@ -126,9 +146,9 @@ function TileCard({
 }) {
   const visual = getAtlasVisual(dept.id);
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.card, styles.tile, pressed && styles.pressed]}>
-      <ImageBackground source={{ uri: visual.uri }} style={styles.bg} imageStyle={styles.bgImage}>
-        <LinearGradient colors={['rgba(8,6,4,0.12)', theme.scrimDeep]} style={StyleSheet.absoluteFill} />
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.tile, pressed && styles.pressed]}>
+      <ImageBackground source={{ uri: visual.uri }} style={styles.tileImg} imageStyle={styles.tileRadius}>
+        <LinearGradient colors={['transparent', theme.scrimDeep]} style={StyleSheet.absoluteFill} />
         <IndexMark index={index} />
         <CardTitle dept={dept} />
       </ImageBackground>
@@ -145,115 +165,60 @@ function BannerCard({
   index: number;
   onPress: () => void;
 }) {
-  const { locale, dir } = useLocale();
   const visual = getAtlasVisual(dept.id);
-  const [c1, c2] = accentColors(dept.accent);
-  const name = pickName(locale, dept);
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.card, styles.banner, pressed && styles.pressed]}>
-      <ImageBackground source={{ uri: visual.uri }} style={styles.bannerBg} imageStyle={styles.bgImage}>
-        <LinearGradient
-          colors={[theme.scrimDeep, 'rgba(8,6,4,0.2)']}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={styles.bannerCopy}>
-          <IndexMark index={index} />
-          <Text style={[styles.nameBig, dir === 'rtl' && styles.rtl]} numberOfLines={1}>
-            {name}
-          </Text>
-          <LinearGradient
-            colors={[c1, c2]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={[styles.bar, styles.barBanner]}
-          />
-        </View>
-        <View style={styles.heroArrow}>
-          <AppIcon name="arrow-right" size={16} color={theme.pearl} />
-        </View>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.banner, pressed && styles.pressed]}>
+      <ImageBackground source={{ uri: visual.uri }} style={styles.bannerImg} imageStyle={styles.bannerRadius}>
+        <LinearGradient colors={['rgba(0,0,0,0.05)', theme.scrimDeep]} style={StyleSheet.absoluteFill} />
+        <IndexMark index={index} />
+        <CardTitle dept={dept} itemsHint />
       </ImageBackground>
     </Pressable>
   );
 }
 
-const GAP = 8;
-
 const styles = StyleSheet.create({
-  wrap: { gap: GAP },
-  row: { flexDirection: 'row', gap: GAP },
-  card: {
-    borderRadius: radii.lg,
-    overflow: 'hidden',
-    backgroundColor: theme.canvasSoft,
-  },
-  pressed: { opacity: 0.94 },
-  hero: { height: 200 },
-  tile: { flex: 1, height: 148 },
-  banner: { height: 100 },
-  bg: { flex: 1, padding: 14, justifyContent: 'space-between' },
-  bannerBg: {
-    flex: 1,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  bgImage: { borderRadius: radii.lg },
+  wrap: { gap: 10 },
+  row: { flexDirection: 'row', gap: 10 },
+  pressed: { opacity: 0.92, transform: [{ scale: 0.995 }] },
   num: {
     fontFamily: fonts.bodySemi,
-    fontSize: 11,
-    letterSpacing: 1.4,
-    color: 'rgba(250,248,244,0.72)',
+    fontSize: 12,
+    letterSpacing: 1,
+    color: 'rgba(255,255,255,0.72)',
   },
   titleBlock: { gap: 2 },
   name: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 15,
-    letterSpacing: -0.2,
-    color: theme.pearl,
-  },
-  nameBig: {
     fontFamily: fonts.display,
-    fontSize: 22,
-    letterSpacing: -0.5,
+    fontSize: 17,
     color: theme.pearl,
-    marginTop: 4,
   },
+  nameBig: { fontSize: 26 },
+  rtl: { textAlign: 'right', writingDirection: 'rtl' },
   count: {
     fontFamily: fonts.bodySemi,
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-    color: 'rgba(250,248,244,0.5)',
-    marginTop: 2,
+    color: 'rgba(255,255,255,0.62)',
   },
-  rtl: { writingDirection: 'rtl', textAlign: 'right' },
   itemsHint: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: 'rgba(250,248,244,0.62)',
-    marginTop: 4,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 2,
   },
-  bar: { height: 2, borderRadius: 1, marginTop: 10, width: '100%', opacity: 0.9 },
-  barBig: { width: 56 },
-  barBanner: { width: 48, marginTop: 8 },
-  heroFooter: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  heroArrow: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.14)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.28)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bannerCopy: { flex: 1, paddingRight: 12 },
+  hero: { borderRadius: radii.lg, overflow: 'hidden' },
+  heroImg: { minHeight: 210, padding: 16, justifyContent: 'space-between' },
+  heroRadius: { borderRadius: radii.lg },
+  heroTop: { gap: 8 },
+  accentBar: { height: 3, width: 48, borderRadius: 2 },
+  enterRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
+  enter: { fontFamily: fonts.bodySemi, fontSize: 13, color: theme.pearl },
+  tile: { flex: 1, borderRadius: radii.md, overflow: 'hidden' },
+  tileImg: { minHeight: 132, padding: 12, justifyContent: 'space-between' },
+  tileRadius: { borderRadius: radii.md },
+  banner: { borderRadius: radii.md, overflow: 'hidden' },
+  bannerImg: { minHeight: 120, padding: 14, justifyContent: 'space-between' },
+  bannerRadius: { borderRadius: radii.md },
 });

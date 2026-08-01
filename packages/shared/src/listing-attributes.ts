@@ -104,6 +104,31 @@ const FURNITURE_TYPE_OPTIONS: AttributeFieldOption[] = [
   { value: 'other', labelEs: 'Otro', labelAr: 'آخر' },
 ];
 
+const SALON_ITEM_OPTIONS: AttributeFieldOption[] = [
+  { value: 'full_set', labelEs: 'Salón completo', labelAr: 'صالون كامل' },
+  { value: 'base', labelEs: 'Base / asiento', labelAr: 'قاعدة الجلوس' },
+  { value: 'cushions', labelEs: 'Cojines', labelAr: 'وسائد' },
+  { value: 'carpet', labelEs: 'Alfombra', labelAr: 'سجادة' },
+  { value: 'table', labelEs: 'Mesa baja', labelAr: 'طاولة منخفضة' },
+  { value: 'other', labelEs: 'Otro', labelAr: 'آخر' },
+];
+
+const SALON_SHAPE_OPTIONS: AttributeFieldOption[] = [
+  { value: 'linear', labelEs: 'Lineal', labelAr: 'مستقيم' },
+  { value: 'l_shape', labelEs: 'En L', labelAr: 'شكل L' },
+  { value: 'u_shape', labelEs: 'En U', labelAr: 'شكل U' },
+  { value: 'modular', labelEs: 'Modular', labelAr: 'وحدات' },
+  { value: 'n_a', labelEs: 'No aplica', labelAr: 'غير منطبق' },
+];
+
+const MEDICAL_ITEM_OPTIONS: AttributeFieldOption[] = [
+  { value: 'mobility', labelEs: 'Movilidad / silla', labelAr: 'تنقل / كرسي' },
+  { value: 'aids', labelEs: 'Ayudas técnicas', labelAr: 'مساعدات تقنية' },
+  { value: 'monitoring', labelEs: 'Medición / control', labelAr: 'قياس ومراقبة' },
+  { value: 'care', labelEs: 'Cuidado / higiene', labelAr: 'رعاية ونظافة' },
+  { value: 'other', labelEs: 'Otro material', labelAr: 'مواد أخرى' },
+];
+
 const ELECTRONICS_TYPE_OPTIONS: AttributeFieldOption[] = [
   { value: 'laptop', labelEs: 'Portátil', labelAr: 'حاسوب محمول' },
   { value: 'desktop', labelEs: 'Sobremesa', labelAr: 'حاسوب مكتبي' },
@@ -321,6 +346,69 @@ export const LISTING_ATTRIBUTE_SCHEMAS: ListingAttributeSchema[] = [
     ],
   },
   {
+    id: 'salons-carpets',
+    categorySlugs: ['salons-carpets'],
+    descriptionMinLength: 0,
+    fields: [
+      {
+        key: 'propertyType',
+        labelEs: 'Qué vendes',
+        labelAr: 'ماذا تبيع',
+        type: 'select',
+        required: true,
+        options: SALON_ITEM_OPTIONS,
+      },
+      {
+        key: 'shape',
+        labelEs: 'Forma del salón',
+        labelAr: 'شكل الصالون',
+        type: 'select',
+        required: true,
+        options: SALON_SHAPE_OPTIONS,
+      },
+      {
+        key: 'seats',
+        labelEs: 'Plazas (aprox.)',
+        labelAr: 'عدد المقاعد تقريباً',
+        type: 'number',
+        required: false,
+        min: 1,
+        placeholder: '6',
+      },
+      {
+        key: 'condition',
+        labelEs: 'Estado',
+        labelAr: 'الحالة',
+        type: 'select',
+        required: true,
+        options: PHONE_CONDITION,
+      },
+    ],
+  },
+  {
+    id: 'medical',
+    categorySlugs: ['health'],
+    descriptionMinLength: 20,
+    fields: [
+      {
+        key: 'propertyType',
+        labelEs: 'Tipo de material',
+        labelAr: 'نوع المادة',
+        type: 'select',
+        required: true,
+        options: MEDICAL_ITEM_OPTIONS,
+      },
+      {
+        key: 'condition',
+        labelEs: 'Estado',
+        labelAr: 'الحالة',
+        type: 'select',
+        required: true,
+        options: PHONE_CONDITION,
+      },
+    ],
+  },
+  {
     id: 'mobile',
     categorySlugs: ['mobiles'],
     descriptionMinLength: 0,
@@ -435,6 +523,18 @@ const furnitureAttributesSchema = z.object({
   condition: z.enum(['new', 'like_new', 'used']),
 });
 
+const salonsCarpetsAttributesSchema = z.object({
+  propertyType: z.enum(['full_set', 'base', 'cushions', 'carpet', 'table', 'other']),
+  shape: z.enum(['linear', 'l_shape', 'u_shape', 'modular', 'n_a']),
+  seats: z.coerce.number().int().positive().optional(),
+  condition: z.enum(['new', 'like_new', 'used']),
+});
+
+const medicalAttributesSchema = z.object({
+  propertyType: z.enum(['mobility', 'aids', 'monitoring', 'care', 'other']),
+  condition: z.enum(['new', 'like_new', 'used']),
+});
+
 const mobileAttributesSchema = z
   .object({
     brand: z.string().min(1),
@@ -478,6 +578,8 @@ const SCHEMA_BY_ID: Record<string, z.ZodTypeAny> = {
   lands: landsAttributesSchema,
   commercial: commercialAttributesSchema,
   furniture: furnitureAttributesSchema,
+  'salons-carpets': salonsCarpetsAttributesSchema,
+  medical: medicalAttributesSchema,
   mobile: mobileAttributesSchema,
   electronics: electronicsAttributesSchema,
 };
@@ -614,6 +716,30 @@ export function formatAttributeHighlights(
   if (schema.id === 'furniture') {
     if (attributes.propertyType) {
       chips.push(labelForOption(FURNITURE_TYPE_OPTIONS, String(attributes.propertyType)));
+    }
+    if (attributes.condition) {
+      chips.push(labelForOption(PHONE_CONDITION, String(attributes.condition)));
+    }
+    return chips;
+  }
+
+  if (schema.id === 'salons-carpets') {
+    if (attributes.propertyType) {
+      chips.push(labelForOption(SALON_ITEM_OPTIONS, String(attributes.propertyType)));
+    }
+    if (attributes.shape && attributes.shape !== 'n_a') {
+      chips.push(labelForOption(SALON_SHAPE_OPTIONS, String(attributes.shape)));
+    }
+    if (attributes.seats) chips.push(`${attributes.seats} plazas`);
+    if (attributes.condition) {
+      chips.push(labelForOption(PHONE_CONDITION, String(attributes.condition)));
+    }
+    return chips;
+  }
+
+  if (schema.id === 'medical') {
+    if (attributes.propertyType) {
+      chips.push(labelForOption(MEDICAL_ITEM_OPTIONS, String(attributes.propertyType)));
     }
     if (attributes.condition) {
       chips.push(labelForOption(PHONE_CONDITION, String(attributes.condition)));
@@ -782,6 +908,30 @@ export function getListingAttributeFilters(categorySlug: string): ListingAttribu
     ];
   }
 
+  if (schema.id === 'salons-carpets') {
+    return [
+      {
+        param: 'propertyType',
+        labelEs: 'Qué es',
+        labelAr: 'النوع',
+        type: 'select',
+        options: SALON_ITEM_OPTIONS,
+      },
+    ];
+  }
+
+  if (schema.id === 'medical') {
+    return [
+      {
+        param: 'propertyType',
+        labelEs: 'Tipo',
+        labelAr: 'النوع',
+        type: 'select',
+        options: MEDICAL_ITEM_OPTIONS,
+      },
+    ];
+  }
+
   if (schema.id === 'mobile') {
     return [
       {
@@ -863,6 +1013,16 @@ export function suggestListingTitle(
 
   if (schema.id === 'furniture' && attributes.propertyType) {
     return labelForOption(FURNITURE_TYPE_OPTIONS, String(attributes.propertyType));
+  }
+
+  if (schema.id === 'salons-carpets' && attributes.propertyType) {
+    const kind = labelForOption(SALON_ITEM_OPTIONS, String(attributes.propertyType));
+    const seats = attributes.seats ? ` · ${attributes.seats} plazas` : '';
+    return `${kind}${seats}`;
+  }
+
+  if (schema.id === 'medical' && attributes.propertyType) {
+    return labelForOption(MEDICAL_ITEM_OPTIONS, String(attributes.propertyType));
   }
 
   if (schema.id === 'electronics') {

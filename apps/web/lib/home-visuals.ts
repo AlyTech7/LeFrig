@@ -24,7 +24,7 @@ export type AtlasVisual = {
 };
 
 /**
- * Atlas — 10 salas del mercado (MARKETPLACE_DEPARTMENTS).
+ * Atlas — salas del mercado (MARKETPLACE_DEPARTMENTS).
  * Cada foto coincide con el departamento, no con otra categoría.
  */
 export const ATLAS_VISUALS: Record<string, AtlasVisual> = {
@@ -48,7 +48,7 @@ export const ATLAS_VISUALS: Record<string, AtlasVisual> = {
     src: img('/gate/transport.jpg', U('photo-1601584115197-04ecc0da31d7')),
     position: 'center 55%',
   },
-  /** عقارات — vivienda, alquiler, terrenos */
+  /** عقارات — vivienda, alquiler, terrenos, salones */
   'real-estate': {
     src: img('/atlas/real-estate.jpg', U('photo-1600596542815-ffad4c1539a9')),
     position: 'center 62%',
@@ -63,15 +63,20 @@ export const ATLAS_VISUALS: Record<string, AtlasVisual> = {
     src: img('/atlas/family.jpg', U('photo-1445205170230-053b83016050')),
     position: 'center 42%',
   },
-  /** إلكترونيات — móviles, TPV, material (no paneles solares) */
+  /** إلكترونيات — móviles, TPV, material */
   electronics: {
     src: img('/atlas/electronics.jpg', U('photo-1511707171634-5f897ff02aa9')),
     position: 'center 50%',
   },
-  /** رياضة وصحة */
+  /** رياضة ولياقة */
   sport: {
     src: img('/atlas/sport.jpg', U('photo-1517836357463-d25dfeac3438')),
     position: 'center 28%',
+  },
+  /** صحة — necesidades médicas y farmacias */
+  health: {
+    src: img('/atlas/health.jpg', U('photo-1579684385127-1ef15d508118')),
+    position: 'center 40%',
   },
   /** أخرى — bazar general, herramientas, miscelánea */
   others: {
@@ -168,6 +173,8 @@ export const HOME_VISUALS = {
     'agua-potable': img('/curated/agua.jpg', U('photo-1523362628745-0c100150b504')),
     solar: img('/curated/solar.jpg', U('photo-1509391366360-2e959784a276')),
     furniture: img('/curated/furniture.jpg', U('photo-1555041469-a586c61ea9bc')),
+    'salons-carpets': img('/curated/salons.jpg', U('photo-1618220179428-22790b461013')),
+    health: img('/curated/health.jpg', U('photo-1579684385127-1ef15d508118')),
     food: img('/curated/food.jpg', U('photo-1565299624946-b28f40a0ae38')),
   },
 

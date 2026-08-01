@@ -14,6 +14,7 @@ export const ATLAS_VISUALS: Record<string, HomeVisual> = {
   family: { uri: U('photo-1445205170230-053b83016050') },
   electronics: { uri: U('photo-1511707171634-5f897ff02aa9') },
   sport: { uri: U('photo-1517836357463-d25dfeac3438') },
+  health: { uri: U('photo-1579684385127-1ef15d508118') },
   others: { uri: U('photo-1578662996442-48f60103fc96') },
 };
 
@@ -33,6 +34,9 @@ export const CURATED_VISUALS: Record<string, HomeVisual> = {
   henna: { uri: U('photo-1612817288484-6f916006741a', 800) },
   'agua-potable': { uri: U('photo-1523362628745-0c100150b504', 800) },
   solar: { uri: U('photo-1509391366360-2e959784a276', 800) },
+  furniture: { uri: U('photo-1555041469-a586c61ea9bc', 800) },
+  'salons-carpets': { uri: U('photo-1618220179428-22790b461013', 800) },
+  health: { uri: U('photo-1579684385127-1ef15d508118', 800) },
   food: { uri: U('photo-1565299624946-b28f40a0ae38', 800) },
   camels: { uri: U('photo-1719689831010-be9fe130e88b', 800) },
   'residential-sale': { uri: U('photo-1600596542815-ffad4c1539a9', 800) },

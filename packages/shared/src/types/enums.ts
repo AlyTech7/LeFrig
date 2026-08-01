@@ -222,6 +222,7 @@ export enum ShopType {
   COOPERATIVE = 'cooperative',
   ASSOCIATION = 'association',
   WORKSHOP = 'workshop',
+  PHARMACY = 'pharmacy',
 }
 
 // Credit/Ledger
