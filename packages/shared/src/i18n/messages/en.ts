@@ -203,7 +203,7 @@ const en: Messages = {
   },
   atlas: {
     allRooms: 'All rooms',
-    seeAllRooms: 'Explore all 10 Atlas rooms',
+    seeAllRooms: 'Explore the 10 rooms',
     swipeRooms: 'Swipe · 10 bazaar rooms',
     deckProgress: '{{current}} / {{total}} · {{name}}',
     vaultOptions: '{{count}} options',
