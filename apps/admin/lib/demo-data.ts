@@ -39,24 +39,24 @@ export const demoNeedsAdmin = [
 ];
 
 export const demoJobsAdmin = [
-  { id: 'j1', title: 'Técnico solar', jobType: 'offer', category: 'skilled', salary: 8000, currency: 'MRU', camp: 'Tindouf', poster: 'ONG Saharaui', isActive: true },
-  { id: 'j2', title: 'Busco trabajo de albañil', jobType: 'seeking', category: 'daily', salary: null, currency: 'MRU', camp: 'El Aaiún', poster: 'Ahmed S.', isActive: true },
+  { id: 'j1', title: 'Técnico solar', jobType: 'offer', category: 'skilled', salary: 160000, currency: 'DURU', camp: 'Tindouf', poster: 'ONG Saharaui', isActive: true },
+  { id: 'j2', title: 'Busco trabajo de albañil', jobType: 'seeking', category: 'daily', salary: null, currency: 'DURU', camp: 'El Aaiún', poster: 'Ahmed S.', isActive: true },
 ];
 
 export const demoListingsAdmin = [
-  { id: 'l1', title: 'Panel solar 200W', status: 'pending_review', camp: 'Rabouni', seller: 'Mohamed L.', price: 12500 },
-  { id: 'l2', title: 'Samsung A54', status: 'active', camp: 'Smara', seller: 'Fatima S.', price: 8500 },
-  { id: 'l3', title: 'Toyota Hilux', status: 'reported', camp: 'Aaiún', seller: 'Hassan M.', price: 420000 },
+  { id: 'l1', title: 'Panel solar 200W', status: 'pending_review', camp: 'Rabouni', seller: 'Mohamed L.', price: 250000 },
+  { id: 'l2', title: 'Samsung A54', status: 'active', camp: 'Smara', seller: 'Fatima S.', price: 170000 },
+  { id: 'l3', title: 'Toyota Hilux', status: 'reported', camp: 'Aaiún', seller: 'Hassan M.', price: 8400000 },
 ];
 
 export const demoOrders = [
-  { id: 'o1', status: 'pending', shop: 'Marsa Al-Khair', total: 2400, camp: 'Rabouni' },
-  { id: 'o2', status: 'delivered', shop: 'Electro Smara', total: 8500, camp: 'Smara' },
-  { id: 'o3', status: 'in_transit', shop: 'Dakhla Fresh', total: 680, camp: 'Dakhla' },
+  { id: 'o1', status: 'pending', shop: 'Marsa Al-Khair', total: 48000, camp: 'Rabouni' },
+  { id: 'o2', status: 'delivered', shop: 'Electro Smara', total: 170000, camp: 'Smara' },
+  { id: 'o3', status: 'in_transit', shop: 'Dakhla Fresh', total: 13600, camp: 'Dakhla' },
 ];
 
 export const demoVouchers = [
-  { id: 'v1', code: 'HUM-2026-001', balance: 5000, status: 'active', program: 'Ayuda humanitaria' },
+  { id: 'v1', code: 'HUM-2026-001', balance: 100000, status: 'active', program: 'Ayuda humanitaria' },
   { id: 'v2', code: 'DIA-2026-042', balance: 12000, status: 'redeemed', program: 'Diáspora' },
 ];
 

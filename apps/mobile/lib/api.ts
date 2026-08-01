@@ -219,7 +219,7 @@ export function mapApiService(raw: Record<string, unknown>): ServiceItem {
     campNames,
     priceFrom: priceFromRaw != null && priceFromRaw !== '' ? Number(priceFromRaw) : 0,
     priceTo: priceToRaw != null && priceToRaw !== '' ? Number(priceToRaw) : undefined,
-    currency: String(raw.currency ?? 'DZD'),
+    currency: String(raw.currency ?? 'DURU'),
     categorySlug: category?.slug?.replace(/^service-/, '') || undefined,
     categoryName: category?.nameEs || undefined,
     images,
@@ -249,7 +249,7 @@ export function mapApiJob(raw: Record<string, unknown>): JobItem {
   const camp = raw.camp as { nameEs?: string } | undefined;
   const poster = raw.poster as { displayName?: string } | undefined;
   const salaryNum = raw.salary != null ? Number(raw.salary) : null;
-  const currency = String(raw.currency ?? 'MRU');
+  const currency = String(raw.currency ?? 'DURU');
   const salary = salaryNum ? `${salaryNum.toLocaleString()} ${currency}` : 'A convenir';
   const jobType = String(raw.jobType ?? 'offer');
   const typeLabel =
@@ -269,9 +269,9 @@ export function mapApiJob(raw: Record<string, unknown>): JobItem {
 }
 
 export const demoListings: ListingSummary[] = [
-  { id: '1', title: 'Panel solar 200W', price: 12500, currency: CURRENCY, status: 'active', category: 'solar', campId: 'c1', sellerName: 'Mohamed L.', createdAt: new Date().toISOString() },
-  { id: '2', title: 'Samsung A54', price: 8500, currency: CURRENCY, status: 'active', category: 'mobiles', campId: 'c2', sellerName: 'Fatima S.', createdAt: new Date().toISOString() },
-  { id: '3', title: 'Harina y aceite', price: 320, currency: CURRENCY, status: 'active', category: 'food', campId: 'c3', sellerName: 'Coop. Al-Nour', createdAt: new Date().toISOString() },
+  { id: '1', title: 'Panel solar 200W', price: 250000, currency: CURRENCY, status: 'active', category: 'solar', campId: 'c1', sellerName: 'Mohamed L.', createdAt: new Date().toISOString() },
+  { id: '2', title: 'Samsung A54', price: 170000, currency: CURRENCY, status: 'active', category: 'mobiles', campId: 'c2', sellerName: 'Fatima S.', createdAt: new Date().toISOString() },
+  { id: '3', title: 'Harina y aceite', price: 6400, currency: CURRENCY, status: 'active', category: 'food', campId: 'c3', sellerName: 'Coop. Al-Nour', createdAt: new Date().toISOString() },
 ];
 
 export const demoListingsPage: PaginatedResponse<ListingSummary> = {

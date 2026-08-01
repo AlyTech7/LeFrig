@@ -11,7 +11,7 @@ const sections = [
     icon: '◈',
     fields: [
       { key: 'platformName', label: 'Nombre de plataforma', value: 'Lefrig', type: 'text' },
-      { key: 'defaultCurrency', label: 'Moneda por defecto', value: 'DZD', type: 'text' },
+      { key: 'defaultCurrency', label: 'Moneda por defecto', value: 'DURU', type: 'text' },
       { key: 'maintenanceMode', label: 'Modo mantenimiento', value: false, type: 'toggle' },
     ],
   },

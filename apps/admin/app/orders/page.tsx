@@ -11,7 +11,7 @@ export default async function OrdersPage() {
       camp: o.camp,
       buyer: '—',
       total: o.total,
-      currency: 'MRU',
+      currency: 'DURU',
       status: o.status,
       paymentMethod: 'cash',
       paymentStatus: 'pending',

@@ -24,7 +24,7 @@ import { theme, radii } from '@/lib/theme';
 import { fonts, space } from '@/lib/ui';
 
 function formatPrice(item: ServiceItem, t: (k: string, p?: Record<string, string | number>) => string) {
-  const currency = item.currency || 'DZD';
+  const currency = item.currency || 'DURU';
   if (!item.priceFrom) return t('services.studio.priceNegotiable');
   if (item.priceTo != null && item.priceTo > item.priceFrom) {
     return t('services.priceRange', {

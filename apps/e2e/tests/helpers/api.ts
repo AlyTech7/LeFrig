@@ -36,7 +36,7 @@ export async function createTestListing(
       title,
       description: 'Anuncio de prueba E2E — producto ficticio para CI.',
       price: 2500,
-      currency: 'DZD',
+      currency: 'DURU',
       category: 'other',
       campId: camp.id,
       paymentMethods: ['cash'],

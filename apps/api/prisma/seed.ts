@@ -319,13 +319,13 @@ async function main() {
 
   const products = await Promise.all([
     prisma.shopProduct.create({
-      data: { shopId: shop.id, name: 'Arroz 5kg', price: 450, stock: 50 },
+      data: { shopId: shop.id, name: 'Arroz 5kg', price: 9000, stock: 50, currency: 'DURU' },
     }),
     prisma.shopProduct.create({
-      data: { shopId: shop.id, name: 'Aceite 1L', price: 180, stock: 30 },
+      data: { shopId: shop.id, name: 'Aceite 1L', price: 3600, stock: 30, currency: 'DURU' },
     }),
     prisma.shopProduct.create({
-      data: { shopId: shop.id, name: 'Leche en polvo', price: 320, stock: 20 },
+      data: { shopId: shop.id, name: 'Leche en polvo', price: 6400, stock: 20, currency: 'DURU' },
     }),
   ]);
 
@@ -338,7 +338,8 @@ async function main() {
       dairaId: dairaRecords.aaiun.id,
       title: 'Samsung Galaxy A54 - Como nuevo',
       description: 'Teléfono en excelente estado, con cargador original. 128GB.',
-      price: 8500,
+      price: 170000,
+      currency: 'DURU',
       status: 'active',
       images: ['https://picsum.photos/seed/phone1/400/300'],
       paymentMethods: ['cash'],
@@ -354,7 +355,8 @@ async function main() {
       dairaId: dairaRecords.dakhla.id,
       title: 'Generador 2.5kW',
       description: 'Generador compacto para uso doméstico, en buen estado.',
-      price: 12000,
+      price: 240000,
+      currency: 'DURU',
       status: 'active',
       paymentMethods: ['cash'],
     },
@@ -369,7 +371,8 @@ async function main() {
         dairaId: dairaRecords.rabouni?.id,
         title: 'Toyota Corolla 2018 — Rabouni',
         description: 'Coche familiar, bien mantenido. Pago en efectivo.',
-        price: 185000,
+        price: 3700000,
+        currency: 'DURU',
         status: 'active',
         images: ['https://picsum.photos/seed/car1/400/300'],
         paymentMethods: ['cash'],
@@ -393,8 +396,9 @@ async function main() {
       categoryId: serviceCat!.id,
       title: 'Electricista certificado',
       description: 'Instalaciones eléctricas y reparaciones domésticas.',
-      priceFrom: 500,
-      priceTo: 3000,
+      priceFrom: 10000,
+      priceTo: 60000,
+      currency: 'DURU',
       camps: {
         create: [{ campId: campBySlug.aaiun.id }, { campId: campBySlug.smara.id }],
       },
@@ -461,12 +465,13 @@ async function main() {
       status: 'accepted',
       paymentMethod: 'cash',
       paymentStatus: 'pending',
-      totalAmount: 630,
+      totalAmount: 12600,
+      currency: 'DURU',
       notes: 'Para mi familia en Smara',
       items: {
         create: [
-          { productId: products[0].id, name: 'Arroz 5kg', quantity: 1, unitPrice: 450, subtotal: 450 },
-          { productId: products[1].id, name: 'Aceite 1L', quantity: 1, unitPrice: 180, subtotal: 180 },
+          { productId: products[0].id, name: 'Arroz 5kg', quantity: 1, unitPrice: 9000, subtotal: 9000 },
+          { productId: products[1].id, name: 'Aceite 1L', quantity: 1, unitPrice: 3600, subtotal: 3600 },
         ],
       },
     },
@@ -479,7 +484,8 @@ async function main() {
       listingId: listing.id,
       buyerId: users.shopOwner.id,
       sellerId: users.seller.id,
-      amount: 8500,
+      amount: 170000,
+      currency: 'DURU',
       method: 'cash',
       status: 'agreed',
       pin: '1234',
@@ -501,7 +507,8 @@ async function main() {
       profileId: diasporaProfile.id,
       orderType: 'essentials',
       description: 'Paquete de alimentos básicos para familia',
-      budget: 2000,
+      budget: 40000,
+      currency: 'DURU',
       status: 'pending',
       campId: campBySlug.rabouni.id,
     },
@@ -516,7 +523,8 @@ async function main() {
       category: 'skilled',
       title: 'Técnico de generadores',
       description: 'Instalación y mantenimiento de generadores en viviendas del campamento.',
-      salary: 8000,
+      salary: 160000,
+      currency: 'DURU',
     },
   });
 
@@ -629,7 +637,7 @@ async function main() {
     data: [
       { eventType: 'search', term: 'generador', category: 'tools', campId: campBySlug.dakhla.id, bucket: '2025-06' },
       { eventType: 'search', term: 'telefono', category: 'mobiles', campId: campBySlug.aaiun.id, bucket: '2025-06', count: 12 },
-      { eventType: 'listing_view', category: 'mobiles', campId: campBySlug.aaiun.id, value: 8500, bucket: '2025-06', count: 45 },
+      { eventType: 'listing_view', category: 'mobiles', campId: campBySlug.aaiun.id, value: 170000, bucket: '2025-06', count: 45 },
       { eventType: 'route_search', term: 'rabouni-tindouf', campId: campBySlug.rabouni.id, bucket: '2025-06', count: 8 },
     ],
   });
@@ -638,7 +646,8 @@ async function main() {
   await prisma.escrowTransaction.create({
     data: {
       reference: 'ESCROW-MOCK-001',
-      amount: 5000,
+      amount: 100000,
+      currency: 'DURU',
       status: 'mock_pending',
       buyerRef: users.shopOwner.id,
       sellerRef: users.seller.id,

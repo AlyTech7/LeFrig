@@ -46,7 +46,7 @@ export function DiasporaClient({ initial }: { initial: AdminDiasporaRow[] }) {
           { key: 'diasporaUser', header: 'Remitente' },
           { key: 'orderType', header: 'Tipo' },
           { key: 'camp', header: 'Campamento', sortable: true },
-          { key: 'budget', header: 'Presupuesto', render: (r) => (r.budget != null ? <Mono>{r.budget.toLocaleString()} MRU</Mono> : '—') },
+          { key: 'budget', header: 'Presupuesto', render: (r) => (r.budget != null ? <Mono>{r.budget.toLocaleString()} duros</Mono> : '—') },
           { key: 'status', header: 'Estado', render: (r) => <StatusCell status={r.status} /> },
           {
             key: 'actions',
