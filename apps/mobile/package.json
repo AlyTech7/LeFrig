@@ -15,7 +15,7 @@
     "eas-build-post-install": "pnpm --filter @lefrig/shared build"
   },
   "dependencies": {
-    "@clerk/clerk-expo": "^2.9.0",
+    "@clerk/clerk-expo": "^2.19.36",
     "@expo-google-fonts/dm-sans": "^0.4.2",
     "@expo-google-fonts/fraunces": "^0.4.1",
     "@expo/metro-runtime": "~6.1.2",
