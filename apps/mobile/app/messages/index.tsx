@@ -16,7 +16,7 @@ import { useRouter } from 'expo-router';
 import { AppIcon } from '@/components/AppIcon';
 import { useAuthApi } from '@/lib/useAuthApi';
 import { useLocale, useT } from '@/lib/locale';
-import { theme, radii } from '@/lib/theme';
+import { theme } from '@/lib/theme';
 import { fonts, space } from '@/lib/ui';
 
 type Conversation = {

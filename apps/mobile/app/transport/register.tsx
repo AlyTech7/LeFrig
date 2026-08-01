@@ -20,7 +20,7 @@ import {
 } from '@lefrig/shared';
 import { PhoneField } from '@/components/PhoneField';
 import { CountryFlag } from '@/components/CountryFlag';
-import { Hero, Button, StudioSteps, EmptyState } from '@/components/ui';
+import { Hero, Button, StudioSteps } from '@/components/ui';
 import { SingleImagePicker } from '@/components/ui/SingleImagePicker';
 import { useAuthApi } from '@/lib/useAuthApi';
 import { useLocale, useT } from '@/lib/locale';

@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: theme.goldSoft,
+    backgroundColor: theme.warningSoft,
     borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 16,

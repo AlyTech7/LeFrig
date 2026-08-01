@@ -38,12 +38,17 @@ function resolveImage(url?: string): string | undefined {
   return resolveImageUrl(url, API_URL) ?? undefined;
 }
 
+function firstParam(v: string | string[] | undefined): string | undefined {
+  if (Array.isArray(v)) return v[0];
+  return v;
+}
+
 function pickAttrParams(
-  params: Record<string, string | undefined>,
+  params: Record<string, string | string[] | undefined>,
 ): ListingAttributeFilterValues {
   const raw: Record<string, string> = {};
   for (const key of LISTING_ATTR_FILTER_KEYS) {
-    const v = params[key];
+    const v = firstParam(params[key]);
     if (v) raw[key] = v;
   }
   return listingAttributeFilterSchema.parse(raw);
@@ -102,8 +107,10 @@ export default function MarketplaceScreen() {
   const router = useRouter();
   const t = useT();
   const { locale, dir } = useLocale();
-  const routeParams = useLocalSearchParams<Record<string, string | undefined>>();
-  const { q, category, camp } = routeParams;
+  const routeParams = useLocalSearchParams();
+  const q = firstParam(routeParams.q);
+  const category = firstParam(routeParams.category);
+  const camp = firstParam(routeParams.camp);
   const [listings, setListings] = useState<ListingSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [usingDemo, setUsingDemo] = useState(false);
