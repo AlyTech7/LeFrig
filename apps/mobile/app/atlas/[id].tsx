@@ -70,6 +70,10 @@ export default function AtlasDepartmentScreen() {
       </ImageBackground>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        {dept.id === 'health' ? (
+          <Text style={[styles.healthNotice, dir === 'rtl' && styles.rtl]}>{t('atlas.healthNotice')}</Text>
+        ) : null}
+
         {isServices ? (
           SERVICES_GROUPS.map((group) => {
             const items = group.slugs.map((s) => bySlug.get(s)).filter(Boolean) as MarketplaceItem[];
@@ -151,6 +155,16 @@ const styles = StyleSheet.create({
   rtl: { writingDirection: 'rtl', textAlign: 'right' },
   heroBar: { height: 4, borderRadius: 2, marginTop: 12, width: 80 },
   scroll: { padding: 20, paddingBottom: 100 },
+  healthNotice: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    lineHeight: 19,
+    color: theme.inkSoft,
+    backgroundColor: 'rgba(159, 18, 57, 0.08)',
+    borderRadius: radii.md,
+    padding: 12,
+    marginBottom: 16,
+  },
   group: { marginBottom: 20 },
   groupTitle: { fontSize: 18, fontWeight: '800', color: theme.ink, marginBottom: 10 },
   itemRow: {

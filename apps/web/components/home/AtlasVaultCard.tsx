@@ -160,6 +160,10 @@ export function AtlasVaultCard({
           </div>
         ) : null}
 
+        {dept.id === 'health' && !isDeck ? (
+          <p className="lf-vault__notice">{t('atlas.healthNotice')}</p>
+        ) : null}
+
         {isServices ? (
           <ServicesVaultBody items={dept.items} locale={locale} compact={isDeck} />
         ) : (

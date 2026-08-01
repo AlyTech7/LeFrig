@@ -38,7 +38,7 @@ type ShopInfo = {
 
 type Tab = 'profile' | 'products';
 
-const SHOP_TYPES = ['individual', 'restaurant', 'cooperative', 'association', 'workshop'] as const;
+const SHOP_TYPES = ['individual', 'restaurant', 'cooperative', 'association', 'workshop', 'pharmacy'] as const;
 
 const TYPE_KEYS: Record<string, string> = {
   individual: 'shops.typeIndividual',
@@ -46,6 +46,7 @@ const TYPE_KEYS: Record<string, string> = {
   cooperative: 'shops.typeCooperative',
   association: 'shops.typeAssociation',
   workshop: 'shops.typeWorkshop',
+  pharmacy: 'shops.typePharmacy',
 };
 
 export function ShopManageStudio() {

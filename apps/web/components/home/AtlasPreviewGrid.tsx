@@ -3,6 +3,7 @@
 import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import {
+  ATLAS_ROOM_COUNT,
   MARKETPLACE_DEPARTMENTS,
   getMarketplaceItemHref,
   pickLocalized,
@@ -78,7 +79,7 @@ export function AtlasPreviewGrid() {
         ))}
       </div>
       <Link href="/marketplace" className="lf-atlas-preview__cta">
-        <span>{t('atlas.seeAllRooms')}</span>
+        <span>{t('atlas.seeAllRooms', { count: ATLAS_ROOM_COUNT })}</span>
         <AppIcon name="arrow-right" size={18} />
       </Link>
     </div>

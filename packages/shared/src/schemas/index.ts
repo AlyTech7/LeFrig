@@ -95,7 +95,7 @@ export const createShopSchema = z.object({
   whatsapp: phoneSchema.optional(),
   acceptsCash: z.boolean().default(true),
   shopType: z
-    .enum(['individual', 'restaurant', 'cooperative', 'association', 'workshop'])
+    .enum(['individual', 'restaurant', 'cooperative', 'association', 'workshop', 'pharmacy'])
     .default('individual'),
   imageUrl: z.string().url().optional(),
 });

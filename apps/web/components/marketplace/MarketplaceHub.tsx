@@ -240,6 +240,12 @@ export function MarketplaceHub() {
         </div>
       )}
 
+      {(category === 'health' || activeDept === 'health') && (
+        <p className="mkt-health-notice" role="note">
+          {t('atlas.healthNotice')}
+        </p>
+      )}
+
       <section className="mkt-cats" aria-label={t('marketplace.exploreCategories')}>
         <div className="mkt-rail" role="listbox" aria-label={t('marketplace.exploreCategories')} dir={dir}>
           {MARKETPLACE_DEPARTMENTS.map((dept) => {

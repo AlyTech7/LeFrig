@@ -14,7 +14,7 @@ import { localizedCampFromSummary, DEFAULT_PHONE_COUNTRY } from '@lefrig/shared'
 import { PhoneField } from '@lefrig/ui/client';
 
 type Step = 1 | 2 | 3 | 4;
-type ShopType = 'individual' | 'restaurant' | 'cooperative' | 'association' | 'workshop';
+type ShopType = 'individual' | 'restaurant' | 'cooperative' | 'association' | 'workshop' | 'pharmacy';
 
 const STEPS: { n: Step; labelKey: string }[] = [
   { n: 1, labelKey: 'shops.studio.stepType' },
@@ -26,6 +26,7 @@ const STEPS: { n: Step; labelKey: string }[] = [
 const SHOP_TYPES: { id: ShopType; labelKey: string; descKey: string; icon: string }[] = [
   { id: 'individual', labelKey: 'shops.typeIndividual', descKey: 'shops.studio.typeIndividualDesc', icon: '🏪' },
   { id: 'restaurant', labelKey: 'shops.typeRestaurant', descKey: 'shops.studio.typeRestaurantDesc', icon: '🍽️' },
+  { id: 'pharmacy', labelKey: 'shops.typePharmacy', descKey: 'shops.studio.typePharmacyDesc', icon: '💊' },
   { id: 'cooperative', labelKey: 'shops.typeCooperative', descKey: 'shops.studio.typeCooperativeDesc', icon: '🤝' },
   { id: 'workshop', labelKey: 'shops.typeWorkshop', descKey: 'shops.studio.typeWorkshopDesc', icon: '🔧' },
   { id: 'association', labelKey: 'shops.typeAssociation', descKey: 'shops.studio.typeAssociationDesc', icon: '👥' },

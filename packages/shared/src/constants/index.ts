@@ -11,6 +11,7 @@ export const CAMPS = [
 export {
   LISTING_CATEGORIES,
   MARKETPLACE_DEPARTMENTS,
+  ATLAS_ROOM_COUNT,
   marketplaceListingItems,
   getMarketplaceItemHref,
   findDepartmentForSlug,

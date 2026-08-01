@@ -43,13 +43,14 @@ type ShopInfo = {
   isActive: boolean;
 };
 
-const SHOP_TYPES = ['individual', 'restaurant', 'cooperative', 'association', 'workshop'] as const;
+const SHOP_TYPES = ['individual', 'restaurant', 'cooperative', 'association', 'workshop', 'pharmacy'] as const;
 const TYPE_KEYS: Record<string, string> = {
   individual: 'shops.typeIndividual',
   restaurant: 'shops.typeRestaurant',
   cooperative: 'shops.typeCooperative',
   association: 'shops.typeAssociation',
   workshop: 'shops.typeWorkshop',
+  pharmacy: 'shops.typePharmacy',
 };
 
 export default function ShopManageScreen() {

@@ -34,6 +34,7 @@ const TYPE_KEYS: Record<string, string> = {
   cooperative: 'shops.typeCooperative',
   association: 'shops.typeAssociation',
   workshop: 'shops.typeWorkshop',
+  pharmacy: 'shops.typePharmacy',
 };
 
 export default function MyShopsScreen() {

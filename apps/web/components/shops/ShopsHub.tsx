@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import type { CampSummary, PaginatedResponse } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
 import { AppImage } from '@/lib/images';
@@ -18,7 +19,7 @@ import { localizedCampFromSummary } from '@lefrig/shared';
 import { useAuthFetch } from '@/lib/auth-fetch';
 
 type PayFilter = 'all' | 'cash' | 'verified';
-type TypeFilter = 'all' | 'individual' | 'restaurant' | 'cooperative' | 'association' | 'workshop';
+type TypeFilter = 'all' | 'individual' | 'restaurant' | 'cooperative' | 'association' | 'workshop' | 'pharmacy';
 
 const SHOP_TYPE_KEYS: Record<string, string> = {
   individual: 'shops.typeIndividual',
@@ -26,6 +27,7 @@ const SHOP_TYPE_KEYS: Record<string, string> = {
   cooperative: 'shops.typeCooperative',
   association: 'shops.typeAssociation',
   workshop: 'shops.typeWorkshop',
+  pharmacy: 'shops.typePharmacy',
 };
 
 const TYPE_ICONS: Record<string, string> = {
@@ -34,12 +36,14 @@ const TYPE_ICONS: Record<string, string> = {
   cooperative: '🤝',
   association: '👥',
   workshop: '🔧',
+  pharmacy: '💊',
 };
 
 const TYPE_FILTERS: { id: TypeFilter; labelKey: string; icon?: string }[] = [
   { id: 'all', labelKey: 'shops.filterAll' },
   { id: 'individual', labelKey: 'shops.typeIndividual', icon: '🏪' },
   { id: 'restaurant', labelKey: 'shops.typeRestaurant', icon: '🍽️' },
+  { id: 'pharmacy', labelKey: 'shops.typePharmacy', icon: '💊' },
   { id: 'cooperative', labelKey: 'shops.typeCooperative', icon: '🤝' },
   { id: 'workshop', labelKey: 'shops.typeWorkshop', icon: '🔧' },
   { id: 'association', labelKey: 'shops.typeAssociation', icon: '👥' },
@@ -54,6 +58,8 @@ function paymentTags(shop: ShopListItem, t: ReturnType<typeof useT>) {
 export function ShopsHub() {
   const t = useT();
   const { locale } = useLocale();
+  const searchParams = useSearchParams();
+  const initialType = (searchParams.get('shopType') as TypeFilter | null) ?? 'all';
   const { authFetch, isSignedIn } = useAuthFetch();
   const [shops, setShops] = useState<ShopListItem[]>([]);
   const [camps, setCamps] = useState<CampSummary[]>(demoCamps);
@@ -61,7 +67,9 @@ export function ShopsHub() {
   const [usingDemo, setUsingDemo] = useState(false);
   const [campId, setCampId] = useState('');
   const [payFilter, setPayFilter] = useState<PayFilter>('all');
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>(
+    TYPE_FILTERS.some((x) => x.id === initialType) ? initialType : 'all',
+  );
   const [query, setQuery] = useState('');
   const [mineCount, setMineCount] = useState(0);
 

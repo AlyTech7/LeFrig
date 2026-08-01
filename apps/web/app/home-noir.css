@@ -2507,6 +2507,17 @@
   letter-spacing: 0.06em;
 }
 
+.lf-vault__notice {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: rgba(250, 248, 244, 0.82);
+  background: rgba(159, 18, 57, 0.28);
+  border: 1px solid rgba(251, 113, 133, 0.28);
+}
+
 /* ─── Society ─── */
 .lf-society {
   padding-top: 0.5rem;

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Pressable, ActivityIndicator, TextInput, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { resolveImageUrl } from '@lefrig/shared';
 import { API_URL, fetchWithMeta, mapApiShop, type ShopItem, unwrapPaginated } from '@/lib/api';
 import { useAuthApi } from '@/lib/useAuthApi';
@@ -12,8 +12,19 @@ import { AppIcon } from '@/components/AppIcon';
 import { CAMPS } from '@lefrig/shared';
 import { fonts, space } from '@/lib/ui';
 
+const TYPE_FILTERS = [
+  { id: 'all', labelKey: 'shops.filterAll' },
+  { id: 'individual', labelKey: 'shops.typeIndividual' },
+  { id: 'restaurant', labelKey: 'shops.typeRestaurant' },
+  { id: 'pharmacy', labelKey: 'shops.typePharmacy' },
+  { id: 'cooperative', labelKey: 'shops.typeCooperative' },
+  { id: 'workshop', labelKey: 'shops.typeWorkshop' },
+  { id: 'association', labelKey: 'shops.typeAssociation' },
+] as const;
+
 export default function ShopsScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ shopType?: string }>();
   const { authFetch, isSignedIn } = useAuthApi();
   const t = useT();
   const { locale, dir } = useLocale();
@@ -22,6 +33,11 @@ export default function ShopsScreen() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [campFilter, setCampFilter] = useState<string | null>(null);
+  const initialType =
+    typeof params.shopType === 'string' && TYPE_FILTERS.some((x) => x.id === params.shopType)
+      ? params.shopType
+      : 'all';
+  const [typeFilter, setTypeFilter] = useState<string>(initialType);
 
   useEffect(() => {
     fetchWithMeta('/shops', { data: [] as ShopItem[], meta: { total: 0, page: 1, limit: 20, totalPages: 0 } })
@@ -48,9 +64,10 @@ export default function ShopsScreen() {
     return shops.filter((s) => {
       const campOk = !campFilter || s.camp.toLowerCase().includes(campFilter.toLowerCase());
       const searchOk = !q || s.name.toLowerCase().includes(q) || s.camp.toLowerCase().includes(q);
-      return campOk && searchOk;
+      const typeOk = typeFilter === 'all' || (s.shopType ?? 'individual') === typeFilter;
+      return campOk && searchOk && typeOk;
     });
-  }, [shops, search, campFilter]);
+  }, [shops, search, campFilter, typeFilter]);
 
   return (
     <View style={styles.root}>
@@ -108,6 +125,20 @@ export default function ShopsScreen() {
           ))}
         </View>
       ) : null}
+
+      <View style={styles.filterWrap}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.campRow}>
+          {TYPE_FILTERS.map((tf) => {
+            const active = typeFilter === tf.id;
+            return (
+              <Pressable key={tf.id} style={styles.filterItem} onPress={() => setTypeFilter(tf.id)}>
+                <Text style={[styles.filterText, active && styles.filterTextOn]}>{t(tf.labelKey)}</Text>
+                {active ? <View style={styles.filterRule} /> : <View style={styles.filterRuleGhost} />}
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       <View style={styles.filterWrap}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.campRow}>
