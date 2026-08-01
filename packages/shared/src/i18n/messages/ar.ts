@@ -204,7 +204,7 @@ const ar: Messages = {
   },
   atlas: {
     allRooms: 'جميع الأروقة',
-    seeAllRooms: 'استكشف الأروقة العشرة في الأطلس',
+    seeAllRooms: 'استكشف الأروقة العشرة',
     swipeRooms: 'مرّر · 10 أروقة السوق',
     deckProgress: '{{current}} / {{total}} · {{name}}',
     vaultOptions: '{{count}} خيار',

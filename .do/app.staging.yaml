@@ -30,9 +30,9 @@ services:
       - key: API_PUBLIC_URL
         value: https://api-staging.lefrig.com
       - key: CORS_ORIGINS
-        value: https://staging.lefrig.com,https://lefrig-staging.vercel.app,http://localhost:3000
+        value: https://staging.lefrig.com,https://lefrig-staging.vercel.app,http://localhost:3000,http://localhost:8082,http://127.0.0.1:8082
       - key: CLERK_AUTHORIZED_PARTIES
-        value: https://staging.lefrig.com,https://lefrig-staging.vercel.app,http://localhost:3000,http://localhost:3002
+        value: https://staging.lefrig.com,https://lefrig-staging.vercel.app,http://localhost:3000,http://localhost:3002,http://localhost:8082,http://127.0.0.1:8082
       - key: ENABLE_SWAGGER
         value: 'true'
       - key: AUTH_LEGACY_JWT

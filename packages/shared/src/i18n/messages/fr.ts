@@ -203,7 +203,7 @@ const fr: Messages = {
   },
   atlas: {
     allRooms: 'Toutes les salles',
-    seeAllRooms: 'Explorer les 10 salles de l’Atlas',
+    seeAllRooms: 'Explore les 10 salles',
     swipeRooms: 'Glisse · 10 salles du marché',
     deckProgress: '{{current}} / {{total}} · {{name}}',
     vaultOptions: '{{count}} options',

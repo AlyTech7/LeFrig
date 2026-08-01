@@ -202,7 +202,7 @@ const es = {
   },
   atlas: {
     allRooms: 'Todas las salas',
-    seeAllRooms: 'Explorar las 10 salas del Atlas',
+    seeAllRooms: 'Explora las 10 salas',
     swipeRooms: 'Desliza · 10 salas del mercado',
     deckProgress: '{{current}} / {{total}} · {{name}}',
     vaultOptions: '{{count}} opciones',
