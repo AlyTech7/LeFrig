@@ -208,6 +208,7 @@ const ar: Messages = {
     swipeRooms: 'مرّر · {{count}} أروقة السوق',
     deckProgress: '{{current}} / {{total}} · {{name}}',
     vaultOptions: '{{count}} خيار',
+    vaultOptionsOne: 'خيار واحد',
     vaultEnter: 'ادخل الرواق',
     vaultExploreServices: 'استكشف الخدمات',
     vaultMore: '+{{count}} المزيد',

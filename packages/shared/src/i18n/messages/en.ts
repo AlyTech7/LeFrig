@@ -207,6 +207,7 @@ const en: Messages = {
     swipeRooms: 'Swipe · {{count}} market rooms',
     deckProgress: '{{current}} / {{total}} · {{name}}',
     vaultOptions: '{{count}} options',
+    vaultOptionsOne: '1 option',
     vaultEnter: 'Enter room',
     vaultExploreServices: 'Explore services',
     vaultMore: '+{{count}} more',

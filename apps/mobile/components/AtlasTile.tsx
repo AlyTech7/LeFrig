@@ -44,7 +44,11 @@ export function AtlasTile({ dept, index, onPress, compact, active }: Props) {
         <Text style={[styles.compactName, dir === 'rtl' && styles.rtl]} numberOfLines={2}>
           {name}
         </Text>
-        <Text style={styles.compactCount}>{t('atlas.vaultOptions', { count: dept.items.length })}</Text>
+        <Text style={styles.compactCount}>
+          {t(dept.items.length === 1 ? 'atlas.vaultOptionsOne' : 'atlas.vaultOptions', {
+            count: dept.items.length,
+          })}
+        </Text>
         <LinearGradient
           colors={[c1, c2]}
           start={{ x: 0, y: 0 }}
@@ -69,7 +73,11 @@ export function AtlasTile({ dept, index, onPress, compact, active }: Props) {
           <Text style={[styles.name, dir === 'rtl' && styles.rtl]} numberOfLines={2}>
             {name}
           </Text>
-          <Text style={styles.count}>{t('atlas.vaultOptions', { count: dept.items.length })}</Text>
+          <Text style={styles.count}>
+            {t(dept.items.length === 1 ? 'atlas.vaultOptionsOne' : 'atlas.vaultOptions', {
+              count: dept.items.length,
+            })}
+          </Text>
           <LinearGradient
             colors={[c1, c2]}
             start={{ x: 0, y: 0 }}
