@@ -71,7 +71,6 @@ export const MARKETPLACE_DEPARTMENTS: MarketplaceDepartment[] = [
       { slug: 'camels', nameEs: 'Camellos', nameAr: 'إبل', icon: '🐪', kind: 'listing' },
       { slug: 'lambs', nameEs: 'Corderos', nameAr: 'حملان', icon: '🐑', kind: 'listing' },
       { slug: 'sheep', nameEs: 'Ovejas', nameAr: 'أغنام', icon: '🐏', kind: 'listing' },
-      { slug: 'sheep-camels', nameEs: 'Ganado mixto', nameAr: 'ماشية', icon: '🐑', kind: 'listing' },
     ],
   },
   {
