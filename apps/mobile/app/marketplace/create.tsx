@@ -273,7 +273,10 @@ export default function CreateListingScreen() {
                           searchable={
                             field.key === 'brand' ||
                             field.key === 'year' ||
-                            field.key === 'propertyType'
+                            field.key === 'propertyType' ||
+                            field.key === 'bodyType' ||
+                            field.key === 'fuel' ||
+                            field.key === 'model'
                           }
                           onChange={(v) => setAttr(field.key, v)}
                         />

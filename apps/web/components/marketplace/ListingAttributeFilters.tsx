@@ -26,8 +26,13 @@ export function ListingAttributeFilters({
       delete next[param];
     } else {
       const def = defs.find((d) => d.param === param);
-      (next as Record<string, string | number>)[param] =
-        def?.type === 'number' ? Number(raw) : raw;
+      const numeric =
+        def?.type === 'number' ||
+        param === 'yearMin' ||
+        param === 'yearMax' ||
+        param === 'rooms' ||
+        param === 'areaMin';
+      (next as Record<string, string | number>)[param] = numeric ? Number(raw) : raw;
     }
     onChange(next);
   };

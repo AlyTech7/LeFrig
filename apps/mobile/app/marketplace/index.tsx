@@ -21,6 +21,7 @@ import {
   MARKETPLACE_DEPARTMENTS,
   getListingAttributeFilters,
   listingAttributeFilterSchema,
+  LISTING_ATTR_FILTER_KEYS,
   resolveImageUrl,
   type ListingAttributeFilterValues,
 } from '@lefrig/shared';
@@ -35,6 +36,34 @@ import { ListingCard } from '@/components/ListingCard';
 
 function resolveImage(url?: string): string | undefined {
   return resolveImageUrl(url, API_URL) ?? undefined;
+}
+
+function pickAttrParams(
+  params: Record<string, string | undefined>,
+): ListingAttributeFilterValues {
+  const raw: Record<string, string> = {};
+  for (const key of LISTING_ATTR_FILTER_KEYS) {
+    const v = params[key];
+    if (v) raw[key] = v;
+  }
+  return listingAttributeFilterSchema.parse(raw);
+}
+
+function attrParamsToRouter(
+  filters: ListingAttributeFilterValues,
+): Record<string, string | undefined> {
+  const out: Record<string, string | undefined> = {};
+  for (const key of LISTING_ATTR_FILTER_KEYS) {
+    const v = filters[key];
+    out[key] = v !== undefined && v !== '' ? String(v) : undefined;
+  }
+  return out;
+}
+
+function clearAttrRouterParams(): Record<string, undefined> {
+  const out: Record<string, undefined> = {};
+  for (const key of LISTING_ATTR_FILTER_KEYS) out[key] = undefined;
+  return out;
 }
 
 const CATEGORY_GROUPS = MARKETPLACE_DEPARTMENTS.map((dept) => ({
@@ -73,17 +102,8 @@ export default function MarketplaceScreen() {
   const router = useRouter();
   const t = useT();
   const { locale, dir } = useLocale();
-  const { q, category, camp, brand, yearMin, storage, areaMin, propertyType, fuel } = useLocalSearchParams<{
-    q?: string;
-    category?: string;
-    camp?: string;
-    brand?: string;
-    yearMin?: string;
-    storage?: string;
-    areaMin?: string;
-    propertyType?: string;
-    fuel?: string;
-  }>();
+  const routeParams = useLocalSearchParams<Record<string, string | undefined>>();
+  const { q, category, camp } = routeParams;
   const [listings, setListings] = useState<ListingSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [usingDemo, setUsingDemo] = useState(false);
@@ -115,18 +135,7 @@ export default function MarketplaceScreen() {
     }).start();
   }, [searchFocused, searchPulse]);
 
-  const activeAttrFilters = useMemo(
-    () =>
-      listingAttributeFilterSchema.parse({
-        ...(brand ? { brand } : {}),
-        ...(yearMin ? { yearMin } : {}),
-        ...(storage ? { storage } : {}),
-        ...(areaMin ? { areaMin } : {}),
-        ...(propertyType ? { propertyType } : {}),
-        ...(fuel ? { fuel } : {}),
-      }),
-    [brand, yearMin, storage, areaMin, propertyType, fuel],
-  );
+  const activeAttrFilters = useMemo(() => pickAttrParams(routeParams), [routeParams]);
 
   useEffect(() => {
     setSearch(q ?? '');
@@ -138,12 +147,10 @@ export default function MarketplaceScreen() {
     if (q) params.set('q', q);
     if (category) params.set('category', category);
     if (camp) params.set('campId', camp);
-    if (brand) params.set('brand', brand);
-    if (yearMin) params.set('yearMin', yearMin);
-    if (storage) params.set('storage', storage);
-    if (areaMin) params.set('areaMin', areaMin);
-    if (propertyType) params.set('propertyType', propertyType);
-    if (fuel) params.set('fuel', fuel);
+    for (const key of LISTING_ATTR_FILTER_KEYS) {
+      const v = activeAttrFilters[key];
+      if (v !== undefined && v !== '') params.set(key, String(v));
+    }
     params.set('limit', '40');
     const query = params.toString() ? `?${params.toString()}` : '';
 
@@ -153,7 +160,7 @@ export default function MarketplaceScreen() {
       setUsingDemo(res.fromFallback);
       setLoading(false);
     });
-  }, [q, category, camp, brand, yearMin, storage, areaMin, propertyType, fuel]);
+  }, [q, category, camp, activeAttrFilters]);
 
   const activeCategory = category ? LISTING_CATEGORIES.find((c) => c.slug === category) : undefined;
   const activeCamp = camp ? CAMPS.find((c) => c.slug === camp) : undefined;
@@ -218,12 +225,7 @@ export default function MarketplaceScreen() {
       q: search || undefined,
       category: pendingCategory,
       camp: pendingCamp,
-      brand: pendingAttr.brand ? String(pendingAttr.brand) : undefined,
-      yearMin: pendingAttr.yearMin != null ? String(pendingAttr.yearMin) : undefined,
-      storage: pendingAttr.storage ? String(pendingAttr.storage) : undefined,
-      areaMin: pendingAttr.areaMin != null ? String(pendingAttr.areaMin) : undefined,
-      propertyType: pendingAttr.propertyType ? String(pendingAttr.propertyType) : undefined,
-      fuel: pendingAttr.fuel ? String(pendingAttr.fuel) : undefined,
+      ...attrParamsToRouter(pendingAttr),
     });
   };
 
@@ -236,12 +238,7 @@ export default function MarketplaceScreen() {
       q: search || undefined,
       category: undefined,
       camp: undefined,
-      brand: undefined,
-      yearMin: undefined,
-      storage: undefined,
-      areaMin: undefined,
-      propertyType: undefined,
-      fuel: undefined,
+      ...clearAttrRouterParams(),
     });
   };
 
@@ -646,24 +643,30 @@ export default function MarketplaceScreen() {
                           >
                             <Text style={styles.sheetChipText}>{t('common.all')}</Text>
                           </Pressable>
-                          {def.options.map((opt) => (
+                          {def.options.map((opt) => {
+                            const current = pendingAttr[def.param as keyof ListingAttributeFilterValues];
+                            const selected = current != null && String(current) === opt.value;
+                            const numericParams = new Set(['yearMin', 'yearMax', 'rooms', 'areaMin']);
+                            return (
                             <Pressable
                               key={opt.value}
                               style={[
                                 styles.sheetChip,
-                                pendingAttr[def.param as keyof ListingAttributeFilterValues] ===
-                                  opt.value && styles.sheetChipOn,
+                                selected && styles.sheetChipOn,
                               ]}
                               onPress={() =>
                                 setPendingAttr((prev) => ({
                                   ...prev,
-                                  [def.param]: def.type === 'number' ? Number(opt.value) : opt.value,
+                                  [def.param]: numericParams.has(def.param)
+                                    ? Number(opt.value)
+                                    : opt.value,
                                 }))
                               }
                             >
                               <Text style={styles.sheetChipText}>{pickLabel(locale, opt)}</Text>
                             </Pressable>
-                          ))}
+                            );
+                          })}
                         </View>
                       ) : (
                         <TextInput
