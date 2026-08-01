@@ -145,7 +145,11 @@ export function AtlasVaultCard({
             </span>
             <div className="lf-vault__head-copy">
               <h3>{name}</h3>
-              <span className="lf-vault__count">{t('atlas.vaultOptions', { count: dept.items.length })}</span>
+              <span className="lf-vault__count">
+                {t(dept.items.length === 1 ? 'atlas.vaultOptionsOne' : 'atlas.vaultOptions', {
+                  count: dept.items.length,
+                })}
+              </span>
             </div>
           </Link>
         </header>
@@ -158,10 +162,6 @@ export function AtlasVaultCard({
               </span>
             ))}
           </div>
-        ) : null}
-
-        {dept.id === 'health' && !isDeck ? (
-          <p className="lf-vault__notice">{t('atlas.healthNotice')}</p>
         ) : null}
 
         {isServices ? (

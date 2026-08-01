@@ -206,6 +206,7 @@ const es = {
     swipeRooms: 'Desliza · {{count}} salas del mercado',
     deckProgress: '{{current}} / {{total}} · {{name}}',
     vaultOptions: '{{count}} opciones',
+    vaultOptionsOne: '1 opción',
     vaultEnter: 'Entrar a la sala',
     vaultExploreServices: 'Explorar servicios',
     vaultMore: '+{{count}} más',

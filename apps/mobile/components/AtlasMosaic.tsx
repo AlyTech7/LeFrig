@@ -93,7 +93,11 @@ function CardTitle({
       <Text style={[styles.name, big && styles.nameBig, dir === 'rtl' && styles.rtl]} numberOfLines={1}>
         {name}
       </Text>
-      <Text style={styles.count}>{t('atlas.vaultOptions', { count: dept.items.length })}</Text>
+      <Text style={styles.count}>
+        {t(dept.items.length === 1 ? 'atlas.vaultOptionsOne' : 'atlas.vaultOptions', {
+          count: dept.items.length,
+        })}
+      </Text>
       {itemsHint ? (
         <Text style={styles.itemsHint} numberOfLines={1}>
           {dept.items

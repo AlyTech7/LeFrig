@@ -54,7 +54,11 @@ function PreviewTile({
           {dept.icon}
         </span>
         <span className="lf-atlas-tile__name">{name}</span>
-        <span className="lf-atlas-tile__meta">{t('atlas.vaultOptions', { count: dept.items.length })}</span>
+        <span className="lf-atlas-tile__meta">
+          {t(dept.items.length === 1 ? 'atlas.vaultOptionsOne' : 'atlas.vaultOptions', {
+            count: dept.items.length,
+          })}
+        </span>
       </span>
     </Link>
   );

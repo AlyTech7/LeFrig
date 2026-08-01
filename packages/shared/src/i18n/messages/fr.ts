@@ -207,6 +207,7 @@ const fr: Messages = {
     swipeRooms: 'Glisse · {{count}} salles du marché',
     deckProgress: '{{current}} / {{total}} · {{name}}',
     vaultOptions: '{{count}} options',
+    vaultOptionsOne: '1 option',
     vaultEnter: 'Entrer dans la salle',
     vaultExploreServices: 'Explorer les services',
     vaultMore: '+{{count}} de plus',
