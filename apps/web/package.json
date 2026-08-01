@@ -16,7 +16,7 @@
     "@lefrig/ui": "workspace:*",
     "@sentry/nextjs": "^10.65.0",
     "heic2any": "^0.0.4",
-    "lucide-react": "^0.468.0",
+    "lucide-react": "^1.27.0",
     "next": "15.5.22",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
