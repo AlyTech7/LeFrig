@@ -82,6 +82,21 @@ export class ListingsService {
     if (filters.storage) {
       and.push({ attributes: { path: ['storage'], equals: filters.storage } });
     }
+    if (filters.transmission) {
+      and.push({ attributes: { path: ['transmission'], equals: filters.transmission } });
+    }
+    if (filters.bodyType) {
+      and.push({ attributes: { path: ['bodyType'], equals: filters.bodyType } });
+    }
+    if (filters.rooms !== undefined) {
+      and.push({ attributes: { path: ['rooms'], equals: filters.rooms } });
+    }
+    if (filters.condition) {
+      and.push({ attributes: { path: ['condition'], equals: filters.condition } });
+    }
+    if (filters.furnished) {
+      and.push({ attributes: { path: ['furnished'], equals: filters.furnished } });
+    }
     return and;
   }
 
@@ -102,6 +117,11 @@ export class ListingsService {
       propertyType,
       fuel,
       storage,
+      transmission,
+      bodyType,
+      rooms,
+      condition,
+      furnished,
     } = filters;
 
     const resolved = rawQ?.trim() && !rawCategory ? resolveMarketplaceSearch(rawQ) : { q: rawQ ?? '', category: undefined };
@@ -115,6 +135,11 @@ export class ListingsService {
       propertyType,
       fuel,
       storage,
+      transmission,
+      bodyType,
+      rooms,
+      condition,
+      furnished,
     };
     const attrConditions = this.buildAttributeConditions(attrFilters);
     const useAttrFilter = hasActiveAttributeFilters(attrFilters);

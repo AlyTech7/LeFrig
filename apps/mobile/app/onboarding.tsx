@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { LOCALE_META, type Locale } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
+import { LefrigMark } from '@/components/LefrigMark';
 import { setCachedUser } from '@/lib/storage';
 import { useLocale } from '@/lib/locale';
 import { theme, gradients } from '@/lib/theme';
@@ -27,7 +28,7 @@ export default function OnboardingScreen() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.content}>
           <View style={styles.logoMark}>
-            <Text style={styles.brandGlyph}>ⵣ</Text>
+            <LefrigMark size={64} />
           </View>
           <Text style={styles.title}>{t('onboarding.title')}</Text>
           <Text style={styles.subtitle}>{t('onboarding.subtitle')}</Text>
@@ -58,17 +59,19 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   content: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
   logoMark: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
-    backgroundColor: 'rgba(232,184,109,0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(232,184,109,0.25)',
+    width: 88,
+    height: 88,
+    borderRadius: 24,
+    backgroundColor: '#08090c',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
+    shadowColor: '#08090c',
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
   },
-  brandGlyph: { fontSize: 32, color: theme.dune },
   title: { fontSize: 36, fontWeight: '800', color: theme.ink, letterSpacing: 4 },
   subtitle: { fontSize: 15, color: theme.inkMuted, marginBottom: 48, marginTop: 8, textAlign: 'center' },
   iconRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 },

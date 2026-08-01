@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '@/components/AppIcon';
 import { ClerkCaptcha } from '@/components/auth/ClerkCaptcha';
 import { SocialAuthButtons } from '@/components/auth/SocialAuthButtons';
+import { LefrigMark } from '@/components/LefrigMark';
 import { finalizeSignUpAfterEmail, splitDisplayName } from '@/lib/auth-complete';
 import {
   getClerkErrorMessage,
@@ -365,7 +366,7 @@ export default function SignInScreen() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
             <View style={styles.logoMark}>
-              <Text style={styles.brandGlyph}>ⵣ</Text>
+              <LefrigMark size={64} />
             </View>
             <Text style={styles.brand}>LEFRIG</Text>
             <Text style={styles.title}>{title}</Text>
@@ -600,18 +601,20 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   scroll: { flexGrow: 1, padding: space.xl, justifyContent: 'center', minHeight: '100%' },
   logoMark: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
-    backgroundColor: 'rgba(168,132,45,0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(168,132,45,0.25)',
+    width: 88,
+    height: 88,
+    borderRadius: 24,
+    backgroundColor: '#08090c',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
     alignSelf: 'center',
+    shadowColor: '#08090c',
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
   },
-  brandGlyph: { fontSize: 32, color: theme.dune },
   brand: {
     fontFamily: fonts.bodyBold,
     fontSize: 14,

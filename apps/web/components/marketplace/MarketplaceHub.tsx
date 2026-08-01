@@ -9,6 +9,7 @@ import {
   getMarketplaceItemHref,
   findDepartmentForSlug,
   listingAttributeFilterSchema,
+  LISTING_ATTR_FILTER_KEYS,
   type MarketplaceItem,
   type ListingAttributeFilterValues,
   localizedMarketplaceItem,
@@ -29,7 +30,7 @@ function itemHref(item: MarketplaceItem) {
 
 function parseAttrFilters(searchParams: URLSearchParams): ListingAttributeFilterValues {
   const raw: Record<string, string> = {};
-  for (const key of ['brand', 'yearMin', 'yearMax', 'areaMin', 'propertyType', 'fuel', 'storage']) {
+  for (const key of LISTING_ATTR_FILTER_KEYS) {
     const v = searchParams.get(key);
     if (v) raw[key] = v;
   }
