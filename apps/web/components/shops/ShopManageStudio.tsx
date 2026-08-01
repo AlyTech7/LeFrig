@@ -376,7 +376,6 @@ export function ShopManageStudio() {
         <div className="shp-manage__hero-shop">
           <div className="shp-manage__hero-avatar">
             {shop?.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img src={shop.imageUrl} alt="" />
             ) : (
               <span aria-hidden>🏪</span>
@@ -733,7 +732,6 @@ export function ShopManageStudio() {
                       <>
                         <div className="shp-manage__item-media">
                           {p.imageUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
                             <img src={p.imageUrl} alt="" />
                           ) : (
                             <span>📦</span>

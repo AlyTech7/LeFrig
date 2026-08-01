@@ -121,7 +121,6 @@ function DocSlot({
       />
       {url ? (
         <div className="drv-doc__preview">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={url} alt="" />
           <button type="button" className="pub-btn pub-btn--ghost" onClick={onClear}>
             ×
