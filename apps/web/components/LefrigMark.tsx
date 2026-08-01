@@ -36,79 +36,139 @@ export function LefrigMark({
     >
       <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="lf-compass__svg">
         <defs>
-          <linearGradient id={`lf-gn-a-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <filter id={`lf-sh-${uid}`} x="-25%" y="-25%" width="150%" height="150%">
+            <feDropShadow dx="0" dy="1.4" stdDeviation="1.1" floodColor="#000" floodOpacity="0.45" />
+          </filter>
+          <filter id={`lf-glow-${uid}`} x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="1.8" result="b" />
+            <feMerge>
+              <feMergeNode in="b" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <linearGradient id={`lf-gn-a-${uid}`} x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stopColor="#6ee7a8" />
+            <stop offset="55%" stopColor="#2d9a64" />
+            <stop offset="100%" stopColor="#165a3a" />
+          </linearGradient>
+          <linearGradient id={`lf-gn-b-${uid}`} x1="100%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#52d492" />
             <stop offset="100%" stopColor="#1f7a52" />
           </linearGradient>
-          <linearGradient id={`lf-gn-b-${uid}`} x1="100%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#6ee7a8" />
-            <stop offset="100%" stopColor="#2d9a64" />
-          </linearGradient>
-          <linearGradient id={`lf-gd-a-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#c9a24d" />
+          <linearGradient id={`lf-gd-a-${uid}`} x1="100%" y1="50%" x2="0%" y2="50%">
+            <stop offset="0%" stopColor="#f0cc7a" />
+            <stop offset="55%" stopColor="#d4a853" />
             <stop offset="100%" stopColor="#8a6b2e" />
           </linearGradient>
           <linearGradient id={`lf-gd-b-${uid}`} x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#f0cc7a" />
-            <stop offset="100%" stopColor="#d4a853" />
+            <stop offset="0%" stopColor="#c9a24d" />
+            <stop offset="100%" stopColor="#e8c56a" />
           </linearGradient>
-          <linearGradient id={`lf-or-a-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#c45c3a" />
+          <linearGradient id={`lf-or-a-${uid}`} x1="50%" y1="100%" x2="50%" y2="0%">
+            <stop offset="0%" stopColor="#e88a5c" />
+            <stop offset="55%" stopColor="#c45c3a" />
             <stop offset="100%" stopColor="#8f3d24" />
           </linearGradient>
-          <linearGradient id={`lf-or-b-${uid}`} x1="100%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#e88a5c" />
-            <stop offset="100%" stopColor="#d4613f" />
+          <linearGradient id={`lf-or-b-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#d4613f" />
+            <stop offset="100%" stopColor="#a84828" />
           </linearGradient>
-          <linearGradient id={`lf-pu-a-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#5c3f8f" />
+          <linearGradient id={`lf-pu-a-${uid}`} x1="0%" y1="50%" x2="100%" y2="50%">
+            <stop offset="0%" stopColor="#8b6fc4" />
+            <stop offset="55%" stopColor="#5c3f8f" />
             <stop offset="100%" stopColor="#3d2860" />
           </linearGradient>
           <linearGradient id={`lf-pu-b-${uid}`} x1="100%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#8b6fc4" />
-            <stop offset="100%" stopColor="#6b4fa0" />
+            <stop offset="0%" stopColor="#6b4fa0" />
+            <stop offset="100%" stopColor="#4a3278" />
           </linearGradient>
+          <linearGradient id={`lf-spk-a-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#3a3a44" />
+            <stop offset="100%" stopColor="#222228" />
+          </linearGradient>
+          <linearGradient id={`lf-spk-b-${uid}`} x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#404048" />
+            <stop offset="100%" stopColor="#2a2a32" />
+          </linearGradient>
+          <linearGradient id={`lf-ring-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#f0cc7a" />
+            <stop offset="50%" stopColor="#c9a24d" />
+            <stop offset="100%" stopColor="#8a6b2e" />
+          </linearGradient>
+          <radialGradient id={`lf-core-${uid}`} cx="50%" cy="40%" r="70%">
+            <stop offset="0%" stopColor="#1a1b22" />
+            <stop offset="100%" stopColor="#08090c" />
+          </radialGradient>
+          <radialGradient id={`lf-pearl-${uid}`} cx="38%" cy="32%" r="65%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="45%" stopColor="#f4f1ea" />
+            <stop offset="100%" stopColor="#c9bba8" />
+          </radialGradient>
         </defs>
 
+        {/* Halo ambiente */}
+        <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(201,162,77,0.07)" strokeWidth="1.1" />
+
         {showRing && (
-          <circle
-            cx="50"
-            cy="50"
-            r="44"
-            className="lf-compass__orbit"
-            stroke="rgba(244, 241, 234, 0.14)"
-            strokeWidth="0.75"
-            strokeDasharray="2 4"
-            fill="none"
-          />
+          <>
+            <circle
+              cx="50"
+              cy="50"
+              r="44"
+              className="lf-compass__orbit"
+              stroke="rgba(244, 241, 234, 0.16)"
+              strokeWidth="0.7"
+              strokeDasharray="1.8 3.6"
+              fill="none"
+            />
+            <circle
+              cx="50"
+              cy="50"
+              r="44"
+              stroke="rgba(201, 162, 77, 0.12)"
+              strokeWidth="0.35"
+              strokeDasharray="1.8 3.6"
+              strokeDashoffset="2.7"
+              fill="none"
+            />
+          </>
         )}
 
         {/* Puntas diagonales */}
-        <path d="M58 42 L68 32 L52 48 Z" fill="#2e2e36" className="lf-compass__spike" />
-        <path d="M58 58 L68 68 L52 52 Z" fill="#35353f" className="lf-compass__spike" />
-        <path d="M42 58 L32 68 L48 52 Z" fill="#2e2e36" className="lf-compass__spike" />
-        <path d="M42 42 L32 32 L48 48 Z" fill="#35353f" className="lf-compass__spike" />
+        <path d="M58 42 L68 32 L52 48 Z" fill={`url(#lf-spk-a-${uid})`} className="lf-compass__spike" />
+        <path d="M58 58 L68 68 L52 52 Z" fill={`url(#lf-spk-b-${uid})`} className="lf-compass__spike" />
+        <path d="M42 58 L32 68 L48 52 Z" fill={`url(#lf-spk-a-${uid})`} className="lf-compass__spike" />
+        <path d="M42 42 L32 32 L48 48 Z" fill={`url(#lf-spk-b-${uid})`} className="lf-compass__spike" />
 
-        {/* Norte — verde */}
-        <path d="M50 11 L61 27 L50 35 L39 27 Z" fill={`url(#lf-gn-a-${uid})`} />
-        <path d="M50 11 L50 35 L39 27 Z" fill={`url(#lf-gn-b-${uid})`} opacity="0.92" />
+        <g filter={`url(#lf-sh-${uid})`}>
+          {/* Norte — verde */}
+          <path d="M50 11 L61 27 L50 35 L39 27 Z" fill={`url(#lf-gn-a-${uid})`} filter={`url(#lf-glow-${uid})`} />
+          <path d="M50 11 L50 35 L39 27 Z" fill={`url(#lf-gn-b-${uid})`} opacity="0.9" />
+          <path d="M50 13.5 L56.5 26 L50 31.5 L43.5 26 Z" fill="rgba(255,255,255,0.12)" />
 
-        {/* Este — oro */}
-        <path d="M89 50 L73 61 L65 50 L73 39 Z" fill={`url(#lf-gd-a-${uid})`} />
-        <path d="M89 50 L65 50 L73 39 Z" fill={`url(#lf-gd-b-${uid})`} opacity="0.92" />
+          {/* Este — oro */}
+          <path d="M89 50 L73 61 L65 50 L73 39 Z" fill={`url(#lf-gd-a-${uid})`} filter={`url(#lf-glow-${uid})`} />
+          <path d="M89 50 L65 50 L73 39 Z" fill={`url(#lf-gd-b-${uid})`} opacity="0.9" />
+          <path d="M86 50 L73.5 56.5 L68.5 50 L73.5 43.5 Z" fill="rgba(255,255,255,0.14)" />
 
-        {/* Sur — terracota */}
-        <path d="M50 89 L39 73 L50 65 L61 73 Z" fill={`url(#lf-or-a-${uid})`} />
-        <path d="M50 89 L50 65 L61 73 Z" fill={`url(#lf-or-b-${uid})`} opacity="0.92" />
+          {/* Sur — terracota */}
+          <path d="M50 89 L39 73 L50 65 L61 73 Z" fill={`url(#lf-or-a-${uid})`} filter={`url(#lf-glow-${uid})`} />
+          <path d="M50 89 L50 65 L61 73 Z" fill={`url(#lf-or-b-${uid})`} opacity="0.9" />
+          <path d="M50 86 L43.5 73.5 L50 68.5 L56.5 73.5 Z" fill="rgba(255,255,255,0.1)" />
 
-        {/* Oeste — violeta */}
-        <path d="M11 50 L27 39 L35 50 L27 61 Z" fill={`url(#lf-pu-a-${uid})`} />
-        <path d="M11 50 L35 50 L27 61 Z" fill={`url(#lf-pu-b-${uid})`} opacity="0.92" />
+          {/* Oeste — violeta */}
+          <path d="M11 50 L27 39 L35 50 L27 61 Z" fill={`url(#lf-pu-a-${uid})`} filter={`url(#lf-glow-${uid})`} />
+          <path d="M11 50 L35 50 L27 61 Z" fill={`url(#lf-pu-b-${uid})`} opacity="0.9" />
+          <path d="M14 50 L26.5 43.5 L31.5 50 L26.5 56.5 Z" fill="rgba(255,255,255,0.12)" />
+        </g>
 
         {/* Núcleo */}
-        <circle cx="50" cy="50" r="11" fill="#08090c" className="lf-compass__core" />
-        <circle cx="50" cy="50" r="11" stroke="#c9a24d" strokeWidth="1.25" fill="none" />
-        <circle cx="50" cy="50" r="2.2" fill="#f4f1ea" className="lf-compass__eye" />
+        <circle cx="50" cy="50" r="12" fill={`url(#lf-core-${uid})`} className="lf-compass__core" />
+        <circle cx="50" cy="50" r="12" stroke={`url(#lf-ring-${uid})`} strokeWidth="1.35" fill="none" />
+        <circle cx="50" cy="50" r="12" stroke="rgba(255,255,255,0.16)" strokeWidth="0.3" fill="none" />
+        <circle cx="50" cy="50" r="8.2" stroke="rgba(201,162,77,0.25)" strokeWidth="0.35" fill="none" />
+        <circle cx="50" cy="50" r="2.35" fill={`url(#lf-pearl-${uid})`} className="lf-compass__eye" />
+        <circle cx="49.15" cy="49" r="0.65" fill="rgba(255,255,255,0.85)" />
       </svg>
     </span>
   );
