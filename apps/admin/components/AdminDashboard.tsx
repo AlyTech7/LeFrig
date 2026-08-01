@@ -125,7 +125,7 @@ export function AdminDashboard({ overview }: { overview: AdminOverview }) {
             </div>
             <div>
               <div style={{ fontSize: '0.7rem', color: 'var(--adm-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Volumen est.</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, marginTop: 4, color: 'var(--adm-gold)' }}>— MRU</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 800, marginTop: 4, color: 'var(--adm-gold)' }}>— duros</div>
             </div>
             <div>
               <div style={{ fontSize: '0.7rem', color: 'var(--adm-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Conversión</div>

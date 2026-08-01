@@ -289,7 +289,7 @@ export default function ShopManageScreen() {
             <View style={styles.row2}>
               <TextInput
                 style={[ui.input, { flex: 1 }]}
-                placeholder="DZD"
+                placeholder="DURU"
                 keyboardType="decimal-pad"
                 value={prodPrice}
                 onChangeText={setProdPrice}

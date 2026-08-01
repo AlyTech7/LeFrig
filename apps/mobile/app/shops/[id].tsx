@@ -172,7 +172,7 @@ export default function ShopDetailScreen() {
               <Pressable key={p.id} style={[styles.product, active && styles.productActive]} onPress={() => toggleProduct(p.id)}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.productName}>{p.name}</Text>
-                  <Text style={styles.productPrice}>{Number(p.price).toLocaleString()} MRU</Text>
+                  <Text style={styles.productPrice}>{Number(p.price).toLocaleString()} duros</Text>
                 </View>
                 {active && <AppIcon name="check" size={18} color={theme.emeraldDeep} />}
               </Pressable>

@@ -149,7 +149,7 @@ export default function MarketplaceMineScreen() {
                     {item.title}
                   </Text>
                   <Text style={styles.price}>
-                    {item.price} {item.currency ?? 'DZD'}
+                    {item.price} {item.currency ?? 'DURU'}
                   </Text>
                   <Text style={styles.status}>
                     {t(

@@ -62,7 +62,7 @@ export function OrdersClient({ initial }: { initial: AdminOrderRow[] }) {
 
           { key: 'camp', header: 'Campamento', sortable: true },
 
-          { key: 'total', header: 'Total', sortable: true, render: (r) => <Mono>{r.total.toLocaleString()} MRU</Mono> },
+          { key: 'total', header: 'Total', sortable: true, render: (r) => <Mono>{r.total.toLocaleString()} duros</Mono> },
 
           { key: 'paymentMethod', header: 'Pago', render: (r) => <StatusCell status={r.paymentMethod} /> },
 

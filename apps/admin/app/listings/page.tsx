@@ -9,7 +9,7 @@ export default async function ListingsPage() {
       ...l,
       category: 'general',
       viewCount: 0,
-      currency: 'MRU',
+      currency: 'DURU',
       createdAt: new Date().toISOString(),
     })),
     meta: { total: demoListingsAdmin.length, page: 1, limit: 100, totalPages: 1 },

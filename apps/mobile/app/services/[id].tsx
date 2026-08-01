@@ -116,7 +116,7 @@ export default function ServiceDetailScreen() {
   }
 
   const camps = service.camps?.map((c) => c.camp.nameEs).filter(Boolean).join(', ') ?? '—';
-  const currency = service.currency || 'DZD';
+  const currency = service.currency || 'DURU';
   const from = service.priceFrom != null ? Number(service.priceFrom) : NaN;
   const to = service.priceTo != null ? Number(service.priceTo) : NaN;
   const price =

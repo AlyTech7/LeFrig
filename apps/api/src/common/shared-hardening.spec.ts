@@ -20,6 +20,8 @@ describe('money helpers', () => {
   });
 
   it('addMoney y multiplyMoney redondean DZD a enteros', () => {
+    expect(addMoney(10.4, 0.4, 'DURU')).toBe(11);
+    expect(multiplyMoney(1500, 2, 'DURU')).toBe(3000);
     expect(addMoney(10.4, 0.4, 'DZD')).toBe(11);
     expect(multiplyMoney(1500, 2, 'DZD')).toBe(3000);
   });

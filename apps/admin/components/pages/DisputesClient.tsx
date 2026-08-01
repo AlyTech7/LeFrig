@@ -32,7 +32,7 @@ export function DisputesClient({ initial }: { initial: AdminDisputeRow[] }) {
           { key: 'type', header: 'Tipo', render: (r) => <StatusCell status={r.type} /> },
           { key: 'parties', header: 'Partes' },
           { key: 'reason', header: 'Motivo' },
-          { key: 'amount', header: 'Importe', render: (r) => (r.amount ? <Mono>{r.amount.toLocaleString()} MRU</Mono> : '—') },
+          { key: 'amount', header: 'Importe', render: (r) => (r.amount ? <Mono>{r.amount.toLocaleString()} duros</Mono> : '—') },
           { key: 'status', header: 'Estado', render: (r) => <StatusCell status={r.status} /> },
           {
             key: 'actions',

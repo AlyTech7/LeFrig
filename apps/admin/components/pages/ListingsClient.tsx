@@ -45,7 +45,7 @@ export function ListingsClient({ initial }: { initial: AdminListingRow[] }) {
           { key: 'seller', header: 'Vendedor' },
           { key: 'camp', header: 'Campamento', sortable: true },
           { key: 'category', header: 'Categoría' },
-          { key: 'price', header: 'Precio', sortable: true, render: (r) => <Mono>{r.price.toLocaleString()} MRU</Mono> },
+          { key: 'price', header: 'Precio', sortable: true, render: (r) => <Mono>{r.price.toLocaleString()} duros</Mono> },
           { key: 'viewCount', header: 'Views', render: (r) => <Mono>{r.viewCount}</Mono> },
           { key: 'status', header: 'Estado', render: (r) => <StatusCell status={r.status} /> },
           {

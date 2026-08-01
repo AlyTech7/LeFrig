@@ -46,7 +46,7 @@ export function TransportCard({
         <Badge variant={status === 'completed' ? 'success' : 'info'} size="sm">{status}</Badge>
       </div>
       <div style={{ display: 'flex', gap: '16px', fontSize: '0.875rem', color: colors.gray[600] }}>
-        {priceEstimate != null && <span>{formatMoney(priceEstimate, 'DZD')}</span>}
+        {priceEstimate != null && <span>{formatMoney(priceEstimate)}</span>}
         {seatsAvailable != null && <span>💺 {seatsAvailable} plazas</span>}
       </div>
     </Card>

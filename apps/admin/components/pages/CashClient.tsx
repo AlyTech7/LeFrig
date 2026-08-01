@@ -12,7 +12,7 @@ export function CashClient({ initial }: { initial: AdminCashRow[] }) {
       <PageHeader
         title="Efectivo (PIN)"
         subtitle="Acuerdos cash-first con confirmación bilateral"
-        action={<span className="adm-badge adm-badge--gold">{total.toLocaleString()} MRU en operaciones</span>}
+        action={<span className="adm-badge adm-badge--gold">{total.toLocaleString()} duros en operaciones</span>}
       />
       <DataGrid<AdminCashRow & Record<string, unknown>>
         data={initial as (AdminCashRow & Record<string, unknown>)[]}
@@ -22,7 +22,7 @@ export function CashClient({ initial }: { initial: AdminCashRow[] }) {
           { key: 'listing', header: 'Anuncio', sortable: true },
           { key: 'buyer', header: 'Comprador' },
           { key: 'seller', header: 'Vendedor' },
-          { key: 'amount', header: 'Importe', sortable: true, render: (r) => <Mono>{r.amount.toLocaleString()} MRU</Mono> },
+          { key: 'amount', header: 'Importe', sortable: true, render: (r) => <Mono>{r.amount.toLocaleString()} duros</Mono> },
           { key: 'confirmations', header: 'PINs', render: (r) => <Mono>{r.confirmations}/2</Mono> },
           { key: 'status', header: 'Estado', render: (r) => <StatusCell status={r.status} /> },
         ]}

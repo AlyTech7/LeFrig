@@ -95,13 +95,13 @@ export function AnalyticsClient({ analytics, overview }: { analytics: AnalyticsD
           ))}
         </Panel>
 
-        <Panel title="Precios medios (MRU)" span={4}>
+        <Panel title="Precios medios (duros)" span={4}>
           {analytics.avgPrices.map((p) => (
             <div key={p.category} style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
               <ProgressRing value={p.avgPrice} max={20000} label={p.category} color="var(--adm-gold)" />
               <div>
                 <div style={{ fontSize: '1.25rem', fontWeight: 800, fontFamily: 'var(--adm-mono)' }}>{p.avgPrice.toLocaleString()}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--adm-muted)' }}>MRU promedio</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--adm-muted)' }}>duros promedio</div>
               </div>
             </div>
           ))}

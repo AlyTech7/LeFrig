@@ -80,7 +80,7 @@ export const demoListings: ListingSummary[] = [
   {
     id: 'demo-1',
     title: 'Generador 3kVA — Rabouni',
-    price: 12500,
+    price: 250000,
     currency: CURRENCY,
     status: 'active',
     category: 'generators',
@@ -91,7 +91,7 @@ export const demoListings: ListingSummary[] = [
   {
     id: 'demo-2',
     title: 'Samsung Galaxy A54 — Smara',
-    price: 8500,
+    price: 170000,
     currency: CURRENCY,
     status: 'active',
     category: 'mobiles',
@@ -102,7 +102,7 @@ export const demoListings: ListingSummary[] = [
   {
     id: 'demo-3',
     title: 'Toyota Hilux 2018 — Aaiún',
-    price: 420000,
+    price: 8400000,
     currency: CURRENCY,
     status: 'active',
     category: 'cars',
@@ -113,7 +113,7 @@ export const demoListings: ListingSummary[] = [
   {
     id: 'demo-4',
     title: 'Harina y aceite — Tindouf',
-    price: 320,
+    price: 6400,
     currency: CURRENCY,
     status: 'active',
     category: 'food',
@@ -124,7 +124,7 @@ export const demoListings: ListingSummary[] = [
   {
     id: 'demo-5',
     title: 'Taladro Bosch profesional',
-    price: 2100,
+    price: 42000,
     currency: CURRENCY,
     status: 'active',
     category: 'tools',
@@ -135,7 +135,7 @@ export const demoListings: ListingSummary[] = [
   {
     id: 'demo-6',
     title: 'Cabra Saharaui — Dakhla',
-    price: 1800,
+    price: 36000,
     currency: CURRENCY,
     status: 'active',
     category: 'animals',

@@ -36,7 +36,7 @@ export function OfflineSync() {
                 title,
                 description: String(p.description ?? `${title}. Publicado desde la app móvil.`),
                 price: price > 0 ? price : 100,
-                currency: String(p.currency ?? 'DZD'),
+                currency: String(p.currency ?? 'DURU'),
                 category: String(p.category ?? 'other'),
                 campId,
                 paymentMethods: Array.isArray(p.paymentMethods) ? p.paymentMethods : ['cash'],

@@ -64,7 +64,7 @@ export function TransportClient({ initial }: { initial: (AdminTransportRow & { c
           {
             key: 'priceEstimate',
             header: 'Estimado',
-            render: (r) => (r.priceEstimate ? <Mono>{r.priceEstimate.toLocaleString()} MRU</Mono> : '—'),
+            render: (r) => (r.priceEstimate ? <Mono>{r.priceEstimate.toLocaleString()} duros</Mono> : '—'),
           },
           { key: 'status', header: 'Estado', render: (r) => <StatusCell status={r.status} /> },
           {

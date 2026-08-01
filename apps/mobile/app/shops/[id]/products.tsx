@@ -203,7 +203,7 @@ export default function ShopProductsScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.name}>{p.name}</Text>
                     <Text style={styles.price}>
-                      {Number(p.price).toLocaleString()} MRU
+                      {Number(p.price).toLocaleString()} duros
                       {p.stock != null ? ` · Stock ${p.stock}` : ''}
                     </Text>
                   </View>
