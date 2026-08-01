@@ -6,7 +6,6 @@ import {
   ScrollView,
   TextInput,
   Pressable,
-  ActivityIndicator,
   Alert,
   Switch,
 } from 'react-native';

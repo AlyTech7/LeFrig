@@ -10,11 +10,10 @@ import {
   TextInput,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { AppIcon } from '@/components/AppIcon';
 import { Hero, Button, EmptyState } from '@/components/ui';
 import { useT } from '@/lib/locale';
 import { useAuthApi } from '@/lib/useAuthApi';
-import { theme, radii } from '@/lib/theme';
+import { theme } from '@/lib/theme';
 import { fonts, space, ui } from '@/lib/ui';
 
 type OrderItem = {

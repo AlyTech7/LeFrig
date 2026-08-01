@@ -4,7 +4,7 @@ import { useRouter, usePathname } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AppIcon, type FeatherIconName } from '@/components/AppIcon';
 import { useT } from '@/lib/locale';
-import { theme, radii } from '@/lib/theme';
+import { theme } from '@/lib/theme';
 import { fonts } from '@/lib/ui';
 
 function useTabs() {

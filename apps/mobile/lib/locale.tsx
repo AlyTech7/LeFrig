@@ -32,7 +32,6 @@ const LocaleContext = createContext<LocaleContextValue | null>(null);
 async function detectDeviceLocale(): Promise<Locale | null> {
   try {
     // Optional peer — do not hard-depend
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Localization = require('expo-localization') as {
       getLocales?: () => Array<{ languageCode?: string | null }>;
       locale?: string;
@@ -58,7 +57,6 @@ async function applyRtl(locale: Locale) {
 
   try {
     // Optional — reload so layout direction takes effect
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Updates = require('expo-updates') as { reloadAsync?: () => Promise<void> };
     if (typeof Updates.reloadAsync === 'function') {
       await Updates.reloadAsync();
