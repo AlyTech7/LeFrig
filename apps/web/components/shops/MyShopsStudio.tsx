@@ -144,7 +144,6 @@ export function MyShopsStudio() {
               <li key={shop.id} className={`shp-mine__card ${shop.isActive ? '' : 'shp-mine__card--paused'}`}>
                 <div className="shp-mine__media">
                   {shop.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img src={shop.imageUrl} alt="" />
                   ) : (
                     <span aria-hidden>{TYPE_ICONS[shop.shopType] ?? '🏪'}</span>

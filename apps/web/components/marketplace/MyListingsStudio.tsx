@@ -150,7 +150,6 @@ export function MyListingsStudio() {
               <li key={item.id} className={`hub-card ${active ? '' : 'hub-card--paused'}`}>
                 <div className="hub-card__media">
                   {img ? (
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img src={img} alt="" />
                   ) : (
                     <span aria-hidden>📦</span>
