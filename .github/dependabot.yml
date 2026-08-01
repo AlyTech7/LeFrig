@@ -15,6 +15,25 @@ updates:
         update-types:
           - minor
           - patch
+        exclude-patterns:
+          - "react-native*"
+          - "expo"
+          - "expo-*"
+          - "@expo/*"
+          - "@types/react-native*"
+    ignore:
+      # Expo SDK pins these; majors/minors must ship with an SDK upgrade, not alone.
+      - dependency-name: "react-native*"
+      - dependency-name: "expo"
+      - dependency-name: "expo-*"
+      - dependency-name: "@expo/*"
+      # Keep ESLint 9 line until we migrate the whole stack.
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript-eslint"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
