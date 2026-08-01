@@ -1,11 +1,12 @@
 import { isClerkConfigured } from '@/lib/clerk-config';
 import { adminRedirectUrl } from '@/lib/site-url';
 
-export default function AdminSignInPage({
+export default async function AdminSignInPage({
   searchParams,
 }: {
-  searchParams: { redirect_url?: string; error?: string };
+  searchParams: Promise<{ redirect_url?: string; error?: string }>;
 }) {
+  const params = await searchParams;
   if (!isClerkConfigured()) {
     return (
       <div
@@ -27,8 +28,8 @@ export default function AdminSignInPage({
   }
 
   const action = `${adminRedirectUrl('/api/auth/sign-in')}${
-    searchParams.redirect_url
-      ? `?redirect_url=${encodeURIComponent(searchParams.redirect_url)}`
+    params.redirect_url
+      ? `?redirect_url=${encodeURIComponent(params.redirect_url)}`
       : ''
   }`;
 
@@ -61,7 +62,7 @@ export default function AdminSignInPage({
           Inicia sesión con tu cuenta admin (sin depender de Clerk en el navegador)
         </p>
 
-        {searchParams.error ? (
+        {params.error ? (
           <div
             style={{
               marginBottom: 16,
@@ -72,7 +73,7 @@ export default function AdminSignInPage({
               fontSize: 14,
             }}
           >
-            {searchParams.error}
+            {params.error}
           </div>
         ) : null}
 
