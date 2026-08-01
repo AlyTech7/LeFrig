@@ -37,7 +37,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
       { type: 'h3', text: '1. Titular del servicio' },
       {
         type: 'p',
-        text: 'Denominación: Lefrig — plataforma digital comunitaria saharaui. Contacto general: hola@lefrig.app. Asuntos de privacidad: privacidad@lefrig.app.',
+        text: 'Denominación: Lefrig — plataforma digital del Sáhara Occidental. Contacto general: hola@lefrig.app. Asuntos de privacidad: privacidad@lefrig.app.',
       },
       { type: 'h3', text: '2. Objeto' },
       {
@@ -47,7 +47,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
       { type: 'h3', text: '3. Acceso y uso' },
       {
         type: 'p',
-        text: 'El acceso a Lefrig implica la aceptación de los presentes textos legales. El usuario se compromete a hacer un uso diligente, lícito y conforme a la dignidad de la comunidad saharaui.',
+        text: 'El acceso a Lefrig implica la aceptación de los presentes textos legales. El usuario se compromete a hacer un uso diligente, lícito y conforme a la dignidad del Sáhara Occidental.',
       },
       { type: 'h3', text: '4. Propiedad intelectual del sitio' },
       {

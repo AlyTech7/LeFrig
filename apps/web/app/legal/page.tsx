@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     'Aviso legal, términos y condiciones, política de privacidad, cookies, pagos, normas comunitarias y propiedad intelectual de Lefrig.',
   openGraph: {
     title: 'Información legal | Lefrig',
-    description: 'Documentación legal completa de la plataforma comunitaria saharaui Lefrig.',
+    description: 'Documentación legal completa de la plataforma del Sáhara Occidental Lefrig.',
   },
 };
 
