@@ -17,7 +17,7 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1085.0",
+    "@aws-sdk/client-s3": "^3.1106.0",
     "@clerk/backend": "^1.21.0",
     "@lefrig/shared": "workspace:*",
     "@nestjs/common": "^11.1.18",
@@ -32,7 +32,7 @@
     "@sentry/node": "^10.65.0",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.1",
+    "class-validator": "^0.15.1",
     "helmet": "^8.3.0",
     "multer": "^2.2.0",
     "passport": "^0.7.0",
