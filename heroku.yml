@@ -1,4 +1,4 @@
-# Heroku Container stack — solo API NestJS (apps/api/Dockerfile, contexto = raíz del monorepo)
+# Heroku usa el directorio del Dockerfile como contexto; debe estar en la raíz.
 build:
   docker:
-    web: apps/api/Dockerfile
+    web: Dockerfile
