@@ -14,7 +14,7 @@
       "channel": "preview",
       "android": { "buildType": "apk" },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://whale-app-xpe4g.ondigitalocean.app",
+        "EXPO_PUBLIC_API_URL": "https://lefrig-api-8fc4936e5267.herokuapp.com",
         "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsubGVmcmlnLmNvbSQ",
         "EXPO_PUBLIC_ENABLE_PUSH": "0"
       }
@@ -25,7 +25,7 @@
       "android": { "buildType": "app-bundle" },
       "ios": { "resourceClass": "m-medium" },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://whale-app-xpe4g.ondigitalocean.app",
+        "EXPO_PUBLIC_API_URL": "https://lefrig-api-8fc4936e5267.herokuapp.com",
         "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsubGVmcmlnLmNvbSQ",
         "EXPO_PUBLIC_ENABLE_PUSH": "0"
       }
