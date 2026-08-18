@@ -11,7 +11,9 @@ node_modules
 !.env.example
 apps/mobile
 apps/admin
+apps/web
 apps/e2e
+docs
 **/.expo
 **/android
 **/ios
