@@ -30,6 +30,7 @@ export class StorageAdapter {
   private readonly mode: StorageMode;
   /** R2 (y otros S3 sin ACL) fallan si se envía ACL: public-read. */
   private readonly objectAclSupported: boolean;
+  private readonly worker: { url: string; secret: string } | null;
 
   constructor(private config: ConfigService) {
     this.uploadRoot = this.config.get('UPLOAD_DIR', join(process.cwd(), 'uploads'));
@@ -54,6 +55,10 @@ export class StorageAdapter {
     this.objectAclSupported =
       !isR2 && this.config.get('STORAGE_SKIP_ACL', 'false') !== 'true';
 
+    const workerUrl = (this.config.get<string>('STORAGE_WORKER_URL') ?? '').replace(/\/$/, '');
+    const workerSecret = this.config.get<string>('STORAGE_WORKER_SECRET') ?? '';
+    this.worker = workerUrl && workerSecret ? { url: workerUrl, secret: workerSecret } : null;
+
     if (useS3) {
       this.s3Client = new S3Client({
         endpoint,
@@ -72,6 +77,10 @@ export class StorageAdapter {
       this.logger.log(
         `Storage: S3-compatible (${endpoint}) → ${this.publicBaseUrl}${isR2 ? ' [R2, sin ACL]' : ''}`,
       );
+    } else if (this.worker) {
+      this.s3Client = null;
+      this.mode = 's3';
+      this.logger.log(`Storage: R2 via worker (${this.worker.url}) → ${this.publicBaseUrl}`);
     } else {
       this.s3Client = null;
       this.mode = 'local';
@@ -103,6 +112,13 @@ export class StorageAdapter {
   async upload(key: string, buffer: Buffer, contentType: string): Promise<UploadResult> {
     const fullKey = key || `misc/${randomUUID()}`;
 
+    if (this.worker) {
+      await this.uploadViaWorker(fullKey, buffer, contentType);
+      const url = this.buildPublicUrl(fullKey);
+      this.logger.log(`Stored ${fullKey} via R2 worker (${contentType}, ${buffer.length} bytes)`);
+      return { key: fullKey, url, size: buffer.length };
+    }
+
     if (this.s3Client && this.s3Bucket) {
       await this.s3Client.send(
         new PutObjectCommand({
@@ -130,6 +146,16 @@ export class StorageAdapter {
   }
 
   async delete(key: string): Promise<void> {
+    if (this.worker) {
+      try {
+        await this.deleteViaWorker(key);
+        this.logger.log(`Deleted ${key} via R2 worker`);
+      } catch {
+        this.logger.warn(`Could not delete ${key} via R2 worker`);
+      }
+      return;
+    }
+
     if (this.s3Client && this.s3Bucket) {
       try {
         await this.s3Client.send(
@@ -245,5 +271,35 @@ export class StorageAdapter {
 
   getUploadRoot(): string {
     return this.uploadRoot;
+  }
+
+  private workerObjectUrl(key: string): string {
+    return `${this.worker!.url}/${key.replace(/\\/g, '/').replace(/^\/+/, '')}`;
+  }
+
+  private async uploadViaWorker(key: string, buffer: Buffer, contentType: string): Promise<void> {
+    const res = await fetch(this.workerObjectUrl(key), {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${this.worker!.secret}`,
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=31536000, immutable',
+      },
+      body: new Uint8Array(buffer),
+    });
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '');
+      throw new Error(`R2 worker upload ${res.status}${detail ? `: ${detail.slice(0, 180)}` : ''}`);
+    }
+  }
+
+  private async deleteViaWorker(key: string): Promise<void> {
+    const res = await fetch(this.workerObjectUrl(key), {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${this.worker!.secret}` },
+    });
+    if (!res.ok && res.status !== 404) {
+      throw new Error(`R2 worker delete ${res.status}`);
+    }
   }
 }

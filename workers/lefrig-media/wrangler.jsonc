@@ -1,0 +1,12 @@
+{
+  "name": "lefrig-media",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-18",
+  "account_id": "1028d68d4212c43682aa8ea90741a72f",
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "lefrig"
+    }
+  ]
+}
