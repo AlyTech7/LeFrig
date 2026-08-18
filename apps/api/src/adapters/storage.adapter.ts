@@ -28,6 +28,8 @@ export class StorageAdapter {
   private readonly s3Client: S3Client | null;
   private readonly s3Bucket: string | null;
   private readonly mode: StorageMode;
+  /** R2 (y otros S3 sin ACL) fallan si se envía ACL: public-read. */
+  private readonly objectAclSupported: boolean;
 
   constructor(private config: ConfigService) {
     this.uploadRoot = this.config.get('UPLOAD_DIR', join(process.cwd(), 'uploads'));
@@ -48,15 +50,28 @@ export class StorageAdapter {
       !endpoint.includes('localhost') &&
       !endpoint.includes('127.0.0.1');
 
+    const isR2 = /r2\.cloudflarestorage\.com/i.test(endpoint);
+    this.objectAclSupported =
+      !isR2 && this.config.get('STORAGE_SKIP_ACL', 'false') !== 'true';
+
     if (useS3) {
       this.s3Client = new S3Client({
         endpoint,
-        region: this.config.get('STORAGE_REGION', 'auto'),
+        region: this.config.get('STORAGE_REGION', isR2 ? 'auto' : 'us-east-1'),
         credentials: { accessKeyId: accessKey!, secretAccessKey: secretKey! },
         forcePathStyle: this.config.get('STORAGE_FORCE_PATH_STYLE', 'true') === 'true',
+        // AWS SDK v3 manda checksums que R2 rechaza (uploads 400).
+        ...(isR2
+          ? {
+              requestChecksumCalculation: 'WHEN_REQUIRED' as const,
+              responseChecksumValidation: 'WHEN_REQUIRED' as const,
+            }
+          : {}),
       });
       this.mode = 's3';
-      this.logger.log(`Storage: S3-compatible (${endpoint}) → ${this.publicBaseUrl}`);
+      this.logger.log(
+        `Storage: S3-compatible (${endpoint}) → ${this.publicBaseUrl}${isR2 ? ' [R2, sin ACL]' : ''}`,
+      );
     } else {
       this.s3Client = null;
       this.mode = 'local';
@@ -97,7 +112,8 @@ export class StorageAdapter {
           ContentType: contentType,
           CacheControl: 'public, max-age=31536000, immutable',
           // Spaces/S3: sin ACL las URLs públicas del bucket responden 403.
-          ACL: 'public-read',
+          // R2 no soporta ACL de objeto: la lectura pública va por r2.dev / dominio custom.
+          ...(this.objectAclSupported ? { ACL: 'public-read' as const } : {}),
         }),
       );
       const url = this.buildPublicUrl(fullKey);
@@ -185,7 +201,7 @@ export class StorageAdapter {
 
   /** Marca un objeto como público (necesario en Spaces tras uploads sin ACL). */
   async makeObjectPublic(key: string): Promise<void> {
-    if (!this.s3Client || !this.s3Bucket) return;
+    if (!this.s3Client || !this.s3Bucket || !this.objectAclSupported) return;
     await this.s3Client.send(
       new PutObjectAclCommand({
         Bucket: this.s3Bucket,
