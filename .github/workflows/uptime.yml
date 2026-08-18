@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Check API /health
         env:
-          HEALTH_URL: https://whale-app-xpe4g.ondigitalocean.app/health
+          HEALTH_URL: https://lefrig-api-8fc4936e5267.herokuapp.com/health
         run: |
           set -euo pipefail
           echo "Checking $HEALTH_URL"
@@ -45,7 +45,7 @@ jobs:
               '',
               `Workflow: ${runUrl}`,
               '',
-              'Revisar DigitalOcean App Platform y PostgreSQL.',
+              'Revisar Heroku (`lefrig-api`) y PostgreSQL.',
             ].join('\n');
             const { data: openIssues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
