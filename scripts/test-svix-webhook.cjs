@@ -1,9 +1,13 @@
 const { chromium } = require('playwright');
 const https = require('https');
+const {
+  requireClerkSvixApp,
+  requireClerkSvixEndpoint,
+} = require('./ops/config.cjs');
 
 const secret = process.env.CLERK_SECRET_KEY;
-const APP = 'app_3GPC9L6XPibSpRZRsANoIIg7iu6';
-const EP = 'ep_3GPCMdkkcwv9evyq6HoKVQIommJ';
+const APP = requireClerkSvixApp();
+const EP = requireClerkSvixEndpoint();
 const EP_URL = `https://app.svix.com/api/eu/api/v1/app/${APP}/endpoint/${EP}`;
 
 function clerk(method, path, body) {

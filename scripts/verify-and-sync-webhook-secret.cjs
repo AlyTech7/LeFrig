@@ -2,11 +2,17 @@ const { chromium } = require('playwright');
 const https = require('https');
 const fs = require('fs');
 const crypto = require('crypto');
+const {
+  webhookUrl,
+  requireClerkSvixApp,
+  requireClerkSvixEndpoint,
+  requireDoAppIds,
+} = require('./ops/config.cjs');
 
 const clerkSecret = process.env.CLERK_SECRET_KEY;
-const APP = 'app_3GPC9L6XPibSpRZRsANoIIg7iu6';
-const EP = 'ep_3GPCMdkkcwv9evyq6HoKVQIommJ';
-const WEBHOOK_URL = 'https://whale-app-xpe4g.ondigitalocean.app/auth/clerk/webhook';
+const APP = requireClerkSvixApp();
+const EP = requireClerkSvixEndpoint();
+const WEBHOOK_URL = webhookUrl();
 
 function clerk(method, path, body) {
   return new Promise((resolve, reject) => {
@@ -102,10 +108,7 @@ function sign(payload, secret) {
 
   // Sync secret to DO again
   const { execSync } = require('child_process');
-  for (const appId of [
-    '280fb860-39ef-44df-b721-7ca8be74f532',
-    '4d6fbbd0-7390-42cb-838e-46bfc2828669',
-  ]) {
+  for (const appId of requireDoAppIds()) {
     let y = execSync(`doctl apps spec get ${appId} -o yaml`, { encoding: 'utf8' }).replace(/^\uFEFF/, '');
     const re =
       /(^[ \t]*- key: CLERK_WEBHOOK_SECRET\r?\n[ \t]*scope: RUN_TIME\r?\n[ \t]*type: SECRET\r?\n[ \t]*value: ).+$/m;

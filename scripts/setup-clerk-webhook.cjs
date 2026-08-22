@@ -1,9 +1,10 @@
 const https = require('https');
 const fs = require('fs');
 const { execSync } = require('child_process');
+const { webhookUrl, requireDoAppIds } = require('./ops/config.cjs');
 
 const secret = process.env.CLERK_SECRET_KEY;
-const WEBHOOK_URL = 'https://whale-app-xpe4g.ondigitalocean.app/auth/clerk/webhook';
+const WEBHOOK_URL = webhookUrl();
 const EVENTS = [
   'user.created',
   'user.updated',
@@ -200,11 +201,8 @@ async function main() {
   fs.writeFileSync('.tmp-CLERK_WEBHOOK_SECRET.txt', signingSecret, 'utf8');
   console.log('Wrote .tmp-CLERK_WEBHOOK_SECRET.txt len', signingSecret.length);
 
-  // Sync to DO prod + staging
-  for (const appId of [
-    '280fb860-39ef-44df-b721-7ca8be74f532',
-    '4d6fbbd0-7390-42cb-838e-46bfc2828669',
-  ]) {
+  // Sync to DO prod + staging (legacy)
+  for (const appId of requireDoAppIds()) {
     let y = execSync(`doctl apps spec get ${appId} -o yaml`, { encoding: 'utf8' }).replace(
       /^\uFEFF/,
       '',

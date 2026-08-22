@@ -28,6 +28,8 @@ Cubierto: autenticación, autorización, inyección, exposición de datos, secre
 
 Fuera de alcance típico: denegación de servicio volumétrica, phishing genérico, vulnerabilidades solo en dependencias de terceros ya reportadas vía Dependabot sin exploit en Lefrig.
 
-## Dependabot
+## Dependabot y escaneo
 
 Este repositorio usa **Dependabot alerts** y **security updates** para avisar y proponer parches de dependencias con CVE conocidas.
+
+En repos **públicos**, activa también **secret scanning** en GitHub → Settings → Code security and analysis.

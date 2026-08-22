@@ -36,7 +36,7 @@ En Sentry → **Alerts** → New alert rule → “Issues” / “Number of even
 
 Workflow [`.github/workflows/uptime.yml`](../.github/workflows/uptime.yml):
 
-- `GET https://whale-app-xpe4g.ondigitalocean.app/health`
+- `GET https://api.lefrig.com/health`
 - Falla si HTTP ≠ 200, `status !== ok` o `db !== connected`
 - Abre un **GitHub Issue** automático (sin duplicar si ya hay uno abierto)
 
@@ -64,4 +64,4 @@ Los monitores externos deben tratar **503 como down**.
 - [ ] `NEXT_PUBLIC_SENTRY_DSN` en Vercel web + admin
 - [ ] Alertas email en Sentry (cada proyecto)
 - [ ] GitHub Watch activado para recibir fallos del workflow uptime
-- [ ] Probar: `curl -i https://whale-app-xpe4g.ondigitalocean.app/health` → 200
+- [ ] Probar: `curl -i https://api.lefrig.com/health` → 200

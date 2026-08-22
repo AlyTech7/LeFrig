@@ -1,7 +1,8 @@
 const fs = require('fs');
 const { execSync } = require('child_process');
+const { requireDoAppId } = require('./ops/config.cjs');
 
-const appId = '280fb860-39ef-44df-b721-7ca8be74f532';
+const appId = requireDoAppId();
 const secret = fs.readFileSync('.tmp-ADMIN_SESSION_SECRET.txt', 'utf8').trim();
 
 let y = execSync(`doctl apps spec get ${appId} -o yaml`, { encoding: 'utf8' }).replace(/^\uFEFF/, '');

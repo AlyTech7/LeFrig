@@ -50,7 +50,7 @@ Roles Lefrig: `citizen`, `seller`, `shop_owner`, `driver`, `moderator`, `admin`,
 
 En Clerk → **Webhooks** → Add endpoint:
 
-- URL prod: `https://whale-app-xpe4g.ondigitalocean.app/auth/clerk/webhook`
+- URL prod: `https://api.lefrig.com/auth/clerk/webhook`
 - Eventos: `user.created`, `user.updated`, `user.deleted`
 - Copia **Signing secret** → `CLERK_WEBHOOK_SECRET` (DO)
 

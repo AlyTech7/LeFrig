@@ -9,7 +9,7 @@ admin.lefrig.com  ──►  Vercel (lefrig-admin, apps/admin)
                               │
                               │ Bearer JWT (Clerk)
                               ▼
-                    whale-app / api.lefrig.com  (DigitalOcean)
+                    api.lefrig.com / Heroku  (API)
 ```
 
 ## 1. Proyecto Vercel
@@ -27,7 +27,7 @@ Comandos en [`apps/admin/vercel.json`](../apps/admin/vercel.json).
 
 | Variable | Valor |
 |----------|-------|
-| `NEXT_PUBLIC_API_URL` | `https://whale-app-xpe4g.ondigitalocean.app` (o `https://api.lefrig.com`) |
+| `NEXT_PUBLIC_API_URL` | `https://api.lefrig.com` |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `pk_live_...` (misma app Clerk que web) |
 | `CLERK_SECRET_KEY` | `sk_live_...` |
 

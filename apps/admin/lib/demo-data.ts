@@ -98,7 +98,7 @@ export const demoCamps = [
 ];
 
 export const demoAccessLogs = [
-  { id: 'a1', action: 'view_dashboard', resource: 'dashboard', ipAddress: '127.0.0.1', createdAt: new Date().toISOString(), admin: { displayName: 'Admin Lefrig', email: 'elbachiryaraaly@gmail.com' } },
-  { id: 'a2', action: 'view_overview', resource: 'overview', ipAddress: '127.0.0.1', createdAt: new Date(Date.now() - 3600000).toISOString(), admin: { displayName: 'Admin Lefrig', email: 'elbachiryaraaly@gmail.com' } },
+  { id: 'a1', action: 'view_dashboard', resource: 'dashboard', ipAddress: '127.0.0.1', createdAt: new Date().toISOString(), admin: { displayName: 'Admin Lefrig', email: 'admin@lefrig.app' } },
+  { id: 'a2', action: 'view_overview', resource: 'overview', ipAddress: '127.0.0.1', createdAt: new Date(Date.now() - 3600000).toISOString(), admin: { displayName: 'Admin Lefrig', email: 'admin@lefrig.app' } },
   { id: 'a3', action: 'verify_user', resource: 'users/abc', ipAddress: '192.168.1.10', createdAt: new Date(Date.now() - 7200000).toISOString(), admin: { displayName: 'Moderador', email: 'mod@lefrig.dev' } },
 ];

@@ -30,7 +30,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: API_PUBLIC_URL
-        value: https://whale-app-xpe4g.ondigitalocean.app
+        value: https://api.lefrig.com
       - key: CORS_ORIGINS
         value: https://www.lefrig.com,https://lefrig.com,https://lefrig.vercel.app,https://admin.lefrig.com,https://lefrig-admin.vercel.app,http://localhost:8082,http://localhost:3000,http://127.0.0.1:8082
       - key: CLERK_AUTHORIZED_PARTIES
