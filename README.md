@@ -161,4 +161,12 @@ Guía completa: **[docs/deploy-vercel.md](docs/deploy-vercel.md)**
 
 ## Licencia
 
-Privado — Proyecto comunitario saharaui.
+Código abierto bajo [MIT License](LICENSE). Proyecto comunitario saharaui.
+
+## Contribuir
+
+Lee [CONTRIBUTING.md](CONTRIBUTING.md). Para reportar vulnerabilidades, [SECURITY.md](SECURITY.md).
+
+## Hacer el repo público (mantenedores)
+
+Checklist pre-publicación: [docs/going-public.md](docs/going-public.md)

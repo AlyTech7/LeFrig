@@ -2,9 +2,10 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const https = require('https');
 const { execSync } = require('child_process');
+const { webhookUrl, apiPublicUrl, requireDoAppIds } = require('./ops/config.cjs');
 
-const WEBHOOK_URL = 'https://whale-app-xpe4g.ondigitalocean.app/auth/clerk/webhook';
-const ALT_URL = 'https://api.lefrig.com/auth/clerk/webhook';
+const WEBHOOK_URL = webhookUrl();
+const ALT_URL = `${apiPublicUrl()}/auth/clerk/webhook`;
 const secret = process.env.CLERK_SECRET_KEY;
 
 function clerk(method, path, body) {
@@ -41,10 +42,7 @@ async function getPortalUrl() {
 
 async function syncSecretToDo(signingSecret) {
   fs.writeFileSync('.tmp-CLERK_WEBHOOK_SECRET.txt', signingSecret, 'utf8');
-  for (const appId of [
-    '280fb860-39ef-44df-b721-7ca8be74f532',
-    '4d6fbbd0-7390-42cb-838e-46bfc2828669',
-  ]) {
+  for (const appId of requireDoAppIds()) {
     let y = execSync(`doctl apps spec get ${appId} -o yaml`, { encoding: 'utf8' }).replace(
       /^\uFEFF/,
       '',
@@ -84,7 +82,7 @@ async function main() {
   await page.screenshot({ path: '.tmp-svix-1.png', fullPage: true });
 
   // Prefer editing existing endpoint if present
-  const existing = page.getByText(/api\.lefrig\.com\/auth\/clerk\/webhook|whale-app.*\/auth\/clerk\/webhook/).first();
+  const existing = page.getByText(/\/auth\/clerk\/webhook/).first();
   if (await existing.count()) {
     console.log('opening existing endpoint');
     await existing.click();

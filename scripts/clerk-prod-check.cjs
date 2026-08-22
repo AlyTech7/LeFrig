@@ -1,6 +1,7 @@
 const { spawnSync } = require('child_process');
 const fs = require('fs');
 const https = require('https');
+const { webhookUrl } = require('./ops/config.cjs');
 
 function vercel(args) {
   const r = spawnSync('npx', ['--yes', 'vercel@latest', ...args], {
@@ -98,14 +99,14 @@ async function main() {
   }
 
   // Ensure webhook to production API if missing
-  const apiUrl = 'https://whale-app-xpe4g.ondigitalocean.app/auth/clerk/webhook';
+  const apiUrl = webhookUrl();
   const list = await clerkGet('/webhooks', secret);
   console.log('webhooks list status', list.status);
   let has = false;
   try {
     const parsed = JSON.parse(list.body);
     const arr = Array.isArray(parsed) ? parsed : parsed?.data || [];
-    has = arr.some((w) => (w.callback_url || w.url || '').includes('whale-app-xpe4g') || (w.callback_url || w.url || '').includes('/auth/clerk/webhook'));
+    has = arr.some((w) => (w.callback_url || w.url || '').includes('/auth/clerk/webhook'));
     console.log(
       'existing webhooks',
       arr.map((w) => ({ id: w.id, url: w.callback_url || w.url, events: w.event_types || w.events })),

@@ -48,7 +48,7 @@ Redeploy la API.
 ## 5. Verificar
 
 ```bash
-curl https://whale-app-xpe4g.ondigitalocean.app/health
+curl https://api.lefrig.com/health
 ```
 
 Debe mostrar:

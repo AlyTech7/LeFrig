@@ -52,3 +52,9 @@ apps/mobile/ios/
 .env*
 .tmp*
 .tmp-*.json
+
+# EAS / Expo build logs locales (pueden incluir tokens de sesión)
+apps/mobile/eas-build-*.json
+
+# Ops locales (secretos de mantenedores)
+scripts/ops/.env.ops

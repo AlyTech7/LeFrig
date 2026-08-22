@@ -2,36 +2,28 @@
 
 Checklist accionable. El código del piloto web está en `master`; lo bloqueante es operativo.
 
-## 1. Backup Postgres (bloqueante) — ✅ hecho 2026-07-18
+## 1. Backup Postgres — ✅ hecho (infra legacy DO)
 
-| Cluster | Uso | Backups |
-|---------|-----|---------|
-| `db-pgsql-fra1-32508` (`5fd9dfe4-…`) | **Prod** → app `lefrig-api` | Diarios (p. ej. 11–18 jul 2026) |
-| `db-postgresql-fra1-62172` (`6bd19a5b-…`) | **Staging** → app `lefrig-api-staging` (DB `lefrig_staging`) | Diarios |
+> **Nota:** La API de producción migró a **Heroku**. Los IDs de cluster DO ya no aplican; conserva backups en el proveedor Postgres activo (Heroku Postgres o fork).
 
-**Restore drill:** fork `lefrig-restore-drill-20260718` desde backup staging `2026-07-18 07:26:11 +0000 UTC`.
-Verificado: DB `lefrig_staging` con schema Prisma (53 tablas public) y filas (`users`, `listings`, `cash_agreements`, `camps`). Cluster temporal **destruido** tras la prueba.
-
-Comandos de referencia:
+Comandos de referencia (DigitalOcean Managed PostgreSQL, histórico):
 
 ```bash
 doctl databases backups <cluster-id>
 doctl databases fork lefrig-restore-drill-YYYYMMDD \
-  --restore-from-cluster-id <staging-or-prod-id> \
+  --restore-from-cluster-id <cluster-id> \
   --restore-from-timestamp "YYYY-MM-DD HH:MM:SS +0000 UTC" \
   --wait
 # verificar schema/filas, luego:
 doctl databases delete <fork-id> --force
 ```
 
-Repetir el drill sobre **prod** solo si quieres validar el cluster grande (cuesta un nodo extra mientras exista).
-
 ## 2. Clerk live — email / Google (piloto)
 
 ### Estado 2026-07-18
 - Instancia **production** OK; dominio primario `lefrig.com` (`clerk.lefrig.com`, `accounts.lefrig.com`).
 - Orígenes: `www.lefrig.com`, `lefrig.com`, `admin.lefrig.com`, `staging.lefrig.com`.
-- CLI: `npx clerk login` → `alyelyar@alum.us.es`.
+- CLI: `npx clerk login` → cuenta con acceso a la instancia production de Clerk.
 - `sk_live` sincronizado en DO (prod+staging) y Vercel (`lefrig`, `lefrig-admin`).
 - **Auth piloto:** email (código) + Google. SMS/OTP teléfono **fuera** del piloto (plan Clerk bloquea DZ/MR).
 
@@ -39,7 +31,7 @@ Repetir el drill sobre **prod** solo si quieres validar el cluster grande (cuest
 La API `/instance/communication` tiene **DZ** y **MR** en `blocked_country_codes` (`sms_country_removal_restricted`). Reactivar SMS solo tras upgrade/support Clerk; hasta entonces no hay UI de teléfono en login móvil.
 
 ### Webhook — ✅ 2026-07-18
-- Endpoint Svix: `https://whale-app-xpe4g.ondigitalocean.app/auth/clerk/webhook`
+- Endpoint Svix: `https://api.lefrig.com/auth/clerk/webhook` (o URL Heroku mientras no haya CNAME)
 - Eventos: `user.created`, `user.updated`, `user.deleted`
 - `CLERK_WEBHOOK_SECRET` sincronizado en DO prod + staging
 - Script: `node scripts/setup-clerk-webhook-playwright.cjs` (requiere `CLERK_SECRET_KEY`)
