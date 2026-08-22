@@ -7,7 +7,7 @@ Usa esta guía **antes** de cambiar la visibilidad en GitHub → Settings → Ge
 ### En el código actual
 
 - [x] No hay `.env` commiteados (solo `.env.example` con placeholders).
-- [x] Scripts de ops usan variables de entorno (`scripts/ops/.env.ops.example`).
+- [x] Scripts de ops usan variables de entorno (`scripts/ops/env.ops.example`).
 - [x] Emails personales sustituidos por dominios del proyecto en datos demo.
 - [ ] **Revisa tú** que no queden tokens en issues, PRs o comentarios de GitHub.
 
@@ -119,7 +119,7 @@ gh repo view --web
 ## 7. Copia local de ops (solo mantenedores)
 
 ```bash
-cp scripts/ops/.env.ops.example scripts/ops/.env.ops
+cp scripts/ops/env.ops.example scripts/ops/.env.ops
 # Rellena CLERK_SECRET_KEY, CLERK_SVIX_*, DO_APP_IDS si usas scripts legacy
 ```
 
