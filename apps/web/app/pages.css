@@ -256,11 +256,30 @@
   align-items: center;
   justify-content: center;
   padding: 2rem 1.25rem;
+  background:
+    radial-gradient(circle at top, rgba(199, 163, 74, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(255, 253, 249, 0.94) 0%, rgba(247, 241, 231, 0.96) 100%);
 }
 
 .sv-auth__card {
   width: 100%;
   max-width: 420px;
+  border-radius: 24px;
+}
+
+.sv-auth :is(.cl-rootBox, .cl-cardBox, .cl-card) {
+  width: 100%;
+}
+
+.sv-auth .cl-card {
+  border-radius: 24px !important;
+}
+
+.sv-auth .cl-footer,
+.sv-auth .cl-navbar,
+.sv-auth .cl-internal-b3fm6y,
+.sv-auth .cl-internal-1dauvpw {
+  background: transparent !important;
 }
 
 .sv-auth__notice {
