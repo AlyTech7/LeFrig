@@ -103,6 +103,15 @@ pnpm --filter @lefrig/mobile exec eas build --profile preview --platform android
 pnpm --filter @lefrig/mobile exec eas build --profile production --platform android
 ```
 
+### Password (recomendado para Play / App Store)
+
+En Clerk Dashboard → **User & authentication** → activa **Password** junto al email code.
+
+Flujo en la app móvil:
+1. Email → si la cuenta tiene contraseña y código, se elige método (contraseña primero)
+2. Registro nuevo: nombre + contraseña → código de verificación al email
+3. Cuenta demo para revisores: crea un usuario en Clerk con **password** fijo y úsalo en Play Console → Datos de inicio de sesión
+
 ## 9. Legacy JWT (dev)
 
 Con `AUTH_LEGACY_JWT=true`, el OTP mock (`/auth/otp/*`) sigue funcionando para tests sin Clerk.

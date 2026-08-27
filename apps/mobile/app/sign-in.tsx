@@ -39,7 +39,7 @@ function digitsOnly(input: string): string {
   return input.replace(/\D/g, '').slice(0, 6);
 }
 
-type Step = 'email' | 'code' | 'password';
+type Step = 'email' | 'method' | 'code' | 'password' | 'signup';
 type AuthMode = 'signin' | 'signup';
 
 export default function SignInScreen() {
@@ -50,14 +50,18 @@ export default function SignInScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ email?: string }>();
   const t = useT();
+
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
   const [password2, setPassword2] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<AuthMode>('signin');
   const [step, setStep] = useState<Step>('email');
   const [hasEmailCode, setHasEmailCode] = useState(false);
+  const [hasPassword, setHasPassword] = useState(false);
+  const [emailAddressId, setEmailAddressId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [resendIn, setResendIn] = useState(0);
@@ -66,9 +70,7 @@ export default function SignInScreen() {
 
   useEffect(() => {
     const prefill = typeof params.email === 'string' ? params.email.trim().toLowerCase() : '';
-    if (prefill && isValidEmail(prefill)) {
-      setEmail(prefill);
-    }
+    if (prefill && isValidEmail(prefill)) setEmail(prefill);
   }, [params.email]);
 
   useEffect(() => {
@@ -84,6 +86,7 @@ export default function SignInScreen() {
   }, [resendIn]);
 
   const startCodeCooldown = () => setResendIn(RESEND_SECONDS);
+
   const syncToApi = async () => {
     try {
       const token = await getToken();
@@ -109,13 +112,36 @@ export default function SignInScreen() {
     setFullName('');
     setPassword('');
     setPassword2('');
+    setShowPassword(false);
     setError('');
     setHasEmailCode(false);
+    setHasPassword(false);
+    setEmailAddressId(null);
     setMode('signin');
     setResendIn(0);
   };
 
-  /** Intenta login; si el email no existe, inicia registro por código. */
+  const sendEmailCode = async () => {
+    if (!signIn) throw new Error('signIn missing');
+    let id = emailAddressId;
+    if (!id) {
+      const attempt = await signIn.create({ identifier: email.trim().toLowerCase() });
+      const emailFactor = attempt.supportedFirstFactors?.find((f) => f.strategy === 'email_code');
+      if (!emailFactor || !('emailAddressId' in emailFactor)) {
+        throw new Error(t('auth.errors.clerkEmail'));
+      }
+      id = emailFactor.emailAddressId;
+      setEmailAddressId(id);
+    }
+    await signIn.prepareFirstFactor({
+      strategy: 'email_code',
+      emailAddressId: id,
+    });
+    startCodeCooldown();
+    setStep('code');
+  };
+
+  /** Tras el email: elige método (contraseña preferida) o registro. */
   const onContinue = async () => {
     if (!isValidEmail(email)) {
       setError(t('auth.errors.emailRequired'));
@@ -124,7 +150,7 @@ export default function SignInScreen() {
     if (!isLoaded || !signIn || !signUp) {
       setError(
         Platform.OS === 'web'
-          ? 'Clerk aún no está listo. En el navegador usa https://www.lefrig.com/sign-in; en el móvil abre Expo Go (no la web de Metro).'
+          ? 'Clerk aún no está listo. En el navegador usa https://www.lefrig.com/sign-in.'
           : t('auth.errors.authLoading'),
       );
       return;
@@ -141,52 +167,66 @@ export default function SignInScreen() {
       const passwordFactor = factors.find((f) => f.strategy === 'password');
       const oauthGoogle = factors.some((f) => f.strategy === 'oauth_google');
 
+      const canCode = Boolean(emailFactor && 'emailAddressId' in emailFactor);
+      const canPass = Boolean(passwordFactor);
       setMode('signin');
-      setHasEmailCode(Boolean(emailFactor && 'emailAddressId' in emailFactor));
-
-      // Preferir código solo si Clerk puede prepararlo; si falla (p. ej. cuenta Google),
-      // caemos a contraseña u OAuth.
-      if (emailFactor && 'emailAddressId' in emailFactor) {
-        try {
-          await signIn.prepareFirstFactor({
-            strategy: 'email_code',
-            emailAddressId: emailFactor.emailAddressId,
-          });
-          startCodeCooldown();
-          setStep('code');
-          return;
-        } catch {
-          setHasEmailCode(false);
-        }
+      setHasEmailCode(canCode);
+      setHasPassword(canPass);
+      if (canCode && emailFactor && 'emailAddressId' in emailFactor) {
+        setEmailAddressId(emailFactor.emailAddressId);
       }
 
-      if (passwordFactor) {
-        setStep('password');
-        setError(t('auth.errors.usePassword'));
+      // Contraseña disponible → preferirla (Play review + UX clara)
+      if (canPass && canCode) {
+        setStep('method');
         return;
       }
-
+      if (canPass) {
+        setStep('password');
+        return;
+      }
+      if (canCode && emailFactor && 'emailAddressId' in emailFactor) {
+        await signIn.prepareFirstFactor({
+          strategy: 'email_code',
+          emailAddressId: emailFactor.emailAddressId,
+        });
+        startCodeCooldown();
+        setStep('code');
+        return;
+      }
       if (oauthGoogle) {
         setError(t('auth.errors.useGoogle'));
         return;
       }
-
       setError(t('auth.errors.clerkEmail'));
     } catch (err) {
       if (isIdentifierNotFound(err)) {
-        try {
-          await signUp.create({ emailAddress: identifier });
-          await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-          setMode('signup');
-          setHasEmailCode(true);
-          startCodeCooldown();
-          setStep('code');
-        } catch (signUpErr) {
-          setError(getClerkErrorMessage(signUpErr, t('auth.errors.sendFailed')));
-        }
+        setMode('signup');
+        setHasEmailCode(true);
+        setHasPassword(true);
+        setStep('signup');
+        setError('');
       } else {
         setError(getClerkErrorMessage(err, t('auth.errors.sendFailed')));
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onChoosePassword = () => {
+    setError('');
+    setPassword('');
+    setStep('password');
+  };
+
+  const onChooseCode = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await sendEmailCode();
+    } catch (err) {
+      setError(getClerkErrorMessage(err, t('auth.errors.sendFailed')));
     } finally {
       setLoading(false);
     }
@@ -212,7 +252,10 @@ export default function SignInScreen() {
           await finishSession(attempt.createdSessionId);
           return;
         }
-        const finalized = await finalizeSignUpAfterEmail(attempt);
+        const finalized = await finalizeSignUpAfterEmail(attempt, {
+          password: password || undefined,
+          ...splitDisplayName(fullName),
+        });
         if (finalized.ok) {
           await finishSession(finalized.sessionId);
           return;
@@ -234,6 +277,7 @@ export default function SignInScreen() {
 
       const firstPassword = result.supportedFirstFactors?.some((f) => f.strategy === 'password');
       if (result.status === 'needs_first_factor' && firstPassword) {
+        setHasPassword(true);
         setStep('password');
         setError(t('auth.errors.usePassword'));
         return;
@@ -252,61 +296,107 @@ export default function SignInScreen() {
     }
   };
 
-  const onPassword = async () => {
-    if (mode === 'signup') {
-      if (fullName.trim().length < 2) {
-        setError(t('auth.errors.nameRequired'));
-        return;
-      }
-      if (password.length < 8) {
-        setError(t('auth.errors.passwordMin'));
-        return;
-      }
-      if (password !== password2) {
-        setError(t('auth.errors.passwordMismatch'));
-        return;
-      }
-    } else if (!password) {
+  const onPasswordSignIn = async () => {
+    if (!password) {
       setError(t('auth.errors.usePassword'));
       return;
     }
-    if (!isLoaded || !signIn || !signUp) {
+    if (!isLoaded || !signIn) {
       setError(t('auth.errors.authLoading'));
       return;
     }
     setLoading(true);
     setError('');
-
     try {
-      if (mode === 'signup') {
-        const { firstName, lastName } = splitDisplayName(fullName);
-        const finalized = await finalizeSignUpAfterEmail(signUp, {
-          password,
-          firstName,
-          lastName,
-        });
-        if (finalized.ok) {
-          await finishSession(finalized.sessionId);
-          return;
-        }
-        setError('error' in finalized ? finalized.error : t('auth.errors.incomplete'));
-        return;
-      }
-
+      // Asegura intento fresco con factor password
+      await signIn.create({ identifier: email.trim().toLowerCase() });
       const result = await signIn.attemptFirstFactor({ strategy: 'password', password });
       if (result.status === 'complete' && result.createdSessionId) {
         await finishSession(result.createdSessionId);
         return;
       }
-
       setError(t('auth.errors.incomplete'));
     } catch (err) {
-      setError(
-        getClerkErrorMessage(
-          err,
-          mode === 'signup' ? t('auth.errors.passwordSaveFailed') : t('auth.errors.wrongPassword'),
-        ),
-      );
+      setError(getClerkErrorMessage(err, t('auth.errors.wrongPassword')));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /** Registro nuevo: nombre + contraseña → código email. */
+  const onSignupSubmit = async () => {
+    if (fullName.trim().length < 2) {
+      setError(t('auth.errors.nameRequired'));
+      return;
+    }
+    if (password.length < 8) {
+      setError(t('auth.errors.passwordMin'));
+      return;
+    }
+    if (password !== password2) {
+      setError(t('auth.errors.passwordMismatch'));
+      return;
+    }
+    if (!isLoaded || !signUp) {
+      setError(t('auth.errors.authLoading'));
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const { firstName, lastName } = splitDisplayName(fullName);
+      await signUp.create({
+        emailAddress: email.trim().toLowerCase(),
+        password,
+        firstName: firstName || undefined,
+        lastName,
+      });
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+      setMode('signup');
+      setHasEmailCode(true);
+      startCodeCooldown();
+      setStep('code');
+    } catch (err) {
+      setError(getClerkErrorMessage(err, t('auth.errors.sendFailed')));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /** Completa password si Clerk lo pide tras verificar email. */
+  const onPasswordAfterSignup = async () => {
+    if (fullName.trim().length < 2) {
+      setError(t('auth.errors.nameRequired'));
+      return;
+    }
+    if (password.length < 8) {
+      setError(t('auth.errors.passwordMin'));
+      return;
+    }
+    if (password !== password2) {
+      setError(t('auth.errors.passwordMismatch'));
+      return;
+    }
+    if (!signUp) {
+      setError(t('auth.errors.authLoading'));
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const { firstName, lastName } = splitDisplayName(fullName);
+      const finalized = await finalizeSignUpAfterEmail(signUp, {
+        password,
+        firstName,
+        lastName,
+      });
+      if (finalized.ok) {
+        await finishSession(finalized.sessionId);
+        return;
+      }
+      setError('error' in finalized ? finalized.error : t('auth.errors.incomplete'));
+    } catch (err) {
+      setError(getClerkErrorMessage(err, t('auth.errors.passwordSaveFailed')));
     } finally {
       setLoading(false);
     }
@@ -321,17 +411,8 @@ export default function SignInScreen() {
         if (!signUp) return;
         await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
       } else {
-        if (!signIn) return;
-        const attempt = await signIn.create({ identifier: email });
-        const emailFactor = attempt.supportedFirstFactors?.find((f) => f.strategy === 'email_code');
-        if (!emailFactor || !('emailAddressId' in emailFactor)) {
-          setError(t('auth.errors.clerkEmail'));
-          return;
-        }
-        await signIn.prepareFirstFactor({
-          strategy: 'email_code',
-          emailAddressId: emailFactor.emailAddressId,
-        });
+        await sendEmailCode();
+        return;
       }
       startCodeCooldown();
     } catch (err) {
@@ -344,32 +425,46 @@ export default function SignInScreen() {
   const onChangeCode = (value: string) => {
     const next = digitsOnly(value);
     setCode(next);
-    if (next.length === 6 && !loading) {
-      void onVerifyCode(next);
-    }
+    if (next.length === 6 && !loading) void onVerifyCode(next);
   };
 
   const title =
-    step === 'password'
-      ? mode === 'signup'
+    step === 'method'
+      ? t('auth.methodTitle')
+      : step === 'signup'
         ? t('auth.signUpTitle')
-        : t('auth.welcomeBack')
-      : step === 'code'
-        ? t('auth.verify')
-        : mode === 'signup'
-          ? t('auth.signUpTitle')
-          : t('auth.welcomeBack');
+        : step === 'password'
+          ? mode === 'signup'
+            ? t('auth.signUpTitle')
+            : t('auth.welcomeBack')
+          : step === 'code'
+            ? t('auth.verify')
+            : t('auth.welcomeBack');
 
   const subtitle =
-    step === 'password'
-      ? mode === 'signup'
-        ? t('auth.passwordStepSubtitle')
-        : t('auth.errors.usePassword')
-      : step === 'code'
-        ? t('auth.codeStepSubtitle')
-        : mode === 'signup'
-          ? t('auth.signUpSubtitle')
-          : t('auth.subtitle');
+    step === 'method'
+      ? t('auth.methodSubtitle')
+      : step === 'signup'
+        ? t('auth.signupFormSubtitle')
+        : step === 'password'
+          ? mode === 'signup'
+            ? t('auth.passwordStepSubtitle')
+            : t('auth.passwordSignInSubtitle')
+          : step === 'code'
+            ? t('auth.codeStepSubtitle')
+            : t('auth.subtitle');
+
+  const PasswordToggle = (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+      hitSlop={10}
+      onPress={() => setShowPassword((v) => !v)}
+      style={styles.eyeBtn}
+    >
+      <AppIcon name={showPassword ? 'eye-off' : 'eye'} size={18} color={theme.inkMuted} />
+    </Pressable>
+  );
 
   return (
     <LinearGradient colors={[...gradients.hero]} style={styles.root}>
@@ -417,6 +512,7 @@ export default function SignInScreen() {
                     </>
                   )}
                 </Pressable>
+                <Text style={styles.helper}>{t('auth.emailHelper')}</Text>
                 <View style={styles.divider}>
                   <View style={styles.dividerLine} />
                   <Text style={styles.dividerText}>{t('common.or')}</Text>
@@ -428,6 +524,116 @@ export default function SignInScreen() {
                   disabled={loading}
                   onError={setError}
                 />
+              </>
+            ) : null}
+
+            {step === 'method' ? (
+              <>
+                <Text style={styles.passwordEmail}>{email}</Text>
+                <Pressable
+                  accessibilityRole="button"
+                  style={[styles.methodCard, styles.methodCardPrimary, loading && styles.btnDisabled]}
+                  onPress={onChoosePassword}
+                  disabled={loading}
+                >
+                  <View style={styles.methodIcon}>
+                    <AppIcon name="lock" size={22} color={theme.pearl} />
+                  </View>
+                  <View style={styles.methodCopy}>
+                    <Text style={styles.methodTitle}>{t('auth.methodPasswordTitle')}</Text>
+                    <Text style={styles.methodHint}>{t('auth.methodPasswordHint')}</Text>
+                  </View>
+                  <AppIcon name="chevron-right" size={18} color={theme.pearl} />
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  style={[styles.methodCard, loading && styles.btnDisabled]}
+                  onPress={() => void onChooseCode()}
+                  disabled={loading}
+                >
+                  <View style={[styles.methodIcon, styles.methodIconGhost]}>
+                    <AppIcon name="mail" size={22} color={theme.dune} />
+                  </View>
+                  <View style={styles.methodCopy}>
+                    <Text style={[styles.methodTitle, styles.methodTitleDark]}>
+                      {t('auth.methodCodeTitle')}
+                    </Text>
+                    <Text style={[styles.methodHint, styles.methodHintDark]}>
+                      {t('auth.methodCodeHint')}
+                    </Text>
+                  </View>
+                  {loading ? (
+                    <ActivityIndicator color={theme.dune} />
+                  ) : (
+                    <AppIcon name="chevron-right" size={18} color={theme.inkMuted} />
+                  )}
+                </Pressable>
+                <Pressable onPress={resetToEmail} disabled={loading}>
+                  <Text style={styles.backLink}>{t('auth.changeEmail')}</Text>
+                </Pressable>
+              </>
+            ) : null}
+
+            {step === 'signup' ? (
+              <>
+                <Text style={styles.passwordEmail}>{email}</Text>
+                <View style={styles.inputWrap}>
+                  <AppIcon name="user" size={18} color={theme.dune} />
+                  <TextInput
+                    style={styles.inputInner}
+                    placeholder={t('auth.namePlaceholder')}
+                    placeholderTextColor={theme.inkMuted}
+                    value={fullName}
+                    onChangeText={setFullName}
+                    autoCapitalize="words"
+                    autoComplete="name"
+                    editable={!loading}
+                  />
+                </View>
+                <View style={styles.inputWrap}>
+                  <AppIcon name="lock" size={18} color={theme.dune} />
+                  <TextInput
+                    style={styles.inputInner}
+                    placeholder={t('auth.newPasswordPlaceholder')}
+                    placeholderTextColor={theme.inkMuted}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    autoComplete="new-password"
+                    editable={!loading}
+                  />
+                  {PasswordToggle}
+                </View>
+                <View style={styles.inputWrap}>
+                  <AppIcon name="lock" size={18} color={theme.dune} />
+                  <TextInput
+                    style={styles.inputInner}
+                    placeholder={t('auth.confirmPasswordPlaceholder')}
+                    placeholderTextColor={theme.inkMuted}
+                    value={password2}
+                    onChangeText={setPassword2}
+                    secureTextEntry={!showPassword}
+                    autoComplete="new-password"
+                    editable={!loading}
+                    onSubmitEditing={() => void onSignupSubmit()}
+                  />
+                </View>
+                <Text style={styles.helper}>{t('auth.passwordRules')}</Text>
+                <Pressable
+                  accessibilityRole="button"
+                  style={[styles.btnPrimary, loading && styles.btnDisabled]}
+                  onPress={() => void onSignupSubmit()}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color={theme.pearl} />
+                  ) : (
+                    <Text style={styles.btnPrimaryText}>{t('auth.createAccount')}</Text>
+                  )}
+                </Pressable>
+                <Pressable onPress={resetToEmail} disabled={loading}>
+                  <Text style={styles.backLink}>{t('auth.changeEmail')}</Text>
+                </Pressable>
               </>
             ) : null}
 
@@ -467,6 +673,18 @@ export default function SignInScreen() {
                     {resendIn > 0 ? t('auth.resendIn', { s: resendIn }) : t('auth.resendCode')}
                   </Text>
                 </Pressable>
+                {mode === 'signin' && hasPassword ? (
+                  <Pressable
+                    onPress={() => {
+                      setCode('');
+                      setError('');
+                      setStep('password');
+                    }}
+                    disabled={loading}
+                  >
+                    <Text style={styles.backLink}>{t('auth.enterWithPasswordInstead')}</Text>
+                  </Pressable>
+                ) : null}
                 <Pressable onPress={resetToEmail} disabled={loading}>
                   <Text style={styles.backLink}>{t('auth.changeEmail')}</Text>
                 </Pressable>
@@ -477,22 +695,22 @@ export default function SignInScreen() {
               <>
                 <Text style={styles.passwordEmail}>{email}</Text>
                 {mode === 'signup' ? (
-                  <Text style={styles.passwordHint}>{t('auth.passwordVerifiedHint')}</Text>
-                ) : null}
-                {mode === 'signup' ? (
-                  <View style={styles.inputWrap}>
-                    <AppIcon name="user" size={18} color={theme.dune} />
-                    <TextInput
-                      style={styles.inputInner}
-                      placeholder={t('auth.namePlaceholder')}
-                      placeholderTextColor={theme.inkMuted}
-                      value={fullName}
-                      onChangeText={setFullName}
-                      autoCapitalize="words"
-                      autoComplete="name"
-                      editable={!loading}
-                    />
-                  </View>
+                  <>
+                    <Text style={styles.passwordHint}>{t('auth.passwordVerifiedHint')}</Text>
+                    <View style={styles.inputWrap}>
+                      <AppIcon name="user" size={18} color={theme.dune} />
+                      <TextInput
+                        style={styles.inputInner}
+                        placeholder={t('auth.namePlaceholder')}
+                        placeholderTextColor={theme.inkMuted}
+                        value={fullName}
+                        onChangeText={setFullName}
+                        autoCapitalize="words"
+                        autoComplete="name"
+                        editable={!loading}
+                      />
+                    </View>
+                  </>
                 ) : null}
                 <View style={styles.inputWrap}>
                   <AppIcon name="lock" size={18} color={theme.dune} />
@@ -504,13 +722,14 @@ export default function SignInScreen() {
                     placeholderTextColor={theme.inkMuted}
                     value={password}
                     onChangeText={setPassword}
-                    secureTextEntry
+                    secureTextEntry={!showPassword}
                     autoComplete={mode === 'signup' ? 'new-password' : 'password'}
                     editable={!loading}
                     onSubmitEditing={() => {
-                      if (mode !== 'signup') void onPassword();
+                      if (mode !== 'signup') void onPasswordSignIn();
                     }}
                   />
+                  {PasswordToggle}
                 </View>
                 {mode === 'signup' ? (
                   <View style={styles.inputWrap}>
@@ -521,17 +740,19 @@ export default function SignInScreen() {
                       placeholderTextColor={theme.inkMuted}
                       value={password2}
                       onChangeText={setPassword2}
-                      secureTextEntry
+                      secureTextEntry={!showPassword}
                       autoComplete="new-password"
                       editable={!loading}
-                      onSubmitEditing={() => void onPassword()}
+                      onSubmitEditing={() => void onPasswordAfterSignup()}
                     />
                   </View>
                 ) : null}
                 <Pressable
                   accessibilityRole="button"
                   style={[styles.btnPrimary, loading && styles.btnDisabled]}
-                  onPress={() => void onPassword()}
+                  onPress={() =>
+                    void (mode === 'signup' ? onPasswordAfterSignup() : onPasswordSignIn())
+                  }
                   disabled={loading}
                 >
                   {loading ? (
@@ -543,35 +764,7 @@ export default function SignInScreen() {
                   )}
                 </Pressable>
                 {hasEmailCode && mode === 'signin' ? (
-                  <Pressable
-                    onPress={() => {
-                      setPassword('');
-                      setError('');
-                      void (async () => {
-                        setLoading(true);
-                        try {
-                          if (!signIn) return;
-                          const attempt = await signIn.create({ identifier: email });
-                          const emailFactor = attempt.supportedFirstFactors?.find(
-                            (f) => f.strategy === 'email_code',
-                          );
-                          if (emailFactor && 'emailAddressId' in emailFactor) {
-                            await signIn.prepareFirstFactor({
-                              strategy: 'email_code',
-                              emailAddressId: emailFactor.emailAddressId,
-                            });
-                            startCodeCooldown();
-                            setStep('code');
-                          }
-                        } catch (err) {
-                          setError(getClerkErrorMessage(err, t('auth.errors.sendFailed')));
-                        } finally {
-                          setLoading(false);
-                        }
-                      })();
-                    }}
-                    disabled={loading}
-                  >
+                  <Pressable onPress={() => void onChooseCode()} disabled={loading}>
                     <Text style={styles.backLink}>{t('auth.enterWithCode')}</Text>
                   </Pressable>
                 ) : null}
@@ -646,137 +839,176 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.display,
-    fontSize: 34,
+    fontSize: 28,
     color: theme.ink,
-    letterSpacing: -1,
     textAlign: 'center',
+    marginBottom: 8,
   },
   subtitle: {
     fontFamily: fonts.body,
-    fontSize: 16,
+    fontSize: 15,
     color: theme.inkMuted,
-    marginTop: 8,
-    marginBottom: 32,
     textAlign: 'center',
+    marginBottom: 28,
+    lineHeight: 22,
+  },
+  helper: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: theme.inkMuted,
+    textAlign: 'center',
+    marginTop: 12,
+    lineHeight: 18,
   },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    backgroundColor: theme.surface,
+    gap: 10,
+    backgroundColor: theme.glass,
     borderWidth: 1,
-    borderColor: theme.borderStrong,
+    borderColor: theme.glassBorder,
     borderRadius: radii.md,
-    paddingHorizontal: 16,
-    marginBottom: 16,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+    minHeight: 54,
   },
   inputInner: {
     flex: 1,
-    paddingVertical: 16,
     fontFamily: fonts.body,
     fontSize: 16,
     color: theme.ink,
+    paddingVertical: 14,
   },
+  eyeBtn: { padding: 4 },
   input: {
-    backgroundColor: theme.surface,
+    backgroundColor: theme.glass,
     borderWidth: 1,
-    borderColor: theme.borderStrong,
+    borderColor: theme.glassBorder,
     borderRadius: radii.md,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontFamily: fonts.body,
     fontSize: 16,
     color: theme.ink,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   codeInput: {
+    letterSpacing: 10,
+    fontSize: 24,
     textAlign: 'center',
     fontFamily: fonts.bodyBold,
-    fontSize: 28,
-    letterSpacing: 8,
   },
-  codeHeader: {
+  btnPrimary: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    marginBottom: 12,
+    gap: 10,
+    backgroundColor: theme.ink,
+    borderRadius: radii.md,
+    paddingVertical: 16,
+    marginTop: 4,
   },
-  codeHint: { fontFamily: fonts.body, color: theme.inkMuted, fontSize: 14, flexShrink: 1 },
+  btnPrimaryText: { fontFamily: fonts.bodyBold, fontSize: 16, color: theme.pearl },
+  btnDisabled: { opacity: 0.55 },
+  divider: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 20 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: theme.glassBorder },
+  dividerText: { fontFamily: fonts.body, fontSize: 13, color: theme.inkMuted },
+  codeHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
+  codeHint: { flex: 1, fontFamily: fonts.body, fontSize: 14, color: theme.inkMuted, lineHeight: 20 },
   passwordEmail: {
-    fontFamily: fonts.bodySemi,
+    fontFamily: fonts.bodyBold,
     fontSize: 14,
-    color: theme.inkMuted,
+    color: theme.dune,
     textAlign: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
   },
   passwordHint: {
     fontFamily: fonts.body,
     fontSize: 14,
     color: theme.inkMuted,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 14,
     lineHeight: 20,
   },
-  btnPrimary: {
+  methodCard: {
     flexDirection: 'row',
-    gap: 10,
-    backgroundColor: theme.dune,
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: theme.glass,
+    borderWidth: 1,
+    borderColor: theme.glassBorder,
     borderRadius: radii.md,
-    padding: 16,
+    padding: 14,
+    marginBottom: 12,
+  },
+  methodCardPrimary: {
+    backgroundColor: theme.ink,
+    borderColor: theme.ink,
+  },
+  methodIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
   },
-  btnDisabled: { opacity: 0.7 },
-  btnPrimaryText: {
+  methodIconGhost: {
+    backgroundColor: 'rgba(180, 137, 49, 0.12)',
+  },
+  methodCopy: { flex: 1 },
+  methodTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 16,
     color: theme.pearl,
+    marginBottom: 2,
   },
-  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 20, gap: 12 },
-  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: theme.borderStrong },
-  dividerText: { fontFamily: fonts.body, color: theme.inkMuted, fontSize: 13 },
+  methodTitleDark: { color: theme.ink },
+  methodHint: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.7)',
+    lineHeight: 18,
+  },
+  methodHintDark: { color: theme.inkMuted },
+  backLink: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: theme.dune,
+    textAlign: 'center',
+    marginTop: 16,
+    fontWeight: '600',
+  },
+  backLinkMuted: { opacity: 0.5 },
   errorWrap: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    justifyContent: 'center',
     gap: 8,
     marginTop: 16,
-    paddingHorizontal: 8,
+    padding: 12,
+    backgroundColor: 'rgba(196, 92, 62, 0.12)',
+    borderRadius: radii.sm,
   },
-  error: {
-    flex: 1,
-    fontFamily: fonts.bodySemi,
-    color: theme.terracotta,
-    textAlign: 'center',
-  },
-  backLink: {
-    fontFamily: fonts.bodySemi,
-    color: theme.dune,
-    textAlign: 'center',
-    marginTop: 12,
-  },
-  backLinkMuted: { color: theme.inkMuted },
+  error: { flex: 1, fontFamily: fonts.body, fontSize: 14, color: theme.terracotta, lineHeight: 20 },
   footer: {
     fontFamily: fonts.body,
-    textAlign: 'center',
+    fontSize: 12,
     color: theme.inkMuted,
-    marginTop: 40,
-    fontSize: 13,
+    textAlign: 'center',
+    marginTop: 28,
   },
   switchLink: {
     fontFamily: fonts.bodyBold,
+    fontSize: 14,
     color: theme.dune,
     textAlign: 'center',
-    marginTop: 16,
-    fontSize: 15,
+    marginTop: 12,
   },
   legalLink: {
     fontFamily: fonts.body,
+    fontSize: 12,
     color: theme.inkMuted,
     textAlign: 'center',
-    marginTop: 12,
-    fontSize: 13,
-    textDecorationLine: 'underline',
+    marginTop: 10,
   },
 });
