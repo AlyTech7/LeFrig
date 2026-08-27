@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+﻿import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { createHmac, timingSafeEqual } from 'crypto';
@@ -43,7 +43,7 @@ export class OptionalJwtAuthGuard implements CanActivate {
     });
     if (!user) return;
     if (user.bannedAt) {
-      throw new ForbiddenException('Tu cuenta ha sido suspendida. Contacta con legal@lefrig.app');
+      throw new ForbiddenException('Tu cuenta ha sido suspendida. Contacta con hola@lefrig.com');
     }
     if (user.suspendedUntil && user.suspendedUntil > new Date()) {
       const until = user.suspendedUntil.toLocaleDateString('es-ES');

@@ -1,4 +1,4 @@
-import type { Messages } from './es.js';
+﻿import type { Messages } from './es.js';
 
 const fr: Messages = {
   common: {
@@ -1053,7 +1053,7 @@ const fr: Messages = {
     deleteConfirmBody:
       'Cette action est permanente. Vous perdrez l’accès à Lefrig et votre profil ne sera plus actif.',
     deleteConfirm: 'Supprimer définitivement',
-    deleteError: 'Impossible de supprimer le compte. Contactez privacidad@lefrig.app',
+    deleteError: 'Impossible de supprimer le compte. Contactez hola@lefrig.com',
     deleteConsequencesTitle: 'Ce qui se passe à la suppression',
     deleteConsequence1: 'Votre session se ferme et vous ne pourrez plus vous connecter avec ce compte.',
     deleteConsequence2: 'Annonces, boutiques et activité associée ne seront plus disponibles.',
@@ -1067,7 +1067,7 @@ const fr: Messages = {
     rightsTitle: 'Vos droits',
     rightsBody:
       'Vous pouvez demander l’accès, la rectification, l’opposition ou la suppression de vos données personnelles.',
-    rightsCta: 'Écrire à privacidad@lefrig.app',
+    rightsCta: 'Écrire à hola@lefrig.com',
     docsTitle: 'Documents',
     policy: 'Politique de confidentialité',
     terms: 'Conditions d’utilisation',
@@ -1269,7 +1269,7 @@ const fr: Messages = {
     noAccount: 'Pas de compte ? Créer un compte',
     hasAccount: 'Déjà un compte ? Se connecter',
     legalLink: 'Centre juridique · Conditions et confidentialité',
-    termsPrivacy: 'Conditions · Confidentialité · legal@lefrig.app',
+    termsPrivacy: 'Conditions · Confidentialité · hola@lefrig.com',
     continueWith: 'Continuer avec {{provider}}',
     codeSent: 'Code envoyé à {{email}}',
     codeStepSubtitle: 'Entrez le code à 6 chiffres',

@@ -1,4 +1,4 @@
-import type { Messages } from './es.js';
+﻿import type { Messages } from './es.js';
 
 /** العربية — ترجمات دقيقة للسياق الصحراوي */
 const ar: Messages = {
@@ -1051,7 +1051,7 @@ const ar: Messages = {
     deleteConfirmBody:
       'هذا إجراء دائم. ستفقد الوصول إلى لفريغ ولن يبقى ملفك نشطاً.',
     deleteConfirm: 'حذف نهائي',
-    deleteError: 'تعذّر حذف الحساب. راسل privacidad@lefrig.app',
+    deleteError: 'تعذّر حذف الحساب. راسل hola@lefrig.com',
     deleteConsequencesTitle: 'ماذا يحدث عند الحذف',
     deleteConsequence1: 'تُغلق جلستك ولن تستطيع الدخول بهذا الحساب مجدداً.',
     deleteConsequence2: 'الإعلانات والمتاجر والنشاط المرتبط لن تبقى متاحة.',
@@ -1063,7 +1063,7 @@ const ar: Messages = {
     deleteDoneBody: 'أُغلق وصولك إلى لفريغ. شكراً لكونك جزءاً من المجتمع.',
     rightsTitle: 'حقوقك',
     rightsBody: 'يمكنك طلب الوصول أو التصحيح أو الاعتراض أو محو بياناتك الشخصية.',
-    rightsCta: 'مراسلة privacidad@lefrig.app',
+    rightsCta: 'مراسلة hola@lefrig.com',
     docsTitle: 'المستندات',
     policy: 'سياسة الخصوصية',
     terms: 'شروط الاستخدام',
@@ -1262,7 +1262,7 @@ const ar: Messages = {
     noAccount: 'ليس لديك حساب؟ أنشئ حساباً',
     hasAccount: 'لديك حساب؟ سجّل الدخول',
     legalLink: 'المركز القانوني · الشروط والخصوصية',
-    termsPrivacy: 'الشروط · الخصوصية · legal@lefrig.app',
+    termsPrivacy: 'الشروط · الخصوصية · hola@lefrig.com',
     continueWith: 'المتابعة مع {{provider}}',
     codeSent: 'تم إرسال الرمز إلى {{email}}',
     codeStepSubtitle: 'أدخل الرمز المكوّن من 6 أرقام',

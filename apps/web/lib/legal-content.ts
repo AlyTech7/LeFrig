@@ -1,4 +1,4 @@
-export type LegalBlock =
+﻿export type LegalBlock =
   | { type: 'p'; text: string }
   | { type: 'h3'; text: string }
   | { type: 'ul'; items: string[] }
@@ -17,8 +17,8 @@ export type LegalDocument = {
 export const LEGAL_META = {
   lastUpdated: '4 de julio de 2026',
   lastUpdatedIso: '2026-07-04',
-  contactEmail: 'hola@lefrig.app',
-  dpoEmail: 'privacidad@lefrig.app',
+  contactEmail: 'hola@lefrig.com',
+  dpoEmail: 'hola@lefrig.com',
   platformName: 'Lefrig',
   platformTagline: 'El bazar del Sáhara',
 } as const;
@@ -37,7 +37,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
       { type: 'h3', text: '1. Titular del servicio' },
       {
         type: 'p',
-        text: 'Denominación: Lefrig — plataforma digital del Sáhara Occidental. Contacto general: hola@lefrig.app. Asuntos de privacidad: privacidad@lefrig.app.',
+        text: 'Denominación: Lefrig — plataforma digital del Sáhara Occidental. Contacto: hola@lefrig.com.',
       },
       { type: 'h3', text: '2. Objeto' },
       {
@@ -93,7 +93,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
           'Debes tener capacidad legal para contratar según tu jurisdicción. Si eres menor, necesitas autorización de tu tutor legal.',
           'Debes proporcionar datos veraces en el registro (nombre, correo, teléfono cuando se solicite).',
           'Eres responsable de la confidencialidad de tus credenciales y de toda actividad en tu cuenta.',
-          'Debes notificarnos de inmediato cualquier uso no autorizado en hola@lefrig.app.',
+          'Debes notificarnos de inmediato cualquier uso no autorizado en hola@lefrig.com.',
           'Lefrig puede verificar identidad, campamento o reputación mediante badges, libreta o procesos comunitarios.',
         ],
       },
@@ -147,7 +147,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
       { type: 'h3', text: '9. Suspensión y terminación' },
       {
         type: 'p',
-        text: 'Podemos suspender o cerrar cuentas que incumplan estos Términos, generen riesgo para la comunidad o lo exija la ley. Puedes solicitar la eliminación de tu cuenta en cualquier momento escribiendo a hola@lefrig.app. Algunos datos pueden conservarse por obligación legal o resolución de disputas.',
+        text: 'Podemos suspender o cerrar cuentas que incumplan estos Términos, generen riesgo para la comunidad o lo exija la ley. Puedes solicitar la eliminación de tu cuenta en cualquier momento escribiendo a hola@lefrig.com. Algunos datos pueden conservarse por obligación legal o resolución de disputas.',
       },
       { type: 'h3', text: '10. Limitación de responsabilidad' },
       {
@@ -162,7 +162,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
       { type: 'h3', text: '12. Contacto y reclamaciones' },
       {
         type: 'p',
-        text: 'Para dudas, reclamaciones o reportes: hola@lefrig.app. Indica tu nombre de usuario, capturas si aplica y descripción detallada. Responderemos en un plazo razonable.',
+        text: 'Para dudas, reclamaciones o reportes: hola@lefrig.com. Indica tu nombre de usuario, capturas si aplica y descripción detallada. Responderemos en un plazo razonable.',
       },
     ],
   },
@@ -179,7 +179,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
       { type: 'h3', text: '1. Responsable del tratamiento' },
       {
         type: 'p',
-        text: 'Responsable: titular de la plataforma Lefrig. Contacto privacidad: privacidad@lefrig.app. Contacto general: hola@lefrig.app.',
+        text: 'Responsable: titular de la plataforma Lefrig. Contacto (privacidad y general): hola@lefrig.com.',
       },
       { type: 'h3', text: '2. Datos que recogemos' },
       {
@@ -250,7 +250,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
       },
       {
         type: 'p',
-        text: 'Solicitudes: privacidad@lefrig.app. Responderemos en el plazo legal aplicable (p. ej. 30 días bajo RGPD). Puedes reclamar ante la autoridad de protección de datos de tu país.',
+        text: 'Solicitudes: hola@lefrig.com. Responderemos en el plazo legal aplicable (p. ej. 30 días bajo RGPD). Puedes reclamar ante la autoridad de protección de datos de tu país.',
       },
       { type: 'h3', text: '8. Menores' },
       {
@@ -432,7 +432,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
       { type: 'h3', text: '2. Contenido de terceros' },
       {
         type: 'p',
-        text: 'Si crees que un anuncio o imagen infringe tu copyright o marca, escribe a hola@lefrig.app con: identificación de la obra, URL en Lefrig, tus datos de contacto y declaración de buena fe. Retiraremos contenido manifestamente infractor mientras evaluamos.',
+        text: 'Si crees que un anuncio o imagen infringe tu copyright o marca, escribe a hola@lefrig.com con: identificación de la obra, URL en Lefrig, tus datos de contacto y declaración de buena fe. Retiraremos contenido manifestamente infractor mientras evaluamos.',
       },
       { type: 'h3', text: '3. Contra-notificación' },
       {
@@ -456,7 +456,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
         items: [
           'Procuramos contraste legible y navegación por teclado en la web.',
           'Algunas funciones (subida de fotos, chat en tiempo real) requieren conexión activa.',
-          'Informa de barreras de acceso en hola@lefrig.app para priorizar mejoras.',
+          'Informa de barreras de acceso en hola@lefrig.com para priorizar mejoras.',
         ],
       },
     ],

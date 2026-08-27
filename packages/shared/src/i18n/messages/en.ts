@@ -1,4 +1,4 @@
-import type { Messages } from './es.js';
+﻿import type { Messages } from './es.js';
 
 const en: Messages = {
   common: {
@@ -1051,7 +1051,7 @@ const en: Messages = {
     deleteConfirmBody:
       'This is permanent. You will lose access to Lefrig and your profile will no longer be active.',
     deleteConfirm: 'Delete permanently',
-    deleteError: 'Could not delete the account. Contact privacidad@lefrig.app',
+    deleteError: 'Could not delete the account. Contact hola@lefrig.com',
     deleteConsequencesTitle: 'What happens when you delete',
     deleteConsequence1: 'Your session ends and you cannot sign in with this account again.',
     deleteConsequence2: 'Listings, shops and related activity will no longer be available.',
@@ -1063,7 +1063,7 @@ const en: Messages = {
     deleteDoneBody: 'Your Lefrig access has been closed. Thank you for being part of the community.',
     rightsTitle: 'Your rights',
     rightsBody: 'You may request access, rectification, objection or erasure of your personal data.',
-    rightsCta: 'Email privacidad@lefrig.app',
+    rightsCta: 'Email hola@lefrig.com',
     docsTitle: 'Documents',
     policy: 'Privacy policy',
     terms: 'Terms of use',
@@ -1265,7 +1265,7 @@ const en: Messages = {
     noAccount: "Don't have an account? Create one",
     hasAccount: 'Already have an account? Sign in',
     legalLink: 'Legal center · Terms and privacy',
-    termsPrivacy: 'Terms · Privacy · legal@lefrig.app',
+    termsPrivacy: 'Terms · Privacy · hola@lefrig.com',
     continueWith: 'Continue with {{provider}}',
     codeSent: 'Code sent to {{email}}',
     codeStepSubtitle: 'Enter the 6-digit code',

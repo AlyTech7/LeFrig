@@ -1,5 +1,6 @@
 import { useAuth, useSSO } from '@clerk/clerk-expo';
 import * as AuthSession from 'expo-auth-session';
+import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -20,6 +21,21 @@ export const SOCIAL_PROVIDERS: SocialProvider[] = [
   { id: 'facebook', strategy: 'oauth_facebook', label: 'Facebook' },
   { id: 'apple', strategy: 'oauth_apple', label: 'Apple' },
 ];
+
+/** Expo Go no registra el scheme `lefrig://`; OAuth social suele quedar “cancelado”. */
+export function isExpoGo(): boolean {
+  return Constants.appOwnership === 'expo';
+}
+
+function oauthRedirectUrl(): string {
+  // En builds nativos → lefrig://sso-callback
+  // En Expo Go → exp://IP:puerto/--/sso-callback (limitado; preferir development build)
+  // En web → http(s)://host/sso-callback
+  return AuthSession.makeRedirectUri({
+    scheme: 'lefrig',
+    path: 'sso-callback',
+  });
+}
 
 function useWarmUpBrowser() {
   useEffect(() => {
@@ -53,10 +69,15 @@ export function useSocialAuth() {
     async (provider: SocialProvider): Promise<{ ok: true } | { ok: false; error: string }> => {
       setLoadingProvider(provider.id);
       try {
-        const redirectUrl = AuthSession.makeRedirectUri({
-          scheme: 'lefrig',
-          path: 'sso-callback',
-        });
+        if (isExpoGo()) {
+          return {
+            ok: false,
+            error:
+              'Google no funciona dentro de Expo Go. Entra con email, o usa un build instalable (EAS preview / development).',
+          };
+        }
+
+        const redirectUrl = oauthRedirectUrl();
 
         const { createdSessionId, setActive, signIn, signUp } = await startSSOFlow({
           strategy: provider.strategy,
@@ -71,22 +92,25 @@ export function useSocialAuth() {
           return { ok: true };
         }
 
-        // OAuth incompleto: faltan campos o el usuario cerró el navegador
         const status = signIn?.status || signUp?.status;
         if (!status || status === 'abandoned') {
-          return { ok: false, error: 'Inicio de sesión cancelado.' };
+          return {
+            ok: false,
+            error:
+              'Inicio de sesión cancelado o el redirect no volvió a la app. En Clerk → Native applications añade: lefrig://sso-callback',
+          };
         }
 
         return {
           ok: false,
-          error: `No se pudo completar el acceso con ${provider.label}. Prueba email o revisa la config de Clerk.`,
+          error: `No se pudo completar el acceso con ${provider.label}. Prueba email o revisa Google OAuth en Clerk.`,
         };
       } catch (err) {
         return {
           ok: false,
           error: getClerkErrorMessage(
             err,
-            `No se pudo conectar con ${provider.label}. Prueba otro método.`,
+            `No se pudo conectar con ${provider.label}. Prueba email o otro método.`,
           ),
         };
       } finally {
@@ -96,5 +120,5 @@ export function useSocialAuth() {
     [startSSOFlow, getToken, router],
   );
 
-  return { signInWith, loadingProvider };
+  return { signInWith, loadingProvider, isExpoGoClient: isExpoGo() };
 }
