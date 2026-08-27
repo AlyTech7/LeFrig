@@ -1193,6 +1193,7 @@ const en: Messages = {
     stripDiasporaDesc: 'Camps and Tindouf on one platform',
     rightsDignity: '© {{year}} Lefrig. Made with dignity for Western Sahara.',
     legalCommunity: 'Community',
+    deleteAccount: 'Delete account',
     legalAria: 'Legal',
   },
   report: {

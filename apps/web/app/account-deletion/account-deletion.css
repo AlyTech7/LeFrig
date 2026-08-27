@@ -1,0 +1,81 @@
+.ad-page {
+  min-height: calc(100vh - 120px);
+  padding: 2.5rem 1.25rem 4rem;
+  background:
+    radial-gradient(circle at top, rgba(199, 163, 74, 0.1), transparent 32%),
+    linear-gradient(180deg, #fffdf9 0%, #f7f1e7 100%);
+  display: flex;
+  justify-content: center;
+}
+
+.ad-card {
+  width: 100%;
+  max-width: 640px;
+  background: #fffdf9;
+  border: 1px solid rgba(180, 137, 49, 0.18);
+  border-radius: 20px;
+  padding: 2rem 1.5rem 2.25rem;
+  box-shadow: 0 20px 48px rgba(120, 95, 40, 0.08);
+}
+
+.ad-kicker {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #b48931;
+  font-weight: 700;
+}
+
+.ad-card h1 {
+  margin: 0 0 0.75rem;
+  font-size: clamp(1.6rem, 4vw, 2rem);
+  letter-spacing: -0.03em;
+  color: #1a1612;
+}
+
+.ad-lead {
+  margin: 0 0 1.75rem;
+  color: rgba(26, 22, 18, 0.68);
+  line-height: 1.55;
+}
+
+.ad-card section {
+  margin-bottom: 1.5rem;
+}
+
+.ad-card h2 {
+  margin: 0 0 0.6rem;
+  font-size: 1.05rem;
+  color: #1a1612;
+}
+
+.ad-card p,
+.ad-card li {
+  color: rgba(26, 22, 18, 0.72);
+  line-height: 1.55;
+  font-size: 0.95rem;
+}
+
+.ad-card ol,
+.ad-card ul {
+  margin: 0 0 0.75rem;
+  padding-inline-start: 1.2rem;
+}
+
+.ad-card a {
+  color: #0c8f86;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.ad-card a:hover {
+  text-decoration: underline;
+}
+
+.ad-foot {
+  margin: 2rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(180, 137, 49, 0.16);
+  font-size: 0.88rem;
+}

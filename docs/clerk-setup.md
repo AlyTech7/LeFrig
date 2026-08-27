@@ -72,13 +72,13 @@ Solo usuarios con `publicMetadata.roles` que incluya `admin` o `moderator` acced
 
 ## 8. Mobile (Expo)
 
-- `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` en `.env`
-- Pantalla `/sign-in` y `/sign-up` con **email** + **Google**
+- `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` en `.env` (ver `apps/mobile/.env.example`)
+- Pantalla `/sign-in` y `/sign-up` con **email** + **Google**; en **iOS** también **Sign in with Apple** (App Store 4.8)
 - Token cache en SecureStore (automático con `@clerk/clerk-expo`)
 
 ### Google OAuth en móvil
 
-**Expo Go no soporta bien OAuth social** (`useSSO` + scheme `lefrig://`). En Expo Go usa **email**; para Google hace falta un **development build** o **EAS preview APK**.
+**Expo Go no soporta bien OAuth social** (`useSSO` + scheme `lefrig://`). En Expo Go usa **email**; para Google/Apple hace falta un **development build** o **EAS preview/production**.
 
 En Clerk Dashboard → **Native applications** (o Allowed redirect URLs), añade:
 
@@ -88,9 +88,19 @@ lefrig://sso-callback
 
 En Google Cloud Console el redirect autorizado sigue siendo el de **Clerk** (p. ej. `https://clerk.lefrig.com/v1/oauth_callback`), no el de la app.
 
+### Sign in with Apple (iOS)
+
+1. Apple Developer → App ID `com.lefrig.app` → capability **Sign In with Apple**
+2. Clerk Dashboard → Social connections → **Apple** (Services ID / Key / Team ID según wizard)
+3. En la app: `ios.usesAppleSignIn` + plugin `expo-apple-authentication` (ya en `app.json`)
+
+Checklist de tiendas: [`docs/store-release.md`](./store-release.md).
+
 ```bash
 # APK instalable con Google OAuth
 pnpm --filter @lefrig/mobile exec eas build --profile preview --platform android
+# AAB production Play Store
+pnpm --filter @lefrig/mobile exec eas build --profile production --platform android
 ```
 
 ## 9. Legacy JWT (dev)

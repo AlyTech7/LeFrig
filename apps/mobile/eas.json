@@ -7,16 +7,20 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "android": { "buildType": "apk" }
+      "android": { "buildType": "apk" },
+      "channel": "development"
     },
     "preview": {
       "distribution": "internal",
       "channel": "preview",
       "android": { "buildType": "apk" },
+      "ios": { "simulator": false },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://lefrig-api-8fc4936e5267.herokuapp.com",
         "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsubGVmcmlnLmNvbSQ",
-        "EXPO_PUBLIC_ENABLE_PUSH": "0"
+        "EXPO_PUBLIC_ENABLE_PUSH": "0",
+        "EXPO_PUBLIC_PRIVACY_URL": "https://www.lefrig.com/legal#privacidad",
+        "EXPO_PUBLIC_ACCOUNT_DELETION_URL": "https://www.lefrig.com/account-deletion"
       }
     },
     "production": {
@@ -27,11 +31,21 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://lefrig-api-8fc4936e5267.herokuapp.com",
         "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsubGVmcmlnLmNvbSQ",
-        "EXPO_PUBLIC_ENABLE_PUSH": "0"
+        "EXPO_PUBLIC_ENABLE_PUSH": "0",
+        "EXPO_PUBLIC_PRIVACY_URL": "https://www.lefrig.com/legal#privacidad",
+        "EXPO_PUBLIC_ACCOUNT_DELETION_URL": "https://www.lefrig.com/account-deletion"
       }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "android": {
+        "track": "internal",
+        "releaseStatus": "draft"
+      },
+      "ios": {
+        "ascAppId": "REPLACE_AFTER_CREATE_IN_APP_STORE_CONNECT"
+      }
+    }
   }
 }

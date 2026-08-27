@@ -15,12 +15,13 @@ export type LegalDocument = {
 };
 
 export const LEGAL_META = {
-  lastUpdated: '4 de julio de 2026',
-  lastUpdatedIso: '2026-07-04',
+  lastUpdated: '27 de agosto de 2026',
+  lastUpdatedIso: '2026-08-27',
   contactEmail: 'hola@lefrig.com',
   dpoEmail: 'hola@lefrig.com',
   platformName: 'Lefrig',
   platformTagline: 'El bazar del Sáhara',
+  accountDeletionUrl: 'https://www.lefrig.com/account-deletion',
 } as const;
 
 export const LEGAL_DOCUMENTS: LegalDocument[] = [
@@ -147,7 +148,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
       { type: 'h3', text: '9. Suspensión y terminación' },
       {
         type: 'p',
-        text: 'Podemos suspender o cerrar cuentas que incumplan estos Términos, generen riesgo para la comunidad o lo exija la ley. Puedes solicitar la eliminación de tu cuenta en cualquier momento escribiendo a hola@lefrig.com. Algunos datos pueden conservarse por obligación legal o resolución de disputas.',
+        text: 'Podemos suspender o cerrar cuentas que incumplan estos Términos, generen riesgo para la comunidad o lo exija la ley. Puedes eliminar tu cuenta desde la app (Perfil → Seguridad) o en https://www.lefrig.com/account-deletion, o escribiendo a hola@lefrig.com. Algunos datos pueden conservarse por obligación legal o resolución de disputas.',
       },
       { type: 'h3', text: '10. Limitación de responsabilidad' },
       {
@@ -250,7 +251,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
       },
       {
         type: 'p',
-        text: 'Solicitudes: hola@lefrig.com. Responderemos en el plazo legal aplicable (p. ej. 30 días bajo RGPD). Puedes reclamar ante la autoridad de protección de datos de tu país.',
+        text: 'Solicitudes: hola@lefrig.com o https://www.lefrig.com/account-deletion. Responderemos en el plazo legal aplicable (p. ej. 30 días bajo RGPD). Puedes reclamar ante la autoridad de protección de datos de tu país.',
       },
       { type: 'h3', text: '8. Menores' },
       {
