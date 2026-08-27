@@ -15,6 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/camps',
     '/locations',
     '/legal',
+    '/account-deletion',
   ];
 
   return routes.map((path) => ({

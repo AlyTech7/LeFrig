@@ -1195,6 +1195,7 @@ const es = {
     stripDiasporaDesc: 'Campamentos y Tindouf en una sola plataforma',
     rightsDignity: '© {{year}} Lefrig. Hecho con dignidad para el Sáhara Occidental.',
     legalCommunity: 'Comunidad',
+    deleteAccount: 'Eliminar cuenta',
     legalAria: 'Legal',
   },
   report: {

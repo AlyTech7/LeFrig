@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { SOCIAL_PROVIDERS, useSocialAuth, type SocialProviderId } from '@/lib/social-auth';
+import {
+  SOCIAL_PROVIDERS,
+  defaultAuthProviders,
+  useSocialAuth,
+  type SocialProviderId,
+} from '@/lib/social-auth';
 import { GoogleLogo } from '@/components/auth/GoogleLogo';
 import { useT } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
@@ -11,7 +16,7 @@ type Variant = 'hero' | 'perla';
 type Props = {
   variant?: Variant;
   disabled?: boolean;
-  /** Defaults to all providers; pass `['google']` for email/Google-only auth. */
+  /** Defaults: Apple+Google on iOS, Google elsewhere (App Store 4.8). */
   providers?: SocialProviderId[];
   onError?: (message: string) => void;
 };
@@ -50,9 +55,8 @@ export function SocialAuthButtons({
 
   const isHero = variant === 'hero';
   const busy = disabled || loadingProvider !== null;
-  const visibleProviders = providers?.length
-    ? SOCIAL_PROVIDERS.filter((p) => providers.includes(p.id))
-    : SOCIAL_PROVIDERS;
+  const selected = providers?.length ? providers : defaultAuthProviders();
+  const visibleProviders = SOCIAL_PROVIDERS.filter((p) => selected.includes(p.id));
 
   const handlePress = async (provider: (typeof SOCIAL_PROVIDERS)[number]) => {
     setLocalError('');
@@ -105,7 +109,7 @@ export function SocialAuthButtons({
       })}
       {isExpoGoClient ? (
         <Text style={styles.hint}>
-          En Expo Go usa email. Google requiere un build instalable (EAS).
+          En Expo Go usa email. Google/Apple requieren un build instalable (EAS).
         </Text>
       ) : null}
       {localError ? <Text style={styles.error}>{localError}</Text> : null}

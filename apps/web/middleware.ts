@@ -27,6 +27,7 @@ const isPublicRoute = createRouteMatcher([
   '/community(.*)',
   '/jobs(.*)',
   '/legal(.*)',
+  '/account-deletion(.*)',
   '/robots.txt',
   '/sitemap.xml',
   '/sitemap(.*)',

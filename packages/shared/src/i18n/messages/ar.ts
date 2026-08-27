@@ -1190,6 +1190,7 @@ const ar: Messages = {
     stripDiasporaDesc: 'المخيمات وتندوف على منصّة واحدة',
     rightsDignity: '© {{year}} لفريغ. صُنع بكرامة للصحراء الغربية.',
     legalCommunity: 'المجتمع',
+    deleteAccount: 'حذف الحساب',
     legalAria: 'قانوني',
   },
   report: {

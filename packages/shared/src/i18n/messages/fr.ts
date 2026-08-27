@@ -1197,6 +1197,7 @@ const fr: Messages = {
     stripDiasporaDesc: 'Camps et Tindouf sur une seule plateforme',
     rightsDignity: '© {{year}} Lefrig. Fait avec dignité pour le Sahara occidental.',
     legalCommunity: 'Communauté',
+    deleteAccount: 'Supprimer le compte',
     legalAria: 'Légal',
   },
   report: {

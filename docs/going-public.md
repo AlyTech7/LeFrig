@@ -126,3 +126,5 @@ cp scripts/ops/env.ops.example scripts/ops/.env.ops
 ---
 
 **Resumen:** el código está preparado para ser público. Lo crítico que queda en tus manos es (1) rotar secretos de producción por precaución, (2) revisar historial git si quieres borrar PII antigua, y (3) pulsar "Make public" en GitHub con branch protection activada.
+
+Publicación en tiendas (Play / App Store): ver [`docs/store-release.md`](./store-release.md).

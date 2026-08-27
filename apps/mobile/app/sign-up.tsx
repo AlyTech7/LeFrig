@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '@/components/AppIcon';
 import { ClerkCaptcha } from '@/components/auth/ClerkCaptcha';
 import { SocialAuthButtons } from '@/components/auth/SocialAuthButtons';
+import { defaultAuthProviders } from '@/lib/social-auth';
 import { LefrigMark } from '@/components/LefrigMark';
 import { finalizeSignUpAfterEmail, splitDisplayName } from '@/lib/auth-complete';
 import { getClerkErrorMessage, isIdentifierExists, isIdentifierNotFound } from '@/lib/clerk-errors';
@@ -311,7 +312,12 @@ export default function SignUpScreen() {
                   <Text style={styles.dividerText}>{t('common.or')}</Text>
                   <View style={styles.dividerLine} />
                 </View>
-                <SocialAuthButtons variant="hero" providers={['google']} disabled={loading} onError={setError} />
+                <SocialAuthButtons
+                  variant="hero"
+                  providers={defaultAuthProviders()}
+                  disabled={loading}
+                  onError={setError}
+                />
               </>
             ) : null}
 

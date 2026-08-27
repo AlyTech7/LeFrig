@@ -3,7 +3,7 @@
     "name": "Lefrig",
     "slug": "lefrig",
     "owner": "alytech7",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "lefrig",
     "userInterfaceStyle": "light",
@@ -16,14 +16,51 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.lefrig.app"
+      "bundleIdentifier": "com.lefrig.app",
+      "buildNumber": "1",
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Lefrig usa la cámara para fotos de anuncios, tiendas y tu perfil.",
+        "NSPhotoLibraryUsageDescription": "Lefrig accede a tus fotos para publicar anuncios y actualizar tu perfil.",
+        "NSPhotoLibraryAddUsageDescription": "Lefrig puede guardar imágenes compartidas en tu galería.",
+        "CFBundleAllowMixedLocalizations": true
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": ["C617.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryDiskSpace",
+            "NSPrivacyAccessedAPITypeReasons": ["E174.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategorySystemBootTime",
+            "NSPrivacyAccessedAPITypeReasons": ["35F9.1"]
+          }
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1B5E4B"
       },
-      "package": "com.lefrig.app"
+      "package": "com.lefrig.app",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.INTERNET",
+        "android.permission.VIBRATE"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -33,6 +70,16 @@
     "plugins": [
       "expo-router",
       "expo-web-browser",
+      "expo-secure-store",
+      "expo-apple-authentication",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Lefrig accede a tus fotos para publicar anuncios y actualizar tu perfil.",
+          "cameraPermission": "Lefrig usa la cámara para fotos de anuncios, tiendas y tu perfil.",
+          "microphonePermission": false
+        }
+      ],
       [
         "expo-notifications",
         {
@@ -40,8 +87,22 @@
           "color": "#1B5E4B"
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-updates",
+        {
+          "username": "alytech7"
+        }
+      ]
     ],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/868fa9b8-5f2f-4862-9e34-e378cc5f186e",
+      "fallbackToCacheTimeout": 0,
+      "checkAutomatically": "ON_LOAD"
+    },
     "experiments": {
       "typedRoutes": true,
       "autolinkingModuleResolution": true
@@ -50,7 +111,10 @@
       "router": {},
       "eas": {
         "projectId": "868fa9b8-5f2f-4862-9e34-e378cc5f186e"
-      }
+      },
+      "privacyPolicyUrl": "https://www.lefrig.com/legal#privacidad",
+      "termsUrl": "https://www.lefrig.com/legal#terminos",
+      "accountDeletionUrl": "https://www.lefrig.com/account-deletion"
     }
   }
 }
