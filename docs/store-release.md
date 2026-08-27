@@ -37,7 +37,8 @@ Checklist operativa para `apps/mobile` (Expo SDK 54, bundle `com.lefrig.app`).
 cd apps/mobile
 eas login
 eas build --platform android --profile production --non-interactive
-# iOS requiere Apple creds + ascAppId real:
+# iOS: la primera vez necesita modo interactivo para certificados Apple:
+eas credentials -p ios
 eas build --platform ios --profile production
 ```
 
