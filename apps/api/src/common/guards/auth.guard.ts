@@ -1,4 +1,4 @@
-import {
+﻿import {
   Injectable,
   CanActivate,
   ExecutionContext,
@@ -44,7 +44,7 @@ export class AuthGuard implements CanActivate {
     if (!user) return;
 
     if (user.bannedAt) {
-      throw new ForbiddenException('Tu cuenta ha sido suspendida. Contacta con legal@lefrig.app');
+      throw new ForbiddenException('Tu cuenta ha sido suspendida. Contacta con hola@lefrig.com');
     }
     if (user.suspendedUntil && user.suspendedUntil > new Date()) {
       const until = user.suspendedUntil.toLocaleDateString('es-ES');

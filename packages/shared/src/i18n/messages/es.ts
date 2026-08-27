@@ -1,4 +1,4 @@
-/** Español — claves fuente de verdad para i18n Lefrig */
+﻿/** Español — claves fuente de verdad para i18n Lefrig */
 const es = {
   common: {
     appName: 'Lefrig',
@@ -1052,7 +1052,7 @@ const es = {
     deleteConfirmBody:
       'Esta acción es permanente. Perderás el acceso a Lefrig y tu perfil dejará de estar activo.',
     deleteConfirm: 'Eliminar definitivamente',
-    deleteError: 'No se pudo eliminar la cuenta. Contacta con privacidad@lefrig.app',
+    deleteError: 'No se pudo eliminar la cuenta. Contacta con hola@lefrig.com',
     deleteConsequencesTitle: 'Qué ocurre al eliminar',
     deleteConsequence1: 'Tu sesión se cierra y no podrás volver a entrar con esta cuenta.',
     deleteConsequence2: 'Anuncios, tiendas y actividad asociada dejarán de estar disponibles.',
@@ -1065,7 +1065,7 @@ const es = {
     rightsTitle: 'Tus derechos',
     rightsBody:
       'Puedes solicitar acceso, rectificación, oposición o supresión de tus datos personales.',
-    rightsCta: 'Escribir a privacidad@lefrig.app',
+    rightsCta: 'Escribir a hola@lefrig.com',
     docsTitle: 'Documentos',
     policy: 'Política de privacidad',
     terms: 'Términos de uso',
@@ -1267,7 +1267,7 @@ const es = {
     noAccount: '¿No tienes cuenta? Crear cuenta',
     hasAccount: '¿Ya tienes cuenta? Inicia sesión',
     legalLink: 'Centro legal · Términos y privacidad',
-    termsPrivacy: 'Términos · Privacidad · legal@lefrig.app',
+    termsPrivacy: 'Términos · Privacidad · hola@lefrig.com',
     continueWith: 'Continuar con {{provider}}',
     codeSent: 'Código enviado a {{email}}',
     codeStepSubtitle: 'Introduce el código de 6 dígitos',

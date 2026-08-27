@@ -76,6 +76,23 @@ Solo usuarios con `publicMetadata.roles` que incluya `admin` o `moderator` acced
 - Pantalla `/sign-in` y `/sign-up` con **email** + **Google**
 - Token cache en SecureStore (automático con `@clerk/clerk-expo`)
 
+### Google OAuth en móvil
+
+**Expo Go no soporta bien OAuth social** (`useSSO` + scheme `lefrig://`). En Expo Go usa **email**; para Google hace falta un **development build** o **EAS preview APK**.
+
+En Clerk Dashboard → **Native applications** (o Allowed redirect URLs), añade:
+
+```
+lefrig://sso-callback
+```
+
+En Google Cloud Console el redirect autorizado sigue siendo el de **Clerk** (p. ej. `https://clerk.lefrig.com/v1/oauth_callback`), no el de la app.
+
+```bash
+# APK instalable con Google OAuth
+pnpm --filter @lefrig/mobile exec eas build --profile preview --platform android
+```
+
 ## 9. Legacy JWT (dev)
 
 Con `AUTH_LEGACY_JWT=true`, el OTP mock (`/auth/otp/*`) sigue funcionando para tests sin Clerk.

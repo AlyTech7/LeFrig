@@ -44,7 +44,7 @@ export function SocialAuthButtons({
   providers,
   onError,
 }: Props) {
-  const { signInWith, loadingProvider } = useSocialAuth();
+  const { signInWith, loadingProvider, isExpoGoClient } = useSocialAuth();
   const t = useT();
   const [localError, setLocalError] = useState('');
 
@@ -58,8 +58,9 @@ export function SocialAuthButtons({
     setLocalError('');
     const result = await signInWith(provider);
     if (!result.ok) {
-      setLocalError(result.error);
-      onError?.(result.error);
+      // Evitar duplicar el mismo mensaje (padre + local)
+      if (onError) onError(result.error);
+      else setLocalError(result.error);
     }
   };
 
@@ -102,6 +103,11 @@ export function SocialAuthButtons({
           </Pressable>
         );
       })}
+      {isExpoGoClient ? (
+        <Text style={styles.hint}>
+          En Expo Go usa email. Google requiere un build instalable (EAS).
+        </Text>
+      ) : null}
       {localError ? <Text style={styles.error}>{localError}</Text> : null}
     </View>
   );
@@ -172,5 +178,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 13,
     marginTop: 4,
+  },
+  hint: {
+    color: theme.inkMuted,
+    textAlign: 'center',
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 2,
   },
 });

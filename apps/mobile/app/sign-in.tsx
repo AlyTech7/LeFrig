@@ -71,6 +71,12 @@ export default function SignInScreen() {
   }, [params.email]);
 
   useEffect(() => {
+    if (isLoaded) {
+      setError((prev) => (prev === t('auth.errors.authLoading') ? '' : prev));
+    }
+  }, [isLoaded, t]);
+
+  useEffect(() => {
     if (resendIn <= 0) return;
     const id = setTimeout(() => setResendIn((s) => s - 1), 1000);
     return () => clearTimeout(id);
@@ -115,7 +121,11 @@ export default function SignInScreen() {
       return;
     }
     if (!isLoaded || !signIn || !signUp) {
-      setError(t('auth.errors.authLoading'));
+      setError(
+        Platform.OS === 'web'
+          ? 'Clerk aún no está listo. En el navegador usa https://www.lefrig.com/sign-in; en el móvil abre Expo Go (no la web de Metro).'
+          : t('auth.errors.authLoading'),
+      );
       return;
     }
     setLoading(true);

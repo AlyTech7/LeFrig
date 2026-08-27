@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -68,7 +68,7 @@ const LEGAL: FooterLink[] = [
   { href: '/legal#terminos', labelKey: 'footer.terms' },
   { href: '/legal#pagos', labelKey: 'footer.payments' },
   { href: '/legal#comunidad', labelKey: 'footer.legalCommunity' },
-  { href: 'mailto:hola@lefrig.app', labelKey: 'footer.contact' },
+  { href: 'mailto:hola@lefrig.com', labelKey: 'footer.contact' },
 ];
 
 function useMinWidth(px: number) {

@@ -1,13 +1,10 @@
-# Política de seguridad — Lefrig
+﻿# Política de seguridad — Lefrig
 
 ## Reportar una vulnerabilidad
 
 Si descubres un problema de seguridad en Lefrig (API, web, móvil, infra o dependencias), **no** abras un issue público.
 
-Envía un correo a:
-
-- **hola@lefrig.app** — asuntos de seguridad y abuso
-- **privacidad@lefrig.app** — si implica datos personales
+Envía un correo a **hola@lefrig.com** (seguridad, abuso o datos personales).
 
 Incluye, si puedes:
 
