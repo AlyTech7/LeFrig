@@ -36,7 +36,7 @@ function digitsOnly(input: string): string {
   return input.replace(/\D/g, '').slice(0, 6);
 }
 
-type Step = 'email' | 'code' | 'password';
+type Step = 'email' | 'details' | 'code' | 'password';
 
 export default function SignUpScreen() {
   const { signUp, isLoaded: signUpLoaded } = useSignUp();
@@ -52,6 +52,7 @@ export default function SignUpScreen() {
   const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
   const [password2, setPassword2] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<Step>('email');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -88,6 +89,7 @@ export default function SignUpScreen() {
     setFullName('');
     setPassword('');
     setPassword2('');
+    setShowPassword(false);
     setError('');
     setResendIn(0);
   };
@@ -130,13 +132,52 @@ export default function SignUpScreen() {
         }
       }
 
-      await signUp.create({ emailAddress });
+      // Cuenta nueva: primero nombre + contraseña (Play / UX clara), luego código.
+      setStep('details');
+    } catch (err) {
+      if (isIdentifierExists(err)) {
+        goSignIn(emailAddress);
+      } else {
+        setError(getClerkErrorMessage(err, t('auth.errors.sendFailed')));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onCreateWithPassword = async () => {
+    if (fullName.trim().length < 2) {
+      setError(t('auth.errors.nameRequired'));
+      return;
+    }
+    if (password.length < 8) {
+      setError(t('auth.errors.passwordMin'));
+      return;
+    }
+    if (password !== password2) {
+      setError(t('auth.errors.passwordMismatch'));
+      return;
+    }
+    if (!isLoaded || !signUp) {
+      setError(t('auth.errors.authLoading'));
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const { firstName, lastName } = splitDisplayName(fullName);
+      await signUp.create({
+        emailAddress: email.trim().toLowerCase(),
+        password,
+        firstName: firstName || undefined,
+        lastName,
+      });
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
       startCodeCooldown();
       setStep('code');
     } catch (err) {
       if (isIdentifierExists(err)) {
-        goSignIn(emailAddress);
+        goSignIn(email.trim().toLowerCase());
       } else {
         setError(getClerkErrorMessage(err, t('auth.errors.sendFailed')));
       }
@@ -203,7 +244,7 @@ export default function SignUpScreen() {
         await finishSession(attempt.createdSessionId);
         return;
       }
-      await completeWithOptionalPassword(undefined, attempt);
+      await completeWithOptionalPassword(password || undefined, attempt, fullName);
     } catch (err) {
       setError(getClerkErrorMessage(err, t('auth.errors.wrongCode')));
     } finally {
@@ -248,18 +289,20 @@ export default function SignUpScreen() {
   };
 
   const title =
-    step === 'password'
-      ? t('auth.passwordLabel')
+    step === 'password' || step === 'details'
+      ? t('auth.signUpTitle')
       : step === 'code'
         ? t('auth.verify')
         : t('auth.signUpTitle');
 
   const subtitle =
-    step === 'password'
-      ? t('auth.passwordStepSubtitle')
-      : step === 'code'
-        ? t('auth.codeStepSubtitle')
-        : t('auth.signUpSubtitle');
+    step === 'details'
+      ? t('auth.signupFormSubtitle')
+      : step === 'password'
+        ? t('auth.passwordStepSubtitle')
+        : step === 'code'
+          ? t('auth.codeStepSubtitle')
+          : t('auth.signUpSubtitle');
 
   return (
     <LinearGradient colors={[...gradients.hero]} style={styles.root}>
@@ -270,7 +313,7 @@ export default function SignUpScreen() {
               <LefrigMark size={64} />
             </View>
             <Text style={styles.brand}>LEFRIG</Text>
-            <Text style={styles.title}>{step === 'password' ? t('auth.signUpTitle') : title}</Text>
+            <Text style={styles.title}>{title}</Text>
             <Text style={styles.subtitle}>{subtitle}</Text>
 
             {step === 'email' ? (
@@ -307,6 +350,7 @@ export default function SignUpScreen() {
                     </>
                   )}
                 </Pressable>
+                <Text style={styles.helper}>{t('auth.emailHelper')}</Text>
                 <View style={styles.divider}>
                   <View style={styles.dividerLine} />
                   <Text style={styles.dividerText}>{t('common.or')}</Text>
@@ -318,6 +362,78 @@ export default function SignUpScreen() {
                   disabled={loading}
                   onError={setError}
                 />
+              </>
+            ) : null}
+
+            {step === 'details' ? (
+              <>
+                <Text style={styles.passwordEmail}>{email}</Text>
+                <View style={styles.inputWrap}>
+                  <AppIcon name="user" size={18} color={theme.dune} />
+                  <TextInput
+                    style={styles.inputInner}
+                    placeholder={t('auth.namePlaceholder')}
+                    placeholderTextColor={theme.inkMuted}
+                    value={fullName}
+                    onChangeText={setFullName}
+                    autoCapitalize="words"
+                    autoComplete="name"
+                    editable={!loading}
+                  />
+                </View>
+                <View style={styles.inputWrap}>
+                  <AppIcon name="lock" size={18} color={theme.dune} />
+                  <TextInput
+                    style={styles.inputInner}
+                    placeholder={t('auth.newPasswordPlaceholder')}
+                    placeholderTextColor={theme.inkMuted}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    autoComplete="new-password"
+                    editable={!loading}
+                  />
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                    hitSlop={10}
+                    onPress={() => setShowPassword((v) => !v)}
+                  >
+                    <AppIcon name={showPassword ? 'eye-off' : 'eye'} size={18} color={theme.inkMuted} />
+                  </Pressable>
+                </View>
+                <View style={styles.inputWrap}>
+                  <AppIcon name="lock" size={18} color={theme.dune} />
+                  <TextInput
+                    style={styles.inputInner}
+                    placeholder={t('auth.confirmPasswordPlaceholder')}
+                    placeholderTextColor={theme.inkMuted}
+                    value={password2}
+                    onChangeText={setPassword2}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    autoComplete="new-password"
+                    editable={!loading}
+                    onSubmitEditing={() => void onCreateWithPassword()}
+                  />
+                </View>
+                <Text style={styles.helper}>{t('auth.passwordRules')}</Text>
+                <Pressable
+                  accessibilityRole="button"
+                  style={[styles.btnPrimary, loading && styles.btnDisabled]}
+                  onPress={() => void onCreateWithPassword()}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color={theme.pearl} />
+                  ) : (
+                    <Text style={styles.btnPrimaryText}>{t('auth.createAccount')}</Text>
+                  )}
+                </Pressable>
+                <Pressable onPress={resetToEmail} disabled={loading}>
+                  <Text style={styles.backLink}>{t('auth.changeEmail')}</Text>
+                </Pressable>
               </>
             ) : null}
 
@@ -388,11 +504,18 @@ export default function SignUpScreen() {
                     placeholderTextColor={theme.inkMuted}
                     value={password}
                     onChangeText={setPassword}
-                    secureTextEntry
+                    secureTextEntry={!showPassword}
                     autoCapitalize="none"
                     autoComplete="new-password"
                     editable={!loading}
                   />
+                  <Pressable
+                    accessibilityRole="button"
+                    hitSlop={10}
+                    onPress={() => setShowPassword((v) => !v)}
+                  >
+                    <AppIcon name={showPassword ? 'eye-off' : 'eye'} size={18} color={theme.inkMuted} />
+                  </Pressable>
                 </View>
                 <View style={styles.inputWrap}>
                   <AppIcon name="lock" size={18} color={theme.dune} />
@@ -402,7 +525,7 @@ export default function SignUpScreen() {
                     placeholderTextColor={theme.inkMuted}
                     value={password2}
                     onChangeText={setPassword2}
-                    secureTextEntry
+                    secureTextEntry={!showPassword}
                     autoCapitalize="none"
                     autoComplete="new-password"
                     editable={!loading}
@@ -486,6 +609,14 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 32,
     textAlign: 'center',
+  },
+  helper: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: theme.inkMuted,
+    textAlign: 'center',
+    marginBottom: 8,
+    lineHeight: 18,
   },
   inputWrap: {
     flexDirection: 'row',
