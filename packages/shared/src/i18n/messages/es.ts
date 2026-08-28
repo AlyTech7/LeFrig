@@ -181,6 +181,7 @@ const es = {
     view: 'Ver',
     adsAria: 'Anuncios',
     solar: 'Energía solar',
+    aguaPotable: 'Agua potable',
     generators: 'Generadores',
     transport: 'Transporte seguro',
     shop: 'Entrega hoy',

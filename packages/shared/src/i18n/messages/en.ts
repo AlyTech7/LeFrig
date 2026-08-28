@@ -182,6 +182,7 @@ const en: Messages = {
     view: 'View',
     adsAria: 'Ads',
     solar: 'Clean energy',
+    aguaPotable: 'Drinking water',
     generators: 'Generators',
     transport: 'Safe transport',
     shop: 'Delivery today',
