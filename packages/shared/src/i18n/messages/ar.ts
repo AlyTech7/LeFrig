@@ -183,6 +183,7 @@ const ar: Messages = {
     view: 'عرض',
     adsAria: 'الإعلانات',
     solar: 'طاقة نظيفة',
+    aguaPotable: 'ماء صالح',
     generators: 'مولدات',
     transport: 'نقل آمن',
     shop: 'توصيل اليوم',
