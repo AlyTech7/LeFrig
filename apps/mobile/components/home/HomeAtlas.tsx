@@ -18,7 +18,6 @@ export function HomeAtlas({ onDeptPress, onSeeAll }: Props) {
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.eyebrow}>{t('home.atlasIntro', { count: roomCount })}</Text>
       <Text style={[styles.title, dir === 'rtl' && styles.rtl]} accessibilityRole="header">
         {t('home.atlasQuestion')}
       </Text>
@@ -40,14 +39,6 @@ export function HomeAtlas({ onDeptPress, onSeeAll }: Props) {
 
 const styles = StyleSheet.create({
   wrap: { marginBottom: 8 },
-  eyebrow: {
-    fontFamily: fonts.bodySemi,
-    fontSize: 11,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: theme.dune,
-    marginBottom: 8,
-  },
   title: {
     fontFamily: fonts.display,
     fontSize: 30,

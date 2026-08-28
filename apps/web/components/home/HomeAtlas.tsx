@@ -21,9 +21,6 @@ export function HomeAtlas() {
         <div className="lf-atlas__rim" aria-hidden />
 
         <header className="lf-atlas__head lf-atlas__head--home">
-          <p className="lf-atlas__kicker">
-            <span>{t('home.atlasIntro', { count: roomCount })}</span>
-          </p>
           <h1 id="home-atlas-title">{t('home.atlasQuestion')}</h1>
           <p className="lf-atlas__sub">{t('home.atlasIntroSub', { count: roomCount })}</p>
         </header>
