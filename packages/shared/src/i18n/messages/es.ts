@@ -86,7 +86,7 @@ const es = {
     guest: 'Amigo',
     guestUser: 'Usuario {{suffix}}',
     taglineShort: 'El bazar del Sáhara · sin complicaciones',
-    searchPlaceholder: '¿Qué buscas hoy en El Atlas?',
+    searchPlaceholder: '¿Qué buscas hoy?',
     offlineQueue: '{{count}} en cola offline · se enviarán solos',
     whatToDo: '¿Qué quieres hacer?',
     whatToDoEyebrow: 'Ahora',
