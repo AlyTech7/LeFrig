@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, Pressable, type ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { AppIcon } from '@/components/AppIcon';
 import { useLocale } from '@/lib/locale';
@@ -18,10 +19,11 @@ type Props = {
 export function Hero({ title, subtitle, kicker, back = true, onBack, right, style }: Props) {
   const router = useRouter();
   const { t, dir } = useLocale();
+  const insets = useSafeAreaInsets();
   const rtl = dir === 'rtl';
 
   return (
-    <View style={[styles.wrap, style]}>
+    <View style={[styles.wrap, { paddingTop: insets.top + space.sm }, style]}>
       <View style={styles.top}>
         {back ? (
           <Pressable
@@ -51,7 +53,6 @@ export function Hero({ title, subtitle, kicker, back = true, onBack, right, styl
 const styles = StyleSheet.create({
   wrap: {
     paddingHorizontal: space.lg,
-    paddingTop: space.sm,
     paddingBottom: space.md,
     borderBottomWidth: 1,
     borderBottomColor: theme.border,

@@ -99,7 +99,7 @@ export default function CommunityScreen() {
       setForm((f) => ({ ...f, title: '', content: '' }));
       await loadPosts();
     } catch {
-      Alert.alert(t('common.error'), t('marketplace.publishError'));
+      Alert.alert(t('common.error'), t('marketplaceExtra.agreementError'));
     } finally {
       setSubmitting(false);
     }

@@ -18,7 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { CAMPS, findDepartmentForSlug, formatAttributeDetails, LISTING_CATEGORIES, resolveImageUrl } from '@lefrig/shared';
 import { fetchApi, mapApiListing, API_URL } from '@/lib/api';
-import { useAuthApi } from '@/lib/useAuthApi';
+import { useAuthApi, ApiError } from '@/lib/useAuthApi';
 import { AppIcon } from '@/components/AppIcon';
 import { savePendingCashAgreement } from '@/lib/cash-session';
 import { SellerTrustBadge } from '@/components/SellerTrustBadge';
@@ -126,14 +126,17 @@ export default function ListingDetailScreen() {
   };
 
   const createCashDeal = async () => {
-    if (!requireAuth() || !listing?.sellerId) return;
+    if (!requireAuth()) return;
+    if (!listing?.sellerId) {
+      Alert.alert(t('common.error'), t('marketplaceExtra.agreementError'));
+      return;
+    }
     setCreatingCash(true);
     try {
       await syncUser();
       const agreement = await authFetch<{
         id: string;
         operationCode: string;
-        pin?: string;
         amount: number | string;
         listing?: { title: string };
       }>('/cash/agreements', {
@@ -145,19 +148,29 @@ export default function ListingDetailScreen() {
           method: 'cash',
         }),
       });
+      // El API no devuelve el PIN al comprador; lo ve el vendedor en /cash.
       await savePendingCashAgreement({
         id: agreement.id,
         operationCode: agreement.operationCode,
-        pin: agreement.pin ?? '',
+        pin: '',
         amount: agreement.amount,
         listingTitle: listing.title,
         createdAt: new Date().toISOString(),
       });
-      Alert.alert(t('cash.agreementCreated'), agreement.operationCode, [
-        { text: t('nav.cash'), onPress: () => router.push('/cash') },
-      ]);
-    } catch {
-      Alert.alert(t('common.error'), t('marketplace.publishError'));
+      Alert.alert(
+        t('cash.agreementCreated'),
+        `${t('cash.codeLabel')} ${agreement.operationCode}\n\n${t('cash.buyerCreatedHint')}`,
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('profile.links.cashPin'), onPress: () => router.push('/cash') },
+        ],
+      );
+    } catch (err) {
+      const detail =
+        err instanceof ApiError && err.message && !err.message.startsWith('API ')
+          ? err.message
+          : t('marketplaceExtra.agreementError');
+      Alert.alert(t('common.error'), detail);
     } finally {
       setCreatingCash(false);
     }
@@ -183,7 +196,7 @@ export default function ListingDetailScreen() {
       });
       router.push('/messages');
     } catch {
-      Alert.alert(t('common.error'), t('messages.empty'));
+      Alert.alert(t('common.error'), t('marketplaceExtra.chatError'));
     } finally {
       setContacting(false);
     }
@@ -404,7 +417,7 @@ const styles = StyleSheet.create({
   emptyBtnText: { fontFamily: fonts.bodyBold, fontSize: 14, color: theme.dune },
   backChip: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   backText: { fontFamily: fonts.bodyBold, fontSize: 13, color: theme.dune },
-  scroll: { paddingBottom: 120 },
+  scroll: { paddingBottom: 160 },
 
   galleryWrap: {
     height: GALLERY_H,

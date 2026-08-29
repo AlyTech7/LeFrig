@@ -187,7 +187,7 @@ export default function ServiceDetailScreen() {
           <View style={{ height: 100 }} />
         </ScrollView>
 
-        <View style={styles.ctaBar}>
+        <SafeAreaView edges={['bottom']} style={styles.ctaBar}>
           <Pressable
             style={[styles.cta, contacting && styles.ctaDisabled]}
             onPress={() => void contact()}
@@ -202,7 +202,7 @@ export default function ServiceDetailScreen() {
               </>
             )}
           </Pressable>
-        </View>
+        </SafeAreaView>
       </SafeAreaView>
     </View>
   );

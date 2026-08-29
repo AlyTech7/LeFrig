@@ -103,6 +103,11 @@ function RootNavigator() {
     pathname === '/jobs/create' ||
     pathname === '/services/create' ||
     (root === 'services' && segments.length > 1) ||
+    // Detalle de anuncio / empleo: CTA fijo no debe quedar bajo la tab bar
+    (root === 'marketplace' &&
+      typeof segments[1] === 'string' &&
+      !['create', 'mine'].includes(segments[1])) ||
+    (root === 'jobs' && typeof segments[1] === 'string' && segments[1] !== 'create') ||
     pathname === '/profile/personal' ||
     pathname === '/profile/security' ||
     pathname === '/profile/privacy' ||
