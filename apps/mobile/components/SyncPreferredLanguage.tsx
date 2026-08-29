@@ -6,7 +6,7 @@ import { useLocale } from '@/lib/locale';
 
 /** Sincroniza idioma local ↔ preferredLanguage en la API */
 export function SyncPreferredLanguage() {
-  const { locale, setLocale, ready } = useLocale();
+  const { locale, chooseLocale, ready, hasChosenLocale } = useLocale();
   const { authFetch, syncUser, isSignedIn } = useAuthApi();
   const hydratedFromServer = useRef(false);
   const lastPushed = useRef<Locale | null>(null);
@@ -20,7 +20,7 @@ export function SyncPreferredLanguage() {
         const pref = (res?.user as { preferredLanguage?: string } | undefined)?.preferredLanguage;
         const stored = await AsyncStorage.getItem(LOCALE_STORAGE_KEY);
         if (!stored && pref && isLocale(pref)) {
-          setLocale(resolveLocale(pref));
+          await chooseLocale(resolveLocale(pref));
         }
       } catch {
         /* offline */
@@ -28,10 +28,10 @@ export function SyncPreferredLanguage() {
         hydratedFromServer.current = true;
       }
     })();
-  }, [ready, isSignedIn, syncUser, setLocale]);
+  }, [ready, isSignedIn, syncUser, chooseLocale]);
 
   useEffect(() => {
-    if (!ready || !isSignedIn) return;
+    if (!ready || !isSignedIn || !hasChosenLocale) return;
     if (lastPushed.current === locale) return;
 
     (async () => {
@@ -45,7 +45,7 @@ export function SyncPreferredLanguage() {
         /* offline */
       }
     })();
-  }, [locale, ready, isSignedIn, authFetch]);
+  }, [locale, ready, isSignedIn, hasChosenLocale, authFetch]);
 
   return null;
 }

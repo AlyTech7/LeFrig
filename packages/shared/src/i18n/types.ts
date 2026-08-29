@@ -16,6 +16,8 @@ export const LOCALE_META: Record<Locale, LocaleMeta> = {
 };
 
 export const LOCALE_STORAGE_KEY = 'lefrig_locale';
+/** Marcado solo cuando el usuario elige idioma (onboarding o ajustes). */
+export const LOCALE_CHOSEN_KEY = 'lefrig_locale_chosen';
 
 export function isLocale(value: string | null | undefined): value is Locale {
   return LOCALES.includes(value as Locale);

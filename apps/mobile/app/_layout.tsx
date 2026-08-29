@@ -24,6 +24,7 @@ import { PushRegister } from '@/components/PushRegister';
 import { BottomNav } from '@/components/BottomNav';
 import { LocaleProvider } from '@/lib/locale';
 import { SyncPreferredLanguage } from '@/components/SyncPreferredLanguage';
+import { LanguageGate } from '@/components/LanguageGate';
 import { storageGet, storageSet } from '@/lib/safeStorage';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -199,7 +200,9 @@ export default function RootLayout() {
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <LocaleProvider>
         <SyncPreferredLanguage />
-        <RootNavigator />
+        <LanguageGate>
+          <RootNavigator />
+        </LanguageGate>
       </LocaleProvider>
     </ClerkProvider>
   );

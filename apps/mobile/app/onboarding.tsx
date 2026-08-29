@@ -1,101 +1,343 @@
-import { View, Text, StyleSheet, Pressable, SafeAreaView } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Animated,
+  Easing,
+  ActivityIndicator,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { LOCALE_META, type Locale } from '@lefrig/shared';
+import { LOCALE_META, LOCALES, t as translate, type Locale } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
 import { LefrigMark } from '@/components/LefrigMark';
 import { setCachedUser } from '@/lib/storage';
 import { useLocale } from '@/lib/locale';
-import { theme, gradients } from '@/lib/theme';
+import { theme, radii } from '@/lib/theme';
+import { fonts, space } from '@/lib/ui';
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { setLocale, t } = useLocale();
-  const languages = (Object.keys(LOCALE_META) as Locale[]).map((code) => LOCALE_META[code]);
+  const { chooseLocale, suggestedLocale, locale } = useLocale();
+  const [pending, setPending] = useState<Locale>(suggestedLocale ?? locale);
+  const [saving, setSaving] = useState(false);
+  const enter = useRef(new Animated.Value(0)).current;
 
-  const select = async (lang: Locale) => {
-    await setLocale(lang);
-    await setCachedUser({
-      displayName: lang === 'ar' ? 'صديق' : lang === 'fr' ? 'Ami' : lang === 'en' ? 'Friend' : 'Amigo',
-      preferredLanguage: lang,
-      campName: lang === 'ar' ? 'الرابوني' : 'Rabouni',
-    });
-    router.replace('/');
+  useEffect(() => {
+    if (suggestedLocale) setPending(suggestedLocale);
+  }, [suggestedLocale]);
+
+  useEffect(() => {
+    Animated.timing(enter, {
+      toValue: 1,
+      duration: 560,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [enter]);
+
+  const copy = (key: string) => translate(pending, key);
+
+  const finish = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await chooseLocale(pending);
+      await setCachedUser({
+        displayName:
+          pending === 'ar' ? 'صديق' : pending === 'fr' ? 'Ami' : pending === 'en' ? 'Friend' : 'Amigo',
+        preferredLanguage: pending,
+        campName: pending === 'ar' ? 'الرابوني' : 'Rabouni',
+      });
+      router.replace('/');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <LinearGradient colors={[...gradients.hero]} style={styles.gradient}>
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.content}>
-          <View style={styles.logoMark}>
-            <LefrigMark size={64} />
-          </View>
-          <Text style={styles.title}>{t('onboarding.title')}</Text>
-          <Text style={styles.subtitle}>{t('onboarding.subtitle')}</Text>
+    <View style={styles.root}>
+      <LinearGradient
+        colors={['#f7f2e8', theme.canvas, '#f0ebe3']}
+        locations={[0, 0.55, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+      <View style={styles.orbA} pointerEvents="none" />
+      <View style={styles.orbB} pointerEvents="none" />
 
-          <View style={styles.iconRow}>
-            <AppIcon name="globe" size={20} color={theme.dune} />
-            <Text style={styles.prompt}>{t('onboarding.prompt')}</Text>
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        <Animated.View
+          style={[
+            styles.content,
+            {
+              opacity: enter,
+              transform: [
+                {
+                  translateY: enter.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [16, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <View style={styles.brand}>
+            <View style={styles.logoMark}>
+              <LefrigMark size={56} />
+            </View>
+            <Text style={styles.brandName}>LEFRIG</Text>
+            <View style={styles.brandRule} />
+            <Text style={styles.langRibbon}>العربية · Español · Français · English</Text>
           </View>
 
-          <View style={styles.langGrid}>
-            {languages.map((l) => (
-              <Pressable key={l.code} style={styles.langBtn} onPress={() => select(l.code)}>
-                <View style={styles.langCode}>
-                  <Text style={styles.langCodeText}>{l.code.toUpperCase()}</Text>
-                </View>
-                <Text style={[styles.langLabel, l.dir === 'rtl' && styles.langLabelRtl]}>{l.nativeName}</Text>
-              </Pressable>
-            ))}
+          <View style={styles.copyBlock}>
+            <Text style={styles.title}>{copy('onboarding.welcome')}</Text>
+            <Text style={styles.subtitle}>{copy('onboarding.subtitle')}</Text>
           </View>
-        </View>
+
+          <View style={styles.list}>
+            {LOCALES.map((code) => {
+              const meta = LOCALE_META[code];
+              const selected = pending === code;
+              const suggested = suggestedLocale === code;
+              return (
+                <Pressable
+                  key={code}
+                  style={({ pressed }) => [
+                    styles.langRow,
+                    selected && styles.langRowOn,
+                    pressed && styles.pressed,
+                  ]}
+                  onPress={() => setPending(code)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected }}
+                  accessibilityLabel={meta.nativeName}
+                >
+                  <View style={[styles.langCode, selected && styles.langCodeOn]}>
+                    <Text style={[styles.langCodeText, selected && styles.langCodeTextOn]}>
+                      {code.toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={styles.langCopy}>
+                    <Text
+                      style={[
+                        styles.langNative,
+                        selected && styles.langNativeOn,
+                        meta.dir === 'rtl' && styles.rtl,
+                      ]}
+                    >
+                      {meta.nativeName}
+                    </Text>
+                    <Text style={styles.langLabel}>{meta.label}</Text>
+                  </View>
+                  {suggested ? (
+                    <View style={styles.suggestedPill}>
+                      <Text style={styles.suggestedText}>{copy('onboarding.suggested')}</Text>
+                    </View>
+                  ) : null}
+                  <View style={[styles.check, selected && styles.checkOn]}>
+                    {selected ? <AppIcon name="check" size={14} color={theme.pearl} strokeWidth={3} /> : null}
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <Text style={styles.hint}>{copy('onboarding.hint')}</Text>
+
+          <Pressable
+            style={({ pressed }) => [styles.cta, (pressed || saving) && styles.ctaPressed]}
+            onPress={() => void finish()}
+            disabled={saving}
+            accessibilityRole="button"
+            accessibilityLabel={copy('onboarding.continue')}
+          >
+            {saving ? (
+              <ActivityIndicator color={theme.pearl} />
+            ) : (
+              <>
+                <Text style={styles.ctaText}>{copy('onboarding.continue')}</Text>
+                <AppIcon name="arrow-right" size={18} color={theme.pearl} />
+              </>
+            )}
+          </Pressable>
+        </Animated.View>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  gradient: { flex: 1 },
+  root: { flex: 1, backgroundColor: theme.canvas },
   safe: { flex: 1 },
-  content: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
+  orbA: {
+    position: 'absolute',
+    top: -80,
+    right: -60,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: 'rgba(168,132,45,0.08)',
+  },
+  orbB: {
+    position: 'absolute',
+    bottom: 80,
+    left: -70,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(45,138,98,0.06)',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: space.lg,
+    paddingTop: 12,
+    paddingBottom: 16,
+    justifyContent: 'center',
+  },
+  brand: { alignItems: 'center', marginBottom: 28 },
   logoMark: {
-    width: 88,
-    height: 88,
-    borderRadius: 24,
+    width: 76,
+    height: 76,
+    borderRadius: 22,
     backgroundColor: '#08090c',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
-    shadowColor: '#08090c',
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 6,
+    marginBottom: 14,
   },
-  title: { fontSize: 36, fontWeight: '800', color: theme.ink, letterSpacing: 4 },
-  subtitle: { fontSize: 15, color: theme.inkMuted, marginBottom: 48, marginTop: 8, textAlign: 'center' },
-  iconRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 },
-  prompt: { fontSize: 17, color: theme.ink, fontWeight: '600' },
-  langGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, maxWidth: 340 },
-  langBtn: {
-    backgroundColor: theme.canvas,
-    borderRadius: 20,
-    padding: 20,
-    minWidth: 140,
+  brandName: {
+    fontFamily: fonts.display,
+    fontSize: 28,
+    letterSpacing: 6,
+    color: theme.ink,
+  },
+  brandRule: {
+    width: 36,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: theme.dune,
+    marginTop: 10,
+    marginBottom: 12,
+  },
+  langRibbon: {
+    fontFamily: fonts.bodyMed,
+    fontSize: 12,
+    color: theme.inkSoft,
+    letterSpacing: 0.2,
+  },
+  copyBlock: { marginBottom: 18 },
+  title: {
+    fontFamily: fonts.display,
+    fontSize: 26,
+    lineHeight: 32,
+    color: theme.ink,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    lineHeight: 22,
+    color: theme.inkMuted,
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  list: { gap: 10, marginBottom: 14 },
+  langRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderRadius: radii.lg,
+    backgroundColor: theme.surface,
     borderWidth: 1,
-    borderColor: 'rgba(168,132,45,0.2)',
+    borderColor: theme.borderStrong,
   },
+  langRowOn: {
+    borderColor: theme.dune,
+    backgroundColor: 'rgba(168,132,45,0.08)',
+  },
+  pressed: { opacity: 0.92 },
   langCode: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(168,132,45,0.15)',
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: theme.canvasSoft,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
   },
-  langCodeText: { fontSize: 14, fontWeight: '800', color: theme.dune },
-  langLabel: { fontSize: 16, fontWeight: '700', color: theme.ink },
-  langLabelRtl: { writingDirection: 'rtl' },
+  langCodeOn: { backgroundColor: theme.dune },
+  langCodeText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 12,
+    letterSpacing: 0.6,
+    color: theme.inkMuted,
+  },
+  langCodeTextOn: { color: theme.pearl },
+  langCopy: { flex: 1, minWidth: 0 },
+  langNative: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 16,
+    color: theme.ink,
+  },
+  langNativeOn: { color: theme.ink },
+  langLabel: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: theme.inkSoft,
+    marginTop: 2,
+  },
+  rtl: { writingDirection: 'rtl', textAlign: 'right' },
+  suggestedPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radii.pill,
+    backgroundColor: theme.successSoft,
+  },
+  suggestedText: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 10,
+    color: theme.oasisDeep,
+  },
+  check: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: theme.borderStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkOn: {
+    backgroundColor: theme.dune,
+    borderColor: theme.dune,
+  },
+  hint: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    lineHeight: 18,
+    color: theme.inkSoft,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  cta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    minHeight: 54,
+    borderRadius: radii.md,
+    backgroundColor: theme.ink,
+    paddingHorizontal: 20,
+  },
+  ctaPressed: { opacity: 0.88 },
+  ctaText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 16,
+    color: theme.pearl,
+  },
 });
