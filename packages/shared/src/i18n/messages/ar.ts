@@ -88,7 +88,7 @@ const ar: Messages = {
     guest: 'صديق',
     guestUser: 'مستخدم {{suffix}}',
     taglineShort: 'سوق الصحراء · بلا تعقيد',
-    searchPlaceholder: 'ماذا تبحث اليوم في الأطلس؟',
+    searchPlaceholder: 'ماذا تبحث اليوم؟',
     offlineQueue: '{{count}} في قائمة الانتظار · سيُرسَل تلقائياً',
     whatToDo: 'ماذا تريد أن تفعل؟',
     whatToDoEyebrow: 'الآن',

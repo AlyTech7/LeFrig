@@ -21,9 +21,6 @@ export function HomeAtlas({ onDeptPress, onSeeAll }: Props) {
       <Text style={[styles.title, dir === 'rtl' && styles.rtl]} accessibilityRole="header">
         {t('home.atlasQuestion')}
       </Text>
-      <Text style={[styles.sub, dir === 'rtl' && styles.rtl]}>
-        {t('home.atlasIntroSub', { count: roomCount })}
-      </Text>
 
       <View style={styles.mosaic}>
         <AtlasMosaic departments={MARKETPLACE_DEPARTMENTS} onPressDept={onDeptPress} />
@@ -31,42 +28,36 @@ export function HomeAtlas({ onDeptPress, onSeeAll }: Props) {
 
       <Pressable style={({ pressed }) => [styles.cta, pressed && styles.pressed]} onPress={onSeeAll}>
         <Text style={styles.ctaText}>{t('atlas.seeAllRooms', { count: roomCount })}</Text>
-        <AppIcon name={dir === 'rtl' ? 'arrow-left' : 'arrow-right'} size={16} color={theme.dune} />
+        <AppIcon name={dir === 'rtl' ? 'arrow-left' : 'arrow-right'} size={15} color={theme.dune} />
       </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { marginBottom: 8 },
+  wrap: { marginBottom: 4 },
   title: {
     fontFamily: fonts.display,
-    fontSize: 30,
+    fontSize: 24,
+    lineHeight: 28,
     color: theme.ink,
-    marginBottom: 6,
-  },
-  sub: {
-    fontFamily: fonts.body,
-    fontSize: 15,
-    lineHeight: 22,
-    color: theme.inkSoft,
-    marginBottom: 16,
+    marginBottom: 10,
   },
   rtl: { textAlign: 'right', writingDirection: 'rtl' },
-  mosaic: { marginBottom: 14 },
+  mosaic: { marginBottom: 10 },
   cta: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
     backgroundColor: theme.warningSoft,
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
   },
   ctaText: {
     fontFamily: fonts.bodySemi,
-    fontSize: 15,
+    fontSize: 14,
     color: theme.dune,
   },
   pressed: { opacity: 0.9 },

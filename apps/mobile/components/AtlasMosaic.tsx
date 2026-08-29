@@ -129,7 +129,7 @@ function HeroCard({
           <IndexMark index={index} />
           <LinearGradient colors={[c1, c2]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.accentBar} />
         </View>
-        <CardTitle dept={dept} big itemsHint />
+        <CardTitle dept={dept} big />
         <View style={styles.enterRow}>
           <Text style={styles.enter}>Entrar</Text>
           <AppIcon name="arrow-right" size={16} color={theme.pearl} />
@@ -182,26 +182,26 @@ function BannerCard({
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 10 },
-  row: { flexDirection: 'row', gap: 10 },
+  wrap: { gap: 8 },
+  row: { flexDirection: 'row', gap: 8 },
   pressed: { opacity: 0.92, transform: [{ scale: 0.995 }] },
   num: {
     fontFamily: fonts.bodySemi,
-    fontSize: 12,
+    fontSize: 11,
     letterSpacing: 1,
     color: 'rgba(255,255,255,0.72)',
   },
   titleBlock: { gap: 2 },
   name: {
     fontFamily: fonts.display,
-    fontSize: 17,
+    fontSize: 16,
     color: theme.pearl,
   },
-  nameBig: { fontSize: 26 },
+  nameBig: { fontSize: 24 },
   rtl: { textAlign: 'right', writingDirection: 'rtl' },
   count: {
     fontFamily: fonts.bodySemi,
-    fontSize: 11,
+    fontSize: 10,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     color: 'rgba(255,255,255,0.62)',
@@ -213,16 +213,16 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   hero: { borderRadius: radii.lg, overflow: 'hidden' },
-  heroImg: { minHeight: 210, padding: 16, justifyContent: 'space-between' },
+  heroImg: { minHeight: 172, padding: 14, justifyContent: 'space-between' },
   heroRadius: { borderRadius: radii.lg },
-  heroTop: { gap: 8 },
-  accentBar: { height: 3, width: 48, borderRadius: 2 },
-  enterRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
+  heroTop: { gap: 6 },
+  accentBar: { height: 3, width: 40, borderRadius: 2 },
+  enterRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
   enter: { fontFamily: fonts.bodySemi, fontSize: 13, color: theme.pearl },
   tile: { flex: 1, borderRadius: radii.md, overflow: 'hidden' },
-  tileImg: { minHeight: 132, padding: 12, justifyContent: 'space-between' },
+  tileImg: { minHeight: 120, padding: 12, justifyContent: 'space-between' },
   tileRadius: { borderRadius: radii.md },
   banner: { borderRadius: radii.md, overflow: 'hidden' },
-  bannerImg: { minHeight: 120, padding: 14, justifyContent: 'space-between' },
+  bannerImg: { minHeight: 108, padding: 12, justifyContent: 'space-between' },
   bannerRadius: { borderRadius: radii.md },
 });

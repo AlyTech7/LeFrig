@@ -87,7 +87,7 @@ const fr: Messages = {
     guest: 'Ami',
     guestUser: 'Utilisateur {{suffix}}',
     taglineShort: 'Le bazar du Sahara · sans complication',
-    searchPlaceholder: 'Que cherchez-vous aujourd’hui dans l’Atlas ?',
+    searchPlaceholder: 'Que cherchez-vous aujourd’hui ?',
     offlineQueue: '{{count}} en file hors ligne · envoi automatique',
     whatToDo: 'Que voulez-vous faire ?',
     whatToDoEyebrow: 'Maintenant',

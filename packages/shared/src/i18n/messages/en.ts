@@ -87,7 +87,7 @@ const en: Messages = {
     guest: 'Friend',
     guestUser: 'User {{suffix}}',
     taglineShort: 'The Sahara bazaar · no hassle',
-    searchPlaceholder: 'What are you looking for in the Atlas today?',
+    searchPlaceholder: 'What are you looking for today?',
     offlineQueue: '{{count}} queued offline · will send automatically',
     whatToDo: 'What do you want to do?',
     whatToDoEyebrow: 'Now',
