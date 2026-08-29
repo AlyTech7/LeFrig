@@ -43,17 +43,6 @@ function firstParam(v: string | string[] | undefined): string | undefined {
   return v;
 }
 
-function pickAttrParams(
-  params: Record<string, string | string[] | undefined>,
-): ListingAttributeFilterValues {
-  const raw: Record<string, string> = {};
-  for (const key of LISTING_ATTR_FILTER_KEYS) {
-    const v = firstParam(params[key]);
-    if (v) raw[key] = v;
-  }
-  return listingAttributeFilterSchema.parse(raw);
-}
-
 function attrParamsToRouter(
   filters: ListingAttributeFilterValues,
 ): Record<string, string | undefined> {
@@ -124,6 +113,25 @@ export default function MarketplaceScreen() {
 
   const enter = useRef(new Animated.Value(0)).current;
   const searchPulse = useRef(new Animated.Value(0)).current;
+  const initialLoadRef = useRef(true);
+
+  /** Clave estable: useLocalSearchParams() crea un objeto nuevo cada render. */
+  const attrFilterKey = LISTING_ATTR_FILTER_KEYS.map(
+    (k) => `${k}:${firstParam(routeParams[k]) ?? ''}`,
+  ).join('|');
+
+  const activeAttrFilters = useMemo(() => {
+    const raw: Record<string, string> = {};
+    for (const part of attrFilterKey.split('|')) {
+      if (!part) continue;
+      const i = part.indexOf(':');
+      if (i < 0) continue;
+      const key = part.slice(0, i);
+      const v = part.slice(i + 1);
+      if (v) raw[key] = v;
+    }
+    return listingAttributeFilterSchema.parse(raw);
+  }, [attrFilterKey]);
 
   useEffect(() => {
     Animated.timing(enter, {
@@ -142,14 +150,14 @@ export default function MarketplaceScreen() {
     }).start();
   }, [searchFocused, searchPulse]);
 
-  const activeAttrFilters = useMemo(() => pickAttrParams(routeParams), [routeParams]);
-
   useEffect(() => {
     setSearch(q ?? '');
   }, [q]);
 
   useEffect(() => {
-    setLoading(true);
+    let cancelled = false;
+    if (initialLoadRef.current) setLoading(true);
+
     const params = new URLSearchParams();
     if (q) params.set('q', q);
     if (category) params.set('category', category);
@@ -162,12 +170,18 @@ export default function MarketplaceScreen() {
     const query = params.toString() ? `?${params.toString()}` : '';
 
     fetchWithMeta(`/listings${query}`, demoListingsPage).then((res) => {
+      if (cancelled) return;
       const page = res.fromFallback ? demoListingsPage : mapListingsResponse(res.data as never);
       setListings(page.data);
       setUsingDemo(res.fromFallback);
+      initialLoadRef.current = false;
       setLoading(false);
     });
-  }, [q, category, camp, activeAttrFilters]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [q, category, camp, attrFilterKey, activeAttrFilters]);
 
   const activeCategory = category ? LISTING_CATEGORIES.find((c) => c.slug === category) : undefined;
   const activeCamp = camp ? CAMPS.find((c) => c.slug === camp) : undefined;
@@ -365,7 +379,7 @@ export default function MarketplaceScreen() {
       </SafeAreaView>
 
       <FlatList
-        data={loading ? [] : rest}
+        data={rest}
         keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={styles.gridRow}
