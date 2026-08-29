@@ -988,7 +988,7 @@ const fr: Messages = {
   profile: {
     title: 'Mon profil',
     language: 'Langue',
-    languageHint: 'Change la langue de toute l’application',
+    languageHint: 'Changez la langue de toute l’application. C’est immédiat.',
     camp: 'Mon camp',
     reputation: 'Réputation',
     settings: 'Paramètres',
@@ -1161,9 +1161,12 @@ const fr: Messages = {
   },
   onboarding: {
     title: 'LEFRIG',
-    subtitle: 'Votre superapp sahraouie',
+    welcome: 'Bienvenue',
+    subtitle: 'Choisissez la langue de l’application',
     prompt: 'Choisissez votre langue',
     continue: 'Continuer',
+    suggested: 'Suggéré',
+    hint: 'Vous pourrez la changer à tout moment dans votre compte.',
   },
   footer: {
     explore: 'Explorer',

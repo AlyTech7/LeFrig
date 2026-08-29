@@ -988,7 +988,7 @@ const ar: Messages = {
   profile: {
     title: 'ملفي الشخصي',
     language: 'اللغة',
-    languageHint: 'غيّر لغة التطبيق بالكامل',
+    languageHint: 'غيّر لغة التطبيق بالكامل. يُطبَّق فوراً.',
     camp: 'مخيمي',
     reputation: 'السمعة',
     settings: 'الإعدادات',
@@ -1154,9 +1154,12 @@ const ar: Messages = {
   },
   onboarding: {
     title: 'LEFRIG',
-    subtitle: 'تطبيقك الشامل في المخيمات',
+    welcome: 'مرحباً',
+    subtitle: 'اختر لغة التطبيق',
     prompt: 'اختر لغتك',
     continue: 'متابعة',
+    suggested: 'مقترح',
+    hint: 'يمكنك تغييرها في أي وقت من حسابك.',
   },
   footer: {
     explore: 'استكشف',

@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   type Locale,
   LOCALE_STORAGE_KEY,
+  LOCALE_CHOSEN_KEY,
   resolveLocale,
   getDirection,
   t as translate,
@@ -21,17 +22,21 @@ import {
 type LocaleContextValue = {
   locale: Locale;
   dir: 'ltr' | 'rtl';
-  setLocale: (locale: Locale) => void;
+  /** true cuando el usuario ya eligió idioma (onboarding o ajustes) */
+  hasChosenLocale: boolean;
+  /** Idioma detectado del dispositivo (sugerencia en onboarding) */
+  suggestedLocale: Locale | null;
+  setLocale: (locale: Locale) => Promise<void>;
+  /** Persiste idioma + marca la elección como hecha */
+  chooseLocale: (locale: Locale) => Promise<void>;
   t: (key: string, params?: Record<string, string | number>) => string;
   ready: boolean;
 };
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
-/** Prefer expo-localization when available; otherwise null (caller uses arabic-first default). */
 async function detectDeviceLocale(): Promise<Locale | null> {
   try {
-    // Optional peer — do not hard-depend
     const Localization = require('expo-localization') as {
       getLocales?: () => Array<{ languageCode?: string | null }>;
       locale?: string;
@@ -46,7 +51,6 @@ async function detectDeviceLocale(): Promise<Locale | null> {
 }
 
 async function applyRtl(locale: Locale) {
-  // Web preview: avoid I18nManager + Alert/reload loops that freeze boot.
   if (Platform.OS === 'web') return;
 
   const rtl = getDirection(locale) === 'rtl';
@@ -56,14 +60,13 @@ async function applyRtl(locale: Locale) {
   I18nManager.forceRTL(rtl);
 
   try {
-    // Optional — reload so layout direction takes effect
     const Updates = require('expo-updates') as { reloadAsync?: () => Promise<void> };
     if (typeof Updates.reloadAsync === 'function') {
       await Updates.reloadAsync();
       return;
     }
   } catch {
-    // expo-updates unavailable
+    /* expo-updates unavailable */
   }
 
   Alert.alert(
@@ -74,24 +77,49 @@ async function applyRtl(locale: Locale) {
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>('ar');
+  const [hasChosenLocale, setHasChosenLocale] = useState(false);
+  const [suggestedLocale, setSuggestedLocale] = useState<Locale | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const stored = await AsyncStorage.getItem(LOCALE_STORAGE_KEY);
-      const detected = stored ? null : await detectDeviceLocale();
+      const [stored, chosenFlag, detected] = await Promise.all([
+        AsyncStorage.getItem(LOCALE_STORAGE_KEY),
+        AsyncStorage.getItem(LOCALE_CHOSEN_KEY),
+        detectDeviceLocale(),
+      ]);
+
+      setSuggestedLocale(detected);
+
       const resolved = resolveLocale(stored ?? detected ?? 'ar', 'ar');
       setLocaleState(resolved);
+
+      // Migración: si ya había idioma guardado, no forzar onboarding otra vez
+      const chosen = chosenFlag === '1' || Boolean(stored);
+      if (chosen && chosenFlag !== '1') {
+        await AsyncStorage.setItem(LOCALE_CHOSEN_KEY, '1');
+      }
+      setHasChosenLocale(chosen);
+
       await applyRtl(resolved);
       setReady(true);
     })();
   }, []);
 
-  const setLocale = useCallback(async (next: Locale) => {
+  const chooseLocale = useCallback(async (next: Locale) => {
     setLocaleState(next);
+    setHasChosenLocale(true);
     await AsyncStorage.setItem(LOCALE_STORAGE_KEY, next);
+    await AsyncStorage.setItem(LOCALE_CHOSEN_KEY, '1');
     await applyRtl(next);
   }, []);
+
+  const setLocale = useCallback(
+    async (next: Locale) => {
+      await chooseLocale(next);
+    },
+    [chooseLocale],
+  );
 
   const tFn = useCallback(
     (key: string, params?: Record<string, string | number>) => translate(locale, key, params),
@@ -99,8 +127,17 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ locale, dir: getDirection(locale), setLocale, t: tFn, ready }),
-    [locale, setLocale, tFn, ready],
+    () => ({
+      locale,
+      dir: getDirection(locale),
+      hasChosenLocale,
+      suggestedLocale,
+      setLocale,
+      chooseLocale,
+      t: tFn,
+      ready,
+    }),
+    [locale, hasChosenLocale, suggestedLocale, setLocale, chooseLocale, tFn, ready],
   );
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;

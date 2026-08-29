@@ -988,7 +988,7 @@ const es = {
   profile: {
     title: 'Mi perfil',
     language: 'Idioma',
-    languageHint: 'Cambia el idioma de toda la aplicación',
+    languageHint: 'Cambia el idioma de toda la aplicación. Se aplica al instante.',
     camp: 'Mi campamento',
     reputation: 'Reputación',
     settings: 'Ajustes',
@@ -1159,9 +1159,12 @@ const es = {
   },
   onboarding: {
     title: 'LEFRIG',
-    subtitle: 'Tu superapp saharaui',
+    welcome: 'Bienvenido',
+    subtitle: 'Elige el idioma de la aplicación',
     prompt: 'Elige tu idioma',
     continue: 'Continuar',
+    suggested: 'Sugerido',
+    hint: 'Podrás cambiarlo cuando quieras en tu cuenta.',
   },
   footer: {
     explore: 'Explorar',
