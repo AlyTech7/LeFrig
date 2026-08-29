@@ -164,7 +164,7 @@ export default function CreateServiceScreen() {
       if (created?.id) router.replace(`/services/${created.id}` as never);
       else router.replace('/services');
     } catch {
-      Alert.alert(t('common.error'), t('marketplace.publishError'));
+      Alert.alert(t('common.error'), t('publish.publishError'));
     } finally {
       setSubmitting(false);
     }

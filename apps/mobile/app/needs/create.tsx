@@ -74,7 +74,7 @@ export default function CreateNeedScreen() {
         { text: 'OK', onPress: () => router.replace('/needs') },
       ]);
     } catch {
-      Alert.alert(t('common.error'), t('marketplace.publishError'));
+      Alert.alert(t('common.error'), t('marketplaceExtra.agreementError'));
     } finally {
       setSubmitting(false);
     }

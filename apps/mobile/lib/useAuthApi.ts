@@ -33,7 +33,20 @@ export function useAuthApi() {
     if (token) headers.Authorization = `Bearer ${token}`;
 
     const res = await fetch(`${API_URL}${path}`, { ...init, headers });
-    if (!res.ok) throw new ApiError(`API ${res.status}`, res.status);
+    if (!res.ok) {
+      let message = `API ${res.status}`;
+      try {
+        const body = (await res.json()) as { message?: string | string[] };
+        if (typeof body?.message === 'string' && body.message.trim()) {
+          message = body.message.trim();
+        } else if (Array.isArray(body?.message) && body.message.length > 0) {
+          message = body.message.map(String).join('. ');
+        }
+      } catch {
+        /* ignore parse errors */
+      }
+      throw new ApiError(message, res.status);
+    }
     return res.json() as Promise<T>;
   }, []);
 
