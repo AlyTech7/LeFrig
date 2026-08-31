@@ -56,7 +56,7 @@
     "@types/node": "^22.10.2",
     "@types/passport-jwt": "^4.0.1",
     "@types/pdfkit": "^0.17.6",
-    "prisma": "^6.1.0",
+    "prisma": "^7.10.0",
     "rimraf": "^6.0.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
