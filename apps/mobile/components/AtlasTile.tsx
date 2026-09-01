@@ -4,7 +4,7 @@ import type { MarketplaceDepartment } from '@lefrig/shared';
 import { formatVaultOptions } from '@lefrig/shared';
 import { accentColors, getAtlasVisual } from '@/lib/home-visuals';
 import { pickName } from '@/lib/bilingual';
-import { useLocale, useT } from '@/lib/locale';
+import { useLocale } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
 import { fonts } from '@/lib/ui';
 
@@ -18,7 +18,6 @@ type Props = {
 
 export function AtlasTile({ dept, index, onPress, compact, active }: Props) {
   const { locale, dir } = useLocale();
-  const t = useT();
   const visual = getAtlasVisual(dept.id);
   const [c1, c2] = accentColors(dept.accent);
   const num = String(index + 1).padStart(2, '0');
