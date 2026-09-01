@@ -89,7 +89,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 }
 
 function RootNavigator() {
-  const segments = useSegments();
+  const segments = useSegments() as string[];
   const pathname = usePathname();
   const root = segments[0] ?? 'index';
   const hideNav =
