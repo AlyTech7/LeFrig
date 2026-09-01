@@ -53,7 +53,7 @@
     "@types/express": "^5.0.0",
     "@types/helmet": "^4.0.0",
     "@types/multer": "^2.2.0",
-    "@types/node": "^22.10.2",
+    "@types/node": "^26.4.0",
     "@types/passport-jwt": "^4.0.1",
     "@types/pdfkit": "^0.17.6",
     "prisma": "^6.1.0",
