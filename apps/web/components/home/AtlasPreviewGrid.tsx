@@ -7,6 +7,7 @@ import {
   MARKETPLACE_DEPARTMENTS,
   getMarketplaceItemHref,
   pickLocalized,
+  formatVaultOptions,
   type MarketplaceDepartment,
 } from '@lefrig/shared';
 import { atlasVisStyle, visClass } from '@/lib/home-visuals';
@@ -55,9 +56,7 @@ function PreviewTile({
         </span>
         <span className="lf-atlas-tile__name">{name}</span>
         <span className="lf-atlas-tile__meta">
-          {t(dept.items.length === 1 ? 'atlas.vaultOptionsOne' : 'atlas.vaultOptions', {
-            count: dept.items.length,
-          })}
+          {formatVaultOptions(locale, dept.items.length)}
         </span>
       </span>
     </Link>

@@ -7,6 +7,7 @@ import {
   getMarketplaceItemHref,
   type MarketplaceDepartment,
   type MarketplaceItem,
+  formatVaultOptions,
 } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
 import { pickName } from '@/lib/bilingual';
@@ -187,7 +188,7 @@ export function HomeDirectAccess({ onNavigate }: Props) {
                   <Text style={[styles.stageName, dir === 'rtl' && styles.rtl]} numberOfLines={1}>
                     {pickName(locale, activeDept)}
                   </Text>
-                  <Text style={styles.stageCount}>{t('atlas.vaultOptions', { count: activeDept.items.length })}</Text>
+                  <Text style={styles.stageCount}>{formatVaultOptions(locale, activeDept.items.length)}</Text>
                 </View>
               </View>
               <Pressable style={styles.stageLink} onPress={() => onNavigate(deptHref(activeDept))}>

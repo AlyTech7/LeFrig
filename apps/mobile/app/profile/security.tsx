@@ -10,12 +10,15 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { AppIcon } from '@/components/AppIcon';
+import { biometricMethodLabel, canUseDeviceBiometrics } from '@/lib/biometrics';
 import { clearLegacySession } from '@/lib/legacySession';
+import { useLefrigLocalCredentials } from '@/lib/useLefrigLocalCredentials';
 import { useLocale, useT } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
 import { fonts, space } from '@/lib/ui';
@@ -26,16 +29,29 @@ export default function SecurityScreen() {
   const { dir } = useLocale();
   const { user, isLoaded } = useUser();
   const { signOut, isSignedIn } = useAuth();
+  const {
+    biometricType,
+    userOwnsCredentials,
+    setCredentials,
+    clearCredentials,
+  } = useLefrigLocalCredentials();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [bioPassword, setBioPassword] = useState('');
   const [saving, setSaving] = useState(false);
+  const [bioBusy, setBioBusy] = useState(false);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) router.replace('/sign-in');
   }, [isLoaded, isSignedIn, router]);
 
   const passwordEnabled = Boolean(user?.passwordEnabled);
+  const biometricsOn = Boolean(userOwnsCredentials);
+  const biometricsSupported = canUseDeviceBiometrics(biometricType);
+  const method = biometricMethodLabel(biometricType, t);
+  const primaryEmail =
+    user?.primaryEmailAddress?.emailAddress ?? user?.emailAddresses?.[0]?.emailAddress ?? '';
 
   const updatePassword = async () => {
     if (!user) return;
@@ -53,6 +69,13 @@ export default function SecurityScreen() {
         currentPassword: currentPassword || undefined,
         newPassword,
       });
+      if (userOwnsCredentials) {
+        try {
+          await setCredentials({ password: newPassword });
+        } catch {
+          /* biometría opcional */
+        }
+      }
       setCurrentPassword('');
       setNewPassword('');
       setConfirm('');
@@ -62,6 +85,51 @@ export default function SecurityScreen() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const enableBiometrics = async () => {
+    if (!primaryEmail) return;
+    if (bioPassword.length < 8) {
+      Alert.alert(t('common.error'), t('account.biometricsPasswordHint'));
+      return;
+    }
+    setBioBusy(true);
+    try {
+      await setCredentials({
+        identifier: primaryEmail.trim().toLowerCase(),
+        password: bioPassword,
+      });
+      setBioPassword('');
+      Alert.alert(t('common.success'), t('account.biometricsSaved'));
+    } catch {
+      Alert.alert(t('common.error'), t('auth.errors.biometricsEnrollFailed'));
+    } finally {
+      setBioBusy(false);
+    }
+  };
+
+  const disableBiometrics = async () => {
+    setBioBusy(true);
+    try {
+      await clearCredentials();
+      Alert.alert(t('common.success'), t('account.biometricsCleared'));
+    } catch {
+      Alert.alert(t('common.error'), t('auth.errors.biometricsEnrollFailed'));
+    } finally {
+      setBioBusy(false);
+    }
+  };
+
+  const onToggleBiometrics = (next: boolean) => {
+    if (next) {
+      if (!passwordEnabled) {
+        Alert.alert(t('common.error'), t('account.biometricsOauthHint'));
+        return;
+      }
+      void enableBiometrics();
+      return;
+    }
+    void disableBiometrics();
   };
 
   const doSignOut = async () => {
@@ -103,6 +171,69 @@ export default function SecurityScreen() {
             <Text style={[styles.title, dir === 'rtl' && styles.rtl]}>{t('account.security')}</Text>
             <View style={styles.rule} />
             <Text style={[styles.lead, dir === 'rtl' && styles.rtl]}>{t('account.securityLead')}</Text>
+
+            {Platform.OS !== 'web' ? (
+              <View style={styles.bioCard}>
+                <View style={styles.bioHeader}>
+                  <View style={styles.bioIcon}>
+                    <AppIcon name="unlock" size={18} color={theme.oasisDeep} />
+                  </View>
+                  <View style={styles.bioCopy}>
+                    <Text style={styles.bioTitle}>{t('account.biometricsTitle')}</Text>
+                    <Text style={styles.bioLead}>{t('account.biometricsLead')}</Text>
+                  </View>
+                </View>
+                {!biometricsSupported ? (
+                  <Text style={styles.bioStatus}>{t('account.biometricsUnavailable')}</Text>
+                ) : !passwordEnabled ? (
+                  <Text style={styles.bioStatus}>{t('account.biometricsOauthHint')}</Text>
+                ) : (
+                  <>
+                    <View style={styles.bioRow}>
+                      <Text style={styles.bioStatus}>
+                        {biometricsOn
+                          ? t('account.biometricsEnabled')
+                          : t('account.biometricsDisabled')}
+                        {` · ${method}`}
+                      </Text>
+                      {bioBusy ? (
+                        <ActivityIndicator color={theme.dune} />
+                      ) : (
+                        <Switch
+                          value={biometricsOn}
+                          onValueChange={onToggleBiometrics}
+                          trackColor={{ false: theme.borderStrong, true: theme.oasis }}
+                          thumbColor={theme.pearl}
+                        />
+                      )}
+                    </View>
+                    {!biometricsOn ? (
+                      <>
+                        <Text style={styles.label}>{t('account.biometricsPasswordHint')}</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={bioPassword}
+                          onChangeText={setBioPassword}
+                          secureTextEntry
+                          placeholder="••••••••"
+                          placeholderTextColor={theme.inkSoft}
+                          autoComplete="password"
+                        />
+                        <Pressable
+                          style={[styles.secondaryBtn, bioBusy && styles.disabled]}
+                          onPress={() => void enableBiometrics()}
+                          disabled={bioBusy}
+                        >
+                          <Text style={styles.secondaryBtnText}>
+                            {t('account.biometricsEnable')} · {method}
+                          </Text>
+                        </Pressable>
+                      </>
+                    ) : null}
+                  </>
+                )}
+              </View>
+            ) : null}
 
             {passwordEnabled ? (
               <>
@@ -215,6 +346,35 @@ const styles = StyleSheet.create({
   },
   lead: { fontFamily: fonts.body, fontSize: 14, color: theme.inkMuted, lineHeight: 21, marginBottom: 8 },
   rtl: { writingDirection: 'rtl', textAlign: 'right' },
+  bioCard: {
+    marginTop: 16,
+    marginBottom: 8,
+    padding: 16,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: theme.borderStrong,
+    backgroundColor: theme.surface,
+  },
+  bioHeader: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
+  bioIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(45, 138, 98, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bioCopy: { flex: 1 },
+  bioTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: theme.ink, marginBottom: 4 },
+  bioLead: { fontFamily: fonts.body, fontSize: 13, color: theme.inkMuted, lineHeight: 19 },
+  bioRow: {
+    marginTop: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  bioStatus: { flex: 1, fontFamily: fonts.bodyMed, fontSize: 13, color: theme.inkMuted },
   label: {
     fontFamily: fonts.bodySemi,
     fontSize: 10,
@@ -245,6 +405,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   primaryBtnText: { fontFamily: fonts.bodyBold, fontSize: 15, color: theme.pearl },
+  secondaryBtn: {
+    marginTop: 12,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: theme.oasisDeep,
+    paddingVertical: 13,
+    alignItems: 'center',
+  },
+  secondaryBtnText: { fontFamily: fonts.bodyBold, fontSize: 14, color: theme.oasisDeep },
   disabled: { opacity: 0.7 },
   note: {
     flexDirection: 'row',

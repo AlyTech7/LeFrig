@@ -1,6 +1,7 @@
 import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { MarketplaceDepartment } from '@lefrig/shared';
+import { formatVaultOptions } from '@lefrig/shared';
 import { accentColors, getAtlasVisual } from '@/lib/home-visuals';
 import { pickName } from '@/lib/bilingual';
 import { useLocale, useT } from '@/lib/locale';
@@ -45,9 +46,7 @@ export function AtlasTile({ dept, index, onPress, compact, active }: Props) {
           {name}
         </Text>
         <Text style={styles.compactCount}>
-          {t(dept.items.length === 1 ? 'atlas.vaultOptionsOne' : 'atlas.vaultOptions', {
-            count: dept.items.length,
-          })}
+          {formatVaultOptions(locale, dept.items.length)}
         </Text>
         <LinearGradient
           colors={[c1, c2]}
@@ -74,9 +73,7 @@ export function AtlasTile({ dept, index, onPress, compact, active }: Props) {
             {name}
           </Text>
           <Text style={styles.count}>
-            {t(dept.items.length === 1 ? 'atlas.vaultOptionsOne' : 'atlas.vaultOptions', {
-              count: dept.items.length,
-            })}
+            {formatVaultOptions(locale, dept.items.length)}
           </Text>
           <LinearGradient
             colors={[c1, c2]}

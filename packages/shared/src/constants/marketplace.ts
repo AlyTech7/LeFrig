@@ -165,7 +165,7 @@ export const MARKETPLACE_DEPARTMENTS: MarketplaceDepartment[] = [
       {
         slug: 'health',
         nameEs: 'Necesidades médicas',
-        nameAr: 'احتياجات طبية',
+        nameAr: 'عيادات طبية',
         icon: '🩺',
         kind: 'listing',
       },

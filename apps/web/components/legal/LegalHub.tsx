@@ -3,7 +3,12 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { LegalBlock, LegalDocument } from '@/lib/legal-content';
-import { LEGAL_META, LEGAL_QUICK_LINKS } from '@/lib/legal-content';
+import {
+  LEGAL_META,
+  getLocalizedLegalQuickLinks,
+  localizeLegalDocument,
+  localizeLegalMeta,
+} from '@/lib/legal-content';
 import { useLocale, useT } from '@/lib/locale';
 
 function BlockRenderer({ block }: { block: LegalBlock }) {
@@ -71,17 +76,17 @@ function BlockRenderer({ block }: { block: LegalBlock }) {
 function DocumentSection({ doc }: { doc: LegalDocument }) {
   const t = useT();
   const { locale } = useLocale();
-  const title = locale === 'ar' && doc.titleAr ? doc.titleAr : doc.title;
+  const localized = localizeLegalDocument(doc, locale);
 
   return (
     <article id={doc.id} className="legal-doc">
       <header className="legal-doc__head">
         <p className="legal-doc__kicker">{t('legal.document')}</p>
-        <h2 className="legal-doc__title">{title}</h2>
-        <p className="legal-doc__summary">{doc.summary}</p>
+        <h2 className="legal-doc__title">{localized.title}</h2>
+        <p className="legal-doc__summary">{localized.summary}</p>
       </header>
       <div className="legal-doc__body">
-        {doc.blocks.map((block, i) => (
+        {localized.blocks.map((block, i) => (
           <BlockRenderer key={`${doc.id}-${i}`} block={block} />
         ))}
       </div>
@@ -95,6 +100,9 @@ type Props = {
 
 export function LegalHub({ documents }: Props) {
   const t = useT();
+  const { locale } = useLocale();
+  const meta = localizeLegalMeta(locale);
+  const quickLinks = getLocalizedLegalQuickLinks(locale);
   const [activeId, setActiveId] = useState<string>(documents[0]?.id ?? '');
 
   useEffect(() => {
@@ -125,7 +133,7 @@ export function LegalHub({ documents }: Props) {
         <div className="legal-sidebar__sticky">
           <p className="legal-sidebar__label">{t('legal.index')}</p>
           <nav className="legal-sidebar__nav">
-            {LEGAL_QUICK_LINKS.map((link) => (
+            {quickLinks.map((link) => (
               <a
                 key={link.id}
                 href={link.href}
@@ -139,7 +147,7 @@ export function LegalHub({ documents }: Props) {
           <div className="legal-sidebar__meta">
             <p>
               <span>{t('legal.updated')}</span>
-              <time dateTime={LEGAL_META.lastUpdatedIso}>{LEGAL_META.lastUpdated}</time>
+              <time dateTime={LEGAL_META.lastUpdatedIso}>{meta.lastUpdated}</time>
             </p>
             <p>
               <span>{t('legal.contact')}</span>
@@ -162,7 +170,7 @@ export function LegalHub({ documents }: Props) {
           <p>
             {t('legal.intro', {
               platform: LEGAL_META.platformName,
-              tagline: LEGAL_META.platformTagline,
+              tagline: meta.platformTagline,
             })}
           </p>
           <aside className="legal-disclaimer" role="note">
@@ -185,7 +193,7 @@ export function LegalHub({ documents }: Props) {
             <Link href={`mailto:${LEGAL_META.dpoEmail}`}>{LEGAL_META.dpoEmail}</Link>
           </p>
           <p className="legal-contact__foot">
-            {t('legal.lastReview')} {LEGAL_META.lastUpdated} · {LEGAL_META.platformName}
+            {t('legal.lastReview')} {meta.lastUpdated} · {LEGAL_META.platformName}
           </p>
         </footer>
       </div>

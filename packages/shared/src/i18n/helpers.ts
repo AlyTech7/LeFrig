@@ -72,3 +72,23 @@ export function detectBrowserLocale(): Locale {
   if (lang === 'ar' || lang === 'es' || lang === 'fr' || lang === 'en') return lang;
   return 'es';
 }
+
+type VaultOptionsKey =
+  | 'atlas.vaultOptionsOne'
+  | 'atlas.vaultOptionsTwo'
+  | 'atlas.vaultOptionsMany'
+  | 'atlas.vaultOptions';
+
+/** Clave i18n para «N opciones» en salas del Atlas (árabe: واحد / خيارين / خيارات). */
+export function vaultOptionsMessageKey(count: number, locale: Locale): VaultOptionsKey {
+  if (count === 1) return 'atlas.vaultOptionsOne';
+  if (locale === 'ar') {
+    if (count === 2) return 'atlas.vaultOptionsTwo';
+    return 'atlas.vaultOptionsMany';
+  }
+  return 'atlas.vaultOptions';
+}
+
+export function formatVaultOptions(locale: Locale, count: number): string {
+  return t(locale, vaultOptionsMessageKey(count, locale), { count });
+}
