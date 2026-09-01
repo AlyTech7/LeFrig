@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import {
   pickLocalized,
+  formatVaultOptions,
   type MarketplaceDepartment,
   type MarketplaceItem,
 } from '@lefrig/shared';
@@ -146,9 +147,7 @@ export function AtlasVaultCard({
             <div className="lf-vault__head-copy">
               <h3>{name}</h3>
               <span className="lf-vault__count">
-                {t(dept.items.length === 1 ? 'atlas.vaultOptionsOne' : 'atlas.vaultOptions', {
-                  count: dept.items.length,
-                })}
+                {formatVaultOptions(locale, dept.items.length)}
               </span>
             </div>
           </Link>

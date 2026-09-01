@@ -6,6 +6,7 @@ import {
   MARKETPLACE_DEPARTMENTS,
   getMarketplaceItemHref,
   pickLocalized,
+  formatVaultOptions,
   type MarketplaceDepartment,
   type MarketplaceItem,
 } from '@lefrig/shared';
@@ -244,7 +245,7 @@ export function HomeDirectAccess() {
                       <div className="lf-console__stage-copy">
                         <h3>{deptName}</h3>
                         <span className="lf-console__stage-count">
-                          {t('atlas.vaultOptions', { count: activeDept.items.length })}
+                          {formatVaultOptions(locale, activeDept.items.length)}
                         </span>
                       </div>
                     </div>

@@ -2,6 +2,7 @@ import { type ReactNode } from 'react';
 import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { MarketplaceDepartment } from '@lefrig/shared';
+import { formatVaultOptions } from '@lefrig/shared';
 import { accentColors, getAtlasVisual } from '@/lib/home-visuals';
 import { AppIcon } from '@/components/AppIcon';
 import { pickName } from '@/lib/bilingual';
@@ -94,9 +95,7 @@ function CardTitle({
         {name}
       </Text>
       <Text style={styles.count}>
-        {t(dept.items.length === 1 ? 'atlas.vaultOptionsOne' : 'atlas.vaultOptions', {
-          count: dept.items.length,
-        })}
+        {formatVaultOptions(locale, dept.items.length)}
       </Text>
       {itemsHint ? (
         <Text style={styles.itemsHint} numberOfLines={1}>

@@ -186,23 +186,6 @@ export function SovereignFooter() {
           ))}
         </div>
 
-        <div className="sv-foot-strip" role="group" aria-label={t('footer.guaranteesAria')}>
-          <div className="sv-foot-strip__item">
-            <AppIcon name="shield" size={20} color="var(--sv-dune)" />
-            <div>
-              <strong>{t('footer.stripPayments')}</strong>
-              <span>{t('footer.stripPaymentsDesc')}</span>
-            </div>
-          </div>
-          <div className="sv-foot-strip__item">
-            <AppIcon name="scale" size={20} color="var(--sv-dune)" />
-            <div>
-              <strong>{t('footer.stripMediation')}</strong>
-              <span>{t('footer.stripMediationDesc')}</span>
-            </div>
-          </div>
-        </div>
-
         <div className="sv-foot-bar">
           <div className="sv-foot-bar__left">
             <p className="sv-foot-bar__copy">{t('footer.rightsDignity', { year })}</p>

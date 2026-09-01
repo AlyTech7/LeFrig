@@ -1,8 +1,7 @@
 import { View, Text, StyleSheet, ScrollView, Pressable, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { LEGAL_DOCUMENTS, LEGAL_META } from '@/lib/legal-content';
-import { legalDocTitle } from '@/lib/bilingual';
+import { LEGAL_DOCUMENTS, LEGAL_META, localizeLegalDocument, localizeLegalMeta } from '@/lib/legal-content';
 import { useLocale, useT } from '@/lib/locale';
 import { AppIcon } from '@/components/AppIcon';
 import { theme } from '@/lib/theme';
@@ -12,6 +11,8 @@ export default function LegalHubScreen() {
   const router = useRouter();
   const t = useT();
   const { locale, dir } = useLocale();
+  const isRtl = dir === 'rtl';
+  const meta = localizeLegalMeta(locale);
 
   return (
     <View style={styles.root}>
@@ -27,27 +28,38 @@ export default function LegalHubScreen() {
         <Text style={[styles.title, dir === 'rtl' && styles.rtl]}>{t('legal.hubTitle')}</Text>
         <View style={styles.rule} />
         <Text style={[styles.intro, dir === 'rtl' && styles.rtl]}>{t('legal.hubIntro')}</Text>
-        <Text style={styles.updated}>
-          {t('legal.updated')} {LEGAL_META.lastUpdated}
+        <Text style={[styles.updated, isRtl && styles.rtl]}>
+          {t('legal.updated')} {meta.lastUpdated}
         </Text>
 
-        {LEGAL_DOCUMENTS.map((doc, i) => (
+        {LEGAL_DOCUMENTS.map((doc, i) => {
+          const localized = localizeLegalDocument(doc, locale);
+          return (
           <Pressable
             key={doc.id}
-            style={[styles.row, i === LEGAL_DOCUMENTS.length - 1 && styles.rowLast]}
+            style={[
+              styles.row,
+              isRtl && styles.rowRtl,
+              i === LEGAL_DOCUMENTS.length - 1 && styles.rowLast,
+            ]}
             onPress={() => router.push(`/legal/${doc.id}` as never)}
           >
             <View style={styles.rowCopy}>
-              <Text style={[styles.cardTitle, dir === 'rtl' && styles.rtl]}>
-                {legalDocTitle(doc, locale)}
+              <Text style={[styles.cardTitle, isRtl && styles.rtl]}>
+                {localized.title}
               </Text>
-              <Text style={[styles.cardSummary, dir === 'rtl' && styles.rtl]} numberOfLines={2}>
-                {doc.summary}
+              <Text style={[styles.cardSummary, isRtl && styles.rtl]} numberOfLines={3}>
+                {localized.summary}
               </Text>
             </View>
-            <AppIcon name="chevron-right" size={16} color={theme.inkSoft} />
+            <AppIcon
+              name={isRtl ? 'chevron-left' : 'chevron-right'}
+              size={16}
+              color={theme.inkSoft}
+            />
           </Pressable>
-        ))}
+          );
+        })}
 
         <Pressable style={styles.contact} onPress={() => Linking.openURL(`mailto:${LEGAL_META.contactEmail}`)}>
           <AppIcon name="mail" size={15} color={theme.dune} />
@@ -114,6 +126,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: theme.border,
   },
+  rowRtl: { flexDirection: 'row-reverse' },
   rowLast: { borderBottomWidth: 0 },
   rowCopy: { flex: 1 },
   cardTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: theme.ink, letterSpacing: -0.2 },

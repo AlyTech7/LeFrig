@@ -20,7 +20,9 @@ import { SocialAuthButtons } from '@/components/auth/SocialAuthButtons';
 import { defaultAuthProviders } from '@/lib/social-auth';
 import { LefrigMark } from '@/components/LefrigMark';
 import { finalizeSignUpAfterEmail, splitDisplayName } from '@/lib/auth-complete';
+import { enrollLocalBiometrics } from '@/lib/biometrics';
 import { getClerkErrorMessage, isIdentifierExists, isIdentifierNotFound } from '@/lib/clerk-errors';
+import { useLefrigLocalCredentials } from '@/lib/useLefrigLocalCredentials';
 import { useT } from '@/lib/locale';
 import { theme, gradients, radii } from '@/lib/theme';
 import { fonts, space } from '@/lib/ui';
@@ -43,6 +45,7 @@ export default function SignUpScreen() {
   const { signIn, isLoaded: signInLoaded } = useSignIn();
   const { setActive } = useClerk();
   const { getToken } = useAuth();
+  const { setCredentials, biometricType } = useLefrigLocalCredentials();
   const router = useRouter();
   const t = useT();
   const isLoaded = signUpLoaded && signInLoaded;
@@ -77,7 +80,19 @@ export default function SignUpScreen() {
     }
   };
 
-  const finishSession = async (sessionId: string) => {
+  const finishSession = async (
+    sessionId: string,
+    enroll?: { identifier: string; password: string },
+  ) => {
+    if (enroll) {
+      await enrollLocalBiometrics({
+        t,
+        biometricType,
+        identifier: enroll.identifier,
+        password: enroll.password,
+        setCredentials,
+      });
+    }
     await setActive({ session: sessionId });
     await syncToApi();
     router.replace('/');
@@ -214,7 +229,12 @@ export default function SignUpScreen() {
       lastName,
     });
     if (finalized.ok) {
-      await finishSession(finalized.sessionId);
+      await finishSession(
+        finalized.sessionId,
+        pwd && pwd.length >= 8
+          ? { identifier: email.trim().toLowerCase(), password: pwd }
+          : undefined,
+      );
       return;
     }
     if ('needPassword' in finalized && finalized.needPassword) {
@@ -241,7 +261,12 @@ export default function SignUpScreen() {
     try {
       const attempt = await signUp.attemptEmailAddressVerification({ code: digits });
       if (attempt.status === 'complete' && attempt.createdSessionId) {
-        await finishSession(attempt.createdSessionId);
+        await finishSession(
+          attempt.createdSessionId,
+          password.length >= 8
+            ? { identifier: email.trim().toLowerCase(), password }
+            : undefined,
+        );
         return;
       }
       await completeWithOptionalPassword(password || undefined, attempt, fullName);

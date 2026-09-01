@@ -1,7 +1,7 @@
 import { useSignIn, useSignUp, useAuth, useClerk } from '@clerk/clerk-expo';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -15,15 +15,18 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '@/components/AppIcon';
+import { BiometricSignInButton } from '@/components/auth/BiometricSignInButton';
 import { ClerkCaptcha } from '@/components/auth/ClerkCaptcha';
 import { SocialAuthButtons } from '@/components/auth/SocialAuthButtons';
 import { defaultAuthProviders } from '@/lib/social-auth';
 import { LefrigMark } from '@/components/LefrigMark';
 import { finalizeSignUpAfterEmail, splitDisplayName } from '@/lib/auth-complete';
+import { enrollLocalBiometrics } from '@/lib/biometrics';
 import {
   getClerkErrorMessage,
   isIdentifierNotFound,
 } from '@/lib/clerk-errors';
+import { useLefrigLocalCredentials } from '@/lib/useLefrigLocalCredentials';
 import { useT } from '@/lib/locale';
 import { theme, gradients, radii } from '@/lib/theme';
 import { fonts, space } from '@/lib/ui';
@@ -47,9 +50,16 @@ export default function SignInScreen() {
   const { signUp, isLoaded: signUpLoaded } = useSignUp();
   const { setActive } = useClerk();
   const { getToken } = useAuth();
+  const {
+    hasCredentials,
+    setCredentials,
+    authenticate,
+    biometricType,
+  } = useLefrigLocalCredentials();
   const router = useRouter();
   const params = useLocalSearchParams<{ email?: string }>();
   const t = useT();
+  const biometricAutoTried = useRef(false);
 
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -100,11 +110,53 @@ export default function SignInScreen() {
     }
   };
 
-  const finishSession = async (sessionId: string) => {
+  const finishSession = async (
+    sessionId: string,
+    enroll?: { identifier: string; password: string },
+  ) => {
+    if (enroll) {
+      await enrollLocalBiometrics({
+        t,
+        biometricType,
+        identifier: enroll.identifier,
+        password: enroll.password,
+        setCredentials,
+      });
+    }
     await setActive({ session: sessionId });
     await syncToApi();
     router.replace('/');
   };
+
+  const onBiometricSignIn = async () => {
+    if (!isLoaded || loading) return;
+    setLoading(true);
+    setError('');
+    try {
+      const result = await authenticate();
+      if (result.status === 'complete' && result.createdSessionId) {
+        await finishSession(result.createdSessionId);
+        return;
+      }
+      setError(t('auth.errors.incomplete'));
+    } catch (err) {
+      setError(getClerkErrorMessage(err, t('auth.errors.biometricsFailed')));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isLoaded || !hasCredentials || !biometricType || biometricAutoTried.current) return;
+    if (step !== 'email') return;
+    biometricAutoTried.current = true;
+    const id = setTimeout(() => {
+      void onBiometricSignIn();
+    }, 500);
+    return () => clearTimeout(id);
+    // Solo al montar / cuando hay credenciales listas
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded, hasCredentials, biometricType, step]);
 
   const resetToEmail = () => {
     setStep('email');
@@ -249,7 +301,10 @@ export default function SignInScreen() {
       if (mode === 'signup') {
         const attempt = await signUp.attemptEmailAddressVerification({ code: digits });
         if (attempt.status === 'complete' && attempt.createdSessionId) {
-          await finishSession(attempt.createdSessionId);
+          await finishSession(
+            attempt.createdSessionId,
+            password.length >= 8 ? { identifier: email, password } : undefined,
+          );
           return;
         }
         const finalized = await finalizeSignUpAfterEmail(attempt, {
@@ -257,7 +312,10 @@ export default function SignInScreen() {
           ...splitDisplayName(fullName),
         });
         if (finalized.ok) {
-          await finishSession(finalized.sessionId);
+          await finishSession(
+            finalized.sessionId,
+            password.length >= 8 ? { identifier: email, password } : undefined,
+          );
           return;
         }
         if ('needPassword' in finalized && finalized.needPassword) {
@@ -312,7 +370,10 @@ export default function SignInScreen() {
       await signIn.create({ identifier: email.trim().toLowerCase() });
       const result = await signIn.attemptFirstFactor({ strategy: 'password', password });
       if (result.status === 'complete' && result.createdSessionId) {
-        await finishSession(result.createdSessionId);
+        await finishSession(result.createdSessionId, {
+          identifier: email.trim().toLowerCase(),
+          password,
+        });
         return;
       }
       setError(t('auth.errors.incomplete'));
@@ -391,7 +452,10 @@ export default function SignInScreen() {
         lastName,
       });
       if (finalized.ok) {
-        await finishSession(finalized.sessionId);
+        await finishSession(finalized.sessionId, {
+          identifier: email.trim().toLowerCase(),
+          password,
+        });
         return;
       }
       setError('error' in finalized ? finalized.error : t('auth.errors.incomplete'));
@@ -480,6 +544,13 @@ export default function SignInScreen() {
 
             {step === 'email' ? (
               <>
+                {hasCredentials && biometricType ? (
+                  <BiometricSignInButton
+                    biometricType={biometricType}
+                    loading={loading}
+                    onPress={() => void onBiometricSignIn()}
+                  />
+                ) : null}
                 <View style={styles.inputWrap}>
                   <AppIcon name="mail" size={18} color={theme.dune} />
                   <TextInput
