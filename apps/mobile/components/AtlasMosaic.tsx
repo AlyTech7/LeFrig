@@ -6,7 +6,7 @@ import { formatVaultOptions } from '@lefrig/shared';
 import { accentColors, getAtlasVisual } from '@/lib/home-visuals';
 import { AppIcon } from '@/components/AppIcon';
 import { pickName } from '@/lib/bilingual';
-import { useLocale, useT } from '@/lib/locale';
+import { useLocale } from '@/lib/locale';
 import { theme, radii } from '@/lib/theme';
 import { fonts } from '@/lib/ui';
 
@@ -87,7 +87,6 @@ function CardTitle({
   itemsHint?: boolean;
 }) {
   const { locale, dir } = useLocale();
-  const t = useT();
   const name = pickName(locale, dept);
   return (
     <View style={styles.titleBlock}>

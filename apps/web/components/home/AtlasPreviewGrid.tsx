@@ -35,7 +35,6 @@ function PreviewTile({
   featured?: boolean;
   locale: ReturnType<typeof useLocale>['locale'];
 }) {
-  const t = useT();
   const name = pickLocalized({ slug: dept.id, nameEs: dept.nameEs, nameAr: dept.nameAr }, locale);
 
   return (

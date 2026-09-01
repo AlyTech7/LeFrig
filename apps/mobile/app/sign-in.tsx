@@ -154,8 +154,6 @@ export default function SignInScreen() {
       void onBiometricSignIn();
     }, 500);
     return () => clearTimeout(id);
-    // Solo al montar / cuando hay credenciales listas
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded, hasCredentials, biometricType, step]);
 
   const resetToEmail = () => {
