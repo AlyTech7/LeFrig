@@ -6,6 +6,7 @@ import './globals.css';
 import './sovereign.css';
 import './footer.css';
 import './pages.css';
+import './auth-elite.css';
 import './lefrig-mark.css';
 import { ClientShell } from '@/components/ClientShell';
 import { AppProviders } from '@/components/AppProviders';
