@@ -3,8 +3,9 @@
 import { useAuth, useClerk, useSignIn, useSignUp } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState, type CSSProperties } from 'react';
 import { AppIcon } from '@/components/AppIcon';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { LefrigMark } from '@/components/LefrigMark';
 import { GoogleLogo } from '@/components/auth/GoogleLogo';
 import { finalizeSignUpAfterEmail, splitDisplayName } from '@/lib/auth-complete';
@@ -487,318 +488,343 @@ export function EliteAuthForm({ intent = 'signin' }: Props) {
   };
 
   return (
-    <div className={`lf-auth ${isRtl ? 'lf-auth--rtl' : ''}`} dir={dir}>
-      <div className="lf-auth__glow" aria-hidden />
-      <div className="lf-auth__panel">
-        <div className="lf-auth__brand">
-          <LefrigMark size={56} showOrbit={false} />
-          <p className="lf-auth__wordmark">LEFRIG</p>
+    <section
+      className={`lf-auth ${isRtl ? 'lf-auth--rtl' : ''}`}
+      style={
+        {
+          '--lf-auth-stage': `url("https://images.unsplash.com/photo-1509316785289-025f5b846b35?ixlib=rb-4.0.3&auto=format&fit=crop&w=1800&q=85&fm=webp")`,
+        } as CSSProperties
+      }
+    >
+      <aside className="lf-auth__stage" aria-hidden={false}>
+        <div className="lf-auth__stage-media" />
+        <div className="lf-auth__stage-veil" />
+        <div className="lf-auth__stage-grain" />
+        <div className="lf-auth__stage-mark">
+          <LefrigMark size={34} showOrbit={false} />
+        </div>
+        <div className="lf-auth__stage-content">
+          <p className="lf-auth__stage-kicker">{t('auth.stageKicker')}</p>
+          <p className="lf-auth__stage-brand">LEFRIG</p>
+          <p className="lf-auth__stage-line">{t('auth.stageLine')}</p>
+        </div>
+      </aside>
+
+      <div className="lf-auth__rail" dir={dir}>
+        <div className="lf-auth__rail-top">
+          <Link href="/" className="lf-auth__home">
+            <AppIcon name={isRtl ? 'arrow-right' : 'arrow-left'} size={14} />
+            <span>{t('auth.railHome')}</span>
+          </Link>
+          <LanguageSwitcher compact />
         </div>
 
-        <header className="lf-auth__head">
-          <h1 className="lf-auth__title">{title}</h1>
-          <p className="lf-auth__subtitle">{subtitle}</p>
-          {step === 'code' && email ? (
-            <p className="lf-auth__hint">{t('auth.codeSent', { email })}</p>
-          ) : null}
-        </header>
+        <div className="lf-auth__rail-body">
+          <header className="lf-auth__head">
+            <h1 className="lf-auth__title">{title}</h1>
+            <p className="lf-auth__subtitle">{subtitle}</p>
+            {step === 'code' && email ? (
+              <p className="lf-auth__hint">{t('auth.codeSent', { email })}</p>
+            ) : null}
+          </header>
 
-        <form className="lf-auth__form" onSubmit={onSubmit} noValidate>
-          {step !== 'email' ? (
-            <button type="button" className="lf-auth__back" onClick={resetToEmail} disabled={busy}>
-              <AppIcon name={isRtl ? 'arrow-right' : 'arrow-left'} size={16} />
-              <span>{t('auth.changeEmail')}</span>
-            </button>
-          ) : null}
-
-          {step === 'email' ? (
-            <>
-              <label className="lf-auth__field">
-                <span className="lf-auth__label">{t('auth.emailPlaceholder')}</span>
-                <span className="lf-auth__input-wrap">
-                  <AppIcon name="mail" size={18} color="var(--sv-dune, #a8842d)" />
-                  <input
-                    className="lf-auth__input"
-                    type="email"
-                    autoComplete="email"
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    placeholder={t('auth.emailPlaceholder')}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={busy}
-                    required
-                  />
-                </span>
-              </label>
-              <div id="clerk-captcha" />
-              <button type="submit" className="lf-auth__btn lf-auth__btn--primary" disabled={busy}>
-                {loading ? (
-                  <span className="lf-auth__spinner" aria-hidden />
-                ) : (
-                  <>
-                    <AppIcon name={isRtl ? 'arrow-left' : 'arrow-right'} size={18} />
-                    <span>{t('common.continue')}</span>
-                  </>
-                )}
+          <form className="lf-auth__form" onSubmit={onSubmit} noValidate>
+            {step !== 'email' ? (
+              <button type="button" className="lf-auth__back" onClick={resetToEmail} disabled={busy}>
+                <AppIcon name={isRtl ? 'arrow-right' : 'arrow-left'} size={16} />
+                <span>{t('auth.changeEmail')}</span>
               </button>
-              <p className="lf-auth__helper">{t('auth.emailHelper')}</p>
+            ) : null}
 
-              <div className="lf-auth__divider">
-                <span>{t('common.or')}</span>
-              </div>
-
-              <button
-                type="button"
-                className="lf-auth__btn lf-auth__btn--google"
-                onClick={() => void onGoogle()}
-                disabled={busy}
-              >
-                {oauthLoading ? (
-                  <span className="lf-auth__spinner lf-auth__spinner--dark" aria-hidden />
-                ) : (
-                  <>
-                    <GoogleLogo size={20} />
-                    <span>{t('auth.continueWith', { provider: 'Google' })}</span>
-                  </>
-                )}
-              </button>
-            </>
-          ) : null}
-
-          {step === 'method' ? (
-            <div className="lf-auth__methods">
-              {hasPassword ? (
-                <button
-                  type="button"
-                  className="lf-auth__method"
-                  onClick={onChoosePassword}
-                  disabled={busy}
-                >
-                  <span className="lf-auth__method-ico" aria-hidden>
-                    <AppIcon name="lock" size={20} color="#1a1612" />
+            {step === 'email' ? (
+              <>
+                <label className="lf-auth__field">
+                  <span className="lf-auth__label">{t('auth.emailPlaceholder')}</span>
+                  <span className="lf-auth__input-wrap">
+                    <AppIcon name="mail" size={18} color="var(--lf-auth-dune)" />
+                    <input
+                      className="lf-auth__input"
+                      type="email"
+                      autoComplete="email"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      placeholder={t('auth.emailPlaceholder')}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={busy}
+                      required
+                    />
                   </span>
-                  <span className="lf-auth__method-copy">
-                    <strong>{t('auth.methodPasswordTitle')}</strong>
-                    <small>{t('auth.methodPasswordHint')}</small>
-                  </span>
-                  <AppIcon name={isRtl ? 'arrow-left' : 'arrow-right'} size={16} />
-                </button>
-              ) : null}
-              {hasEmailCode ? (
-                <button
-                  type="button"
-                  className="lf-auth__method"
-                  onClick={() => void onChooseCode()}
-                  disabled={busy}
-                >
-                  <span className="lf-auth__method-ico" aria-hidden>
-                    <AppIcon name="mail" size={20} color="#1a1612" />
-                  </span>
-                  <span className="lf-auth__method-copy">
-                    <strong>{t('auth.methodCodeTitle')}</strong>
-                    <small>{t('auth.methodCodeHint')}</small>
-                  </span>
+                </label>
+                <div id="clerk-captcha" />
+                <button type="submit" className="lf-auth__btn lf-auth__btn--primary" disabled={busy}>
                   {loading ? (
-                    <span className="lf-auth__spinner lf-auth__spinner--dark" aria-hidden />
+                    <span className="lf-auth__spinner" aria-hidden />
                   ) : (
-                    <AppIcon name={isRtl ? 'arrow-left' : 'arrow-right'} size={16} />
+                    <>
+                      <span>{t('common.continue')}</span>
+                      <AppIcon name={isRtl ? 'arrow-left' : 'arrow-right'} size={18} />
+                    </>
                   )}
                 </button>
-              ) : null}
-            </div>
-          ) : null}
+                <p className="lf-auth__helper">{t('auth.emailHelper')}</p>
 
-          {step === 'password' && mode === 'signin' ? (
-            <>
-              <label className="lf-auth__field">
-                <span className="lf-auth__label">{t('auth.passwordLabel')}</span>
-                <span className="lf-auth__input-wrap">
-                  <AppIcon name="lock" size={18} color="var(--sv-dune, #a8842d)" />
-                  <input
-                    className="lf-auth__input"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    placeholder={t('auth.passwordPlaceholder')}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={busy}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="lf-auth__eye"
-                    onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
-                  >
-                    <AppIcon name={showPassword ? 'eye-off' : 'eye'} size={18} />
-                  </button>
-                </span>
-              </label>
-              <button type="submit" className="lf-auth__btn lf-auth__btn--primary" disabled={busy}>
-                {loading ? (
-                  <span className="lf-auth__spinner" aria-hidden />
-                ) : (
-                  <span>{t('auth.continueWithPassword')}</span>
-                )}
-              </button>
-              {hasEmailCode ? (
+                <div className="lf-auth__divider">
+                  <span>{t('common.or')}</span>
+                </div>
+
                 <button
                   type="button"
-                  className="lf-auth__link-btn"
-                  onClick={() => void onChooseCode()}
+                  className="lf-auth__btn lf-auth__btn--google"
+                  onClick={() => void onGoogle()}
                   disabled={busy}
                 >
-                  {t('auth.enterWithCode')}
+                  {oauthLoading ? (
+                    <span className="lf-auth__spinner lf-auth__spinner--dark" aria-hidden />
+                  ) : (
+                    <>
+                      <GoogleLogo size={20} />
+                      <span>{t('auth.continueWith', { provider: 'Google' })}</span>
+                    </>
+                  )}
                 </button>
-              ) : null}
-            </>
-          ) : null}
+              </>
+            ) : null}
 
-          {step === 'signup' || (step === 'password' && mode === 'signup') ? (
-            <>
-              <label className="lf-auth__field">
-                <span className="lf-auth__label">{t('auth.namePlaceholder')}</span>
-                <span className="lf-auth__input-wrap">
-                  <input
-                    className="lf-auth__input"
-                    type="text"
-                    autoComplete="name"
-                    placeholder={t('auth.namePlaceholder')}
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    disabled={busy}
-                    required
-                  />
-                </span>
-              </label>
-              <label className="lf-auth__field">
-                <span className="lf-auth__label">{t('auth.newPasswordPlaceholder')}</span>
-                <span className="lf-auth__input-wrap">
-                  <AppIcon name="lock" size={18} color="var(--sv-dune, #a8842d)" />
-                  <input
-                    className="lf-auth__input"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    placeholder={t('auth.newPasswordPlaceholder')}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={busy}
-                    required
-                    minLength={8}
-                  />
+            {step === 'method' ? (
+              <div className="lf-auth__methods">
+                {hasPassword ? (
                   <button
                     type="button"
-                    className="lf-auth__eye"
-                    onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
-                  >
-                    <AppIcon name={showPassword ? 'eye-off' : 'eye'} size={18} />
-                  </button>
-                </span>
-              </label>
-              <label className="lf-auth__field">
-                <span className="lf-auth__label">{t('auth.confirmPasswordPlaceholder')}</span>
-                <span className="lf-auth__input-wrap">
-                  <input
-                    className="lf-auth__input"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    placeholder={t('auth.confirmPasswordPlaceholder')}
-                    value={password2}
-                    onChange={(e) => setPassword2(e.target.value)}
+                    className="lf-auth__method"
+                    onClick={onChoosePassword}
                     disabled={busy}
-                    required
-                    minLength={8}
-                  />
-                </span>
-              </label>
-              <p className="lf-auth__helper">{t('auth.passwordRules')}</p>
-              <button type="submit" className="lf-auth__btn lf-auth__btn--primary" disabled={busy}>
-                {loading ? (
-                  <span className="lf-auth__spinner" aria-hidden />
-                ) : (
-                  <span>
-                    {step === 'password' ? t('common.continue') : t('auth.createAccount')}
+                  >
+                    <span className="lf-auth__method-ico" aria-hidden>
+                      <AppIcon name="lock" size={20} color="var(--lf-auth-ink)" />
+                    </span>
+                    <span className="lf-auth__method-copy">
+                      <strong>{t('auth.methodPasswordTitle')}</strong>
+                      <small>{t('auth.methodPasswordHint')}</small>
+                    </span>
+                    <AppIcon name={isRtl ? 'arrow-left' : 'arrow-right'} size={16} />
+                  </button>
+                ) : null}
+                {hasEmailCode ? (
+                  <button
+                    type="button"
+                    className="lf-auth__method"
+                    onClick={() => void onChooseCode()}
+                    disabled={busy}
+                  >
+                    <span className="lf-auth__method-ico" aria-hidden>
+                      <AppIcon name="mail" size={20} color="var(--lf-auth-ink)" />
+                    </span>
+                    <span className="lf-auth__method-copy">
+                      <strong>{t('auth.methodCodeTitle')}</strong>
+                      <small>{t('auth.methodCodeHint')}</small>
+                    </span>
+                    {loading ? (
+                      <span className="lf-auth__spinner lf-auth__spinner--dark" aria-hidden />
+                    ) : (
+                      <AppIcon name={isRtl ? 'arrow-left' : 'arrow-right'} size={16} />
+                    )}
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+
+            {step === 'password' && mode === 'signin' ? (
+              <>
+                <label className="lf-auth__field">
+                  <span className="lf-auth__label">{t('auth.passwordLabel')}</span>
+                  <span className="lf-auth__input-wrap">
+                    <AppIcon name="lock" size={18} color="var(--lf-auth-dune)" />
+                    <input
+                      className="lf-auth__input"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      placeholder={t('auth.passwordPlaceholder')}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={busy}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="lf-auth__eye"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                    >
+                      <AppIcon name={showPassword ? 'eye-off' : 'eye'} size={18} />
+                    </button>
                   </span>
-                )}
-              </button>
-            </>
-          ) : null}
+                </label>
+                <button type="submit" className="lf-auth__btn lf-auth__btn--primary" disabled={busy}>
+                  {loading ? (
+                    <span className="lf-auth__spinner" aria-hidden />
+                  ) : (
+                    <span>{t('auth.continueWithPassword')}</span>
+                  )}
+                </button>
+                {hasEmailCode ? (
+                  <button
+                    type="button"
+                    className="lf-auth__link-btn"
+                    onClick={() => void onChooseCode()}
+                    disabled={busy}
+                  >
+                    {t('auth.enterWithCode')}
+                  </button>
+                ) : null}
+              </>
+            ) : null}
 
-          {step === 'code' ? (
-            <>
-              <label className="lf-auth__field">
-                <span className="lf-auth__label">{t('auth.codePlaceholder')}</span>
-                <input
-                  className="lf-auth__input lf-auth__input--code"
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  placeholder="••••••"
-                  value={code}
-                  onChange={(e) => onChangeCode(e.target.value)}
-                  disabled={busy}
-                  maxLength={6}
-                  required
-                />
-              </label>
-              <button type="submit" className="lf-auth__btn lf-auth__btn--primary" disabled={busy}>
-                {loading ? (
-                  <span className="lf-auth__spinner" aria-hidden />
-                ) : (
-                  <span>{t('auth.verify')}</span>
-                )}
-              </button>
-              <button
-                type="button"
-                className="lf-auth__link-btn"
-                onClick={() => void onResend()}
-                disabled={busy || resendIn > 0}
-              >
-                {resendIn > 0 ? t('auth.resendIn', { s: resendIn }) : t('auth.resendCode')}
-              </button>
-              {mode === 'signin' && hasPassword ? (
+            {step === 'signup' || (step === 'password' && mode === 'signup') ? (
+              <>
+                <label className="lf-auth__field">
+                  <span className="lf-auth__label">{t('auth.namePlaceholder')}</span>
+                  <span className="lf-auth__input-wrap">
+                    <input
+                      className="lf-auth__input"
+                      type="text"
+                      autoComplete="name"
+                      placeholder={t('auth.namePlaceholder')}
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      disabled={busy}
+                      required
+                    />
+                  </span>
+                </label>
+                <label className="lf-auth__field">
+                  <span className="lf-auth__label">{t('auth.newPasswordPlaceholder')}</span>
+                  <span className="lf-auth__input-wrap">
+                    <AppIcon name="lock" size={18} color="var(--lf-auth-dune)" />
+                    <input
+                      className="lf-auth__input"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      placeholder={t('auth.newPasswordPlaceholder')}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={busy}
+                      required
+                      minLength={8}
+                    />
+                    <button
+                      type="button"
+                      className="lf-auth__eye"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                    >
+                      <AppIcon name={showPassword ? 'eye-off' : 'eye'} size={18} />
+                    </button>
+                  </span>
+                </label>
+                <label className="lf-auth__field">
+                  <span className="lf-auth__label">{t('auth.confirmPasswordPlaceholder')}</span>
+                  <span className="lf-auth__input-wrap">
+                    <input
+                      className="lf-auth__input"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      placeholder={t('auth.confirmPasswordPlaceholder')}
+                      value={password2}
+                      onChange={(e) => setPassword2(e.target.value)}
+                      disabled={busy}
+                      required
+                      minLength={8}
+                    />
+                  </span>
+                </label>
+                <p className="lf-auth__helper">{t('auth.passwordRules')}</p>
+                <button type="submit" className="lf-auth__btn lf-auth__btn--primary" disabled={busy}>
+                  {loading ? (
+                    <span className="lf-auth__spinner" aria-hidden />
+                  ) : (
+                    <span>
+                      {step === 'password' ? t('common.continue') : t('auth.createAccount')}
+                    </span>
+                  )}
+                </button>
+              </>
+            ) : null}
+
+            {step === 'code' ? (
+              <>
+                <label className="lf-auth__field">
+                  <span className="lf-auth__label">{t('auth.codePlaceholder')}</span>
+                  <input
+                    className="lf-auth__input lf-auth__input--code"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="••••••"
+                    value={code}
+                    onChange={(e) => onChangeCode(e.target.value)}
+                    disabled={busy}
+                    maxLength={6}
+                    required
+                  />
+                </label>
+                <button type="submit" className="lf-auth__btn lf-auth__btn--primary" disabled={busy}>
+                  {loading ? (
+                    <span className="lf-auth__spinner" aria-hidden />
+                  ) : (
+                    <span>{t('auth.verify')}</span>
+                  )}
+                </button>
                 <button
                   type="button"
                   className="lf-auth__link-btn"
-                  onClick={onChoosePassword}
-                  disabled={busy}
+                  onClick={() => void onResend()}
+                  disabled={busy || resendIn > 0}
                 >
-                  {t('auth.enterWithPasswordInstead')}
+                  {resendIn > 0 ? t('auth.resendIn', { s: resendIn }) : t('auth.resendCode')}
                 </button>
-              ) : null}
-            </>
-          ) : null}
+                {mode === 'signin' && hasPassword ? (
+                  <button
+                    type="button"
+                    className="lf-auth__link-btn"
+                    onClick={onChoosePassword}
+                    disabled={busy}
+                  >
+                    {t('auth.enterWithPasswordInstead')}
+                  </button>
+                ) : null}
+              </>
+            ) : null}
 
-          {error ? (
-            <p className="lf-auth__error" role="alert">
-              {error}
-            </p>
-          ) : null}
-        </form>
+            {error ? (
+              <p className="lf-auth__error" role="alert">
+                {error}
+              </p>
+            ) : null}
+          </form>
 
-        <footer className="lf-auth__footer">
-          {intent === 'signin' ? (
-            <p>
-              <Link href={`/sign-up?redirect_url=${encodeURIComponent(redirectAfter)}`}>
-                {t('auth.noAccount')}
-              </Link>
-            </p>
-          ) : (
-            <p>
-              <Link href={`/sign-in?redirect_url=${encodeURIComponent(redirectAfter)}`}>
-                {t('auth.hasAccount')}
-              </Link>
-            </p>
-          )}
-          <Link href="/legal" className="lf-auth__legal">
-            {t('auth.legalLink')}
-          </Link>
-          <p className="lf-auth__tagline">{t('auth.footerTagline')}</p>
-        </footer>
+          <footer className="lf-auth__footer">
+            {intent === 'signin' ? (
+              <p>
+                <Link href={`/sign-up?redirect_url=${encodeURIComponent(redirectAfter)}`}>
+                  {t('auth.noAccount')}
+                </Link>
+              </p>
+            ) : (
+              <p>
+                <Link href={`/sign-in?redirect_url=${encodeURIComponent(redirectAfter)}`}>
+                  {t('auth.hasAccount')}
+                </Link>
+              </p>
+            )}
+            <Link href="/legal" className="lf-auth__legal">
+              {t('auth.legalLink')}
+            </Link>
+            <p className="lf-auth__tagline">{t('auth.footerTagline')}</p>
+          </footer>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

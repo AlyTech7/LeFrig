@@ -32,7 +32,11 @@ function SignUpBody() {
   const t = useT();
 
   if (!isLoaded || isSignedIn) {
-    return <div className="sv-auth__loading">{t('common.loading')}</div>;
+    return (
+      <div className="sv-auth">
+        <div className="sv-auth__loading">{t('common.loading')}</div>
+      </div>
+    );
   }
 
   return <EliteAuthForm intent="signup" />;
@@ -43,7 +47,7 @@ export default function SignUpPage() {
 
   if (!isClerkEnabled) {
     return (
-      <div className="sv-auth sv-auth--slim">
+      <div className="sv-auth">
         <div className="sv-auth__notice">
           <h1>Configura Clerk</h1>
           <p>
@@ -56,11 +60,15 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="sv-auth sv-auth--slim">
-      <Suspense fallback={<div className="sv-auth__loading">{t('common.loading')}</div>}>
-        <SignUpRedirect />
-        <SignUpBody />
-      </Suspense>
-    </div>
+    <Suspense
+      fallback={
+        <div className="sv-auth">
+          <div className="sv-auth__loading">{t('common.loading')}</div>
+        </div>
+      }
+    >
+      <SignUpRedirect />
+      <SignUpBody />
+    </Suspense>
   );
 }
