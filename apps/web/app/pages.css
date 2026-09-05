@@ -249,63 +249,7 @@
   gap: 1rem;
 }
 
-/* ─── Auth (sign-in / sign-up) ─── */
-.sv-auth {
-  min-height: calc(100vh - var(--sv-chrome-top) - var(--sv-dock-h));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 1.25rem;
-  background:
-    radial-gradient(circle at top, rgba(199, 163, 74, 0.12), transparent 28%),
-    linear-gradient(180deg, rgba(255, 253, 249, 0.94) 0%, rgba(247, 241, 231, 0.96) 100%);
-}
-
-.sv-auth__card {
-  width: 100%;
-  max-width: 420px;
-  border-radius: 24px;
-}
-
-.sv-auth :is(.cl-rootBox, .cl-cardBox, .cl-card) {
-  width: 100%;
-}
-
-.sv-auth .cl-card {
-  border-radius: 24px !important;
-}
-
-.sv-auth .cl-footer,
-.sv-auth .cl-navbar,
-.sv-auth .cl-internal-b3fm6y,
-.sv-auth .cl-internal-1dauvpw {
-  background: transparent !important;
-}
-
-.sv-auth__notice {
-  text-align: center;
-  max-width: 420px;
-  padding: 2rem;
-  background: var(--page-surface);
-  border: 1px solid var(--page-line);
-  border-radius: 3px;
-  box-shadow: var(--page-shadow-lg);
-}
-
-.sv-auth__notice h1 {
-  font-family: var(--sv-display);
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: var(--page-ink);
-  margin: 0 0 0.75rem;
-}
-
-.sv-auth__notice p {
-  color: var(--page-ink-muted);
-  margin: 0;
-  line-height: 1.6;
-  font-size: 0.9rem;
-}
+/* Auth styles moved to auth-elite.css */
 
 /* ─── Chips / kickers en páginas ─── */
 .sv-main .sv-kicker {

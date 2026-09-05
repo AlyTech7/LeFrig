@@ -1,10 +1,12 @@
 'use client';
 
 import { Suspense, useEffect, useRef } from 'react';
-import { SignIn, useAuth } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 import { useSearchParams } from 'next/navigation';
+import { EliteAuthForm } from '@/components/auth/EliteAuthForm';
 import { isClerkEnabled } from '@/lib/clerk';
 import { safeInternalPath } from '@/lib/safe-redirect';
+import { useT } from '@/lib/locale';
 
 function SignInRedirect() {
   const { isLoaded, isSignedIn } = useAuth();
@@ -17,44 +19,31 @@ function SignInRedirect() {
       searchParams.get('redirect_url') ?? searchParams.get('redirect'),
       '/me',
     );
-    // Evitar quedarse en /sign-in si el destino es el propio sign-in
     const dest = next.startsWith('/sign-in') ? '/me' : next;
     didRedirect.current = true;
-    // Navegación dura: corta bucles de soft-nav con middleware/protect
     window.location.replace(dest);
   }, [isLoaded, isSignedIn, searchParams]);
 
   return null;
 }
 
-function SignInForm() {
+function SignInBody() {
   const { isLoaded, isSignedIn } = useAuth();
+  const t = useT();
 
   if (!isLoaded || isSignedIn) {
-    return (
-      <div className="sv-auth__card" style={{ textAlign: 'center', padding: '2rem 1.5rem' }}>
-        <p style={{ margin: 0, opacity: 0.7 }}>Redirigiendo…</p>
-      </div>
-    );
+    return <div className="sv-auth__loading">{t('common.loading')}</div>;
   }
 
-  return (
-    <div className="sv-auth__card">
-      <SignIn
-        appearance={{ elements: { rootBox: { width: '100%', maxWidth: 420 } } }}
-        routing="path"
-        path="/sign-in"
-        signUpUrl="/sign-up"
-        fallbackRedirectUrl="/me"
-      />
-    </div>
-  );
+  return <EliteAuthForm intent="signin" />;
 }
 
 export default function SignInPage() {
+  const t = useT();
+
   if (!isClerkEnabled) {
     return (
-      <div className="sv-auth">
+      <div className="sv-auth sv-auth--slim">
         <div className="sv-auth__notice">
           <h1>Configura Clerk</h1>
           <p>
@@ -67,10 +56,10 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="sv-auth">
-      <Suspense fallback={<div className="sv-auth__card" style={{ textAlign: 'center', padding: '2rem' }}>Cargando…</div>}>
+    <div className="sv-auth sv-auth--slim">
+      <Suspense fallback={<div className="sv-auth__loading">{t('common.loading')}</div>}>
         <SignInRedirect />
-        <SignInForm />
+        <SignInBody />
       </Suspense>
     </div>
   );

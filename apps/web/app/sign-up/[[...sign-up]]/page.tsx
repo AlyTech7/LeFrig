@@ -1,10 +1,12 @@
 'use client';
 
 import { Suspense, useEffect, useRef } from 'react';
-import { SignUp, useAuth } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 import { useSearchParams } from 'next/navigation';
+import { EliteAuthForm } from '@/components/auth/EliteAuthForm';
 import { isClerkEnabled } from '@/lib/clerk';
 import { safeInternalPath } from '@/lib/safe-redirect';
+import { useT } from '@/lib/locale';
 
 function SignUpRedirect() {
   const { isLoaded, isSignedIn } = useAuth();
@@ -25,38 +27,23 @@ function SignUpRedirect() {
   return null;
 }
 
-function SignUpForm() {
+function SignUpBody() {
   const { isLoaded, isSignedIn } = useAuth();
+  const t = useT();
 
   if (!isLoaded || isSignedIn) {
-    return (
-      <div className="sv-auth__card" style={{ textAlign: 'center', padding: '2rem 1.5rem' }}>
-        <p style={{ margin: 0, opacity: 0.7 }}>Redirigiendo…</p>
-      </div>
-    );
+    return <div className="sv-auth__loading">{t('common.loading')}</div>;
   }
 
-  return (
-    <div className="sv-auth__card">
-      <SignUp
-        appearance={{
-          elements: {
-            rootBox: { width: '100%', maxWidth: 420 },
-          },
-        }}
-        routing="path"
-        path="/sign-up"
-        signInUrl="/sign-in"
-        fallbackRedirectUrl="/me"
-      />
-    </div>
-  );
+  return <EliteAuthForm intent="signup" />;
 }
 
 export default function SignUpPage() {
+  const t = useT();
+
   if (!isClerkEnabled) {
     return (
-      <div className="sv-auth">
+      <div className="sv-auth sv-auth--slim">
         <div className="sv-auth__notice">
           <h1>Configura Clerk</h1>
           <p>
@@ -69,10 +56,10 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="sv-auth">
-      <Suspense fallback={<div className="sv-auth__card" style={{ textAlign: 'center', padding: '2rem' }}>Cargando…</div>}>
+    <div className="sv-auth sv-auth--slim">
+      <Suspense fallback={<div className="sv-auth__loading">{t('common.loading')}</div>}>
         <SignUpRedirect />
-        <SignUpForm />
+        <SignUpBody />
       </Suspense>
     </div>
   );
