@@ -25,13 +25,17 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
     };
   }, [authRoute]);
 
+  if (authRoute) {
+    return <main className="sv-main sv-main--auth">{children}</main>;
+  }
+
   return (
     <>
       <SovereignBackdrop />
       <SovereignHeader />
       <main className="sv-main">{children}</main>
-      {authRoute ? null : <SovereignFooter />}
-      {authRoute ? null : <WebDock />}
+      <SovereignFooter />
+      <WebDock />
     </>
   );
 }
