@@ -9,18 +9,15 @@ type Props = {
   value: string;
   onChangeText: (text: string) => void;
   onSubmit: () => void;
-  onPress?: () => void;
 };
 
-export function HomeSearchBar({ value, onChangeText, onSubmit, onPress }: Props) {
+export function HomeSearchBar({ value, onChangeText, onSubmit }: Props) {
   const t = useT();
   const [focused, setFocused] = useState(false);
 
   return (
     <View style={[styles.wrap, focused && styles.wrapFocused]}>
-      <Pressable onPress={onPress} hitSlop={8} accessibilityRole="button">
-        <AppIcon name="search" size={18} color={theme.inkSoft} />
-      </Pressable>
+      <AppIcon name="search" size={18} color={theme.inkSoft} />
       <TextInput
         style={styles.input}
         placeholder={t('home.searchPlaceholder')}
@@ -31,16 +28,22 @@ export function HomeSearchBar({ value, onChangeText, onSubmit, onPress }: Props)
         onBlur={() => setFocused(false)}
         onSubmitEditing={onSubmit}
         returnKeyType="search"
+        accessibilityLabel={t('search.aria')}
       />
       {value.length > 0 ? (
-        <Pressable onPress={() => onChangeText('')} hitSlop={10}>
+        <Pressable onPress={() => onChangeText('')} hitSlop={10} accessibilityRole="button">
           <AppIcon name="x" size={16} color={theme.inkMuted} />
         </Pressable>
-      ) : (
-        <Pressable style={styles.go} onPress={onSubmit} hitSlop={4}>
-          <AppIcon name="arrow-right" size={15} color={theme.pearl} />
-        </Pressable>
-      )}
+      ) : null}
+      <Pressable
+        style={styles.go}
+        onPress={onSubmit}
+        hitSlop={4}
+        accessibilityRole="button"
+        accessibilityLabel={t('common.search')}
+      >
+        <AppIcon name="arrow-right" size={15} color={theme.pearl} />
+      </Pressable>
     </View>
   );
 }

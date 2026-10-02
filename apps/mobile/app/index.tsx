@@ -120,11 +120,7 @@ export default function HomeScreen() {
 
   const submitSearch = () => {
     const trimmed = search.trim();
-    if (trimmed) {
-      router.push(buildGlobalSearchHref('all', trimmed) as never);
-    } else {
-      router.push('/marketplace');
-    }
+    router.push(buildGlobalSearchHref('all', trimmed) as never);
   };
 
   return (
@@ -173,7 +169,6 @@ export default function HomeScreen() {
               value={search}
               onChangeText={setSearch}
               onSubmit={submitSearch}
-              onPress={() => router.push('/marketplace')}
             />
 
             {offlineCount > 0 ? (
