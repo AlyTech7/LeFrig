@@ -34,7 +34,6 @@ export function PlayStoreBadge({ className = 'sv-play-badge', height = 52 }: Pla
       rel="noopener noreferrer"
       aria-label={t('stores.playBadgeAria')}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element -- badge oficial CDN Google Play */}
       <img
         src={src}
         alt={t('stores.getOnPlay')}
