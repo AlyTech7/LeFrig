@@ -26,10 +26,11 @@ export function ListingPhotoPicker({ photos, onChange, onUpload, disabled }: Pro
   const addPhotos = async (fromCamera: boolean) => {
     if (photos.length >= MAX_IMAGES) return;
 
-    const perm = fromCamera
-      ? await ImagePicker.requestCameraPermissionsAsync()
-      : await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) return;
+    if (fromCamera) {
+      const perm = await ImagePicker.requestCameraPermissionsAsync();
+      if (!perm.granted) return;
+    }
+    // Galería: Android Photo Picker / iOS limited library — sin READ_MEDIA_* (política Play)
 
     const result = fromCamera
       ? await ImagePicker.launchCameraAsync({ quality: 1, allowsEditing: false })

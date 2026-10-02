@@ -20,8 +20,7 @@ export function SingleImagePicker({ url, onChange, getToken, label }: Props) {
   const [error, setError] = useState('');
 
   const pick = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) return;
+    // Selector del sistema — no pedir READ_MEDIA_IMAGES (bloqueado por Google Play)
     const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.85, allowsEditing: true });
     if (result.canceled || !result.assets[0]) return;
     setUploading(true);
