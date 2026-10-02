@@ -2,6 +2,8 @@
 
 **Lefrig** conecta los campamentos de refugiados saharauis — Aaiún, Smara, Auserd, Dakhla, Rabouni, 27 de Febrero y Tindouf — con la diáspora. No es un simple marketplace de anuncios: es una **infraestructura digital comunitaria** cash-first (efectivo con PIN), transporte, empleo, confianza y comunidad.
 
+**Disponible en [Google Play](https://play.google.com/store/apps/details?id=com.lefrig.app)** (`com.lefrig.app`). App Store: próximamente.
+
 > Fiado/vouchers están fuera del producto activo (módulos desmontados; ver `docs/product.md`).
 
 ## Stack

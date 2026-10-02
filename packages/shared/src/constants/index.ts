@@ -47,6 +47,7 @@ export const HOME_ACTIONS = [
 
 export * from './transport.js';
 export * from './locale.js';
+export * from './stores.js';
 export { DEFAULT_CURRENCY as CURRENCY } from './locale.js';
 export const DEFAULT_LOCALE = 'es';
 

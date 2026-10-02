@@ -2,10 +2,20 @@
 
 Checklist operativa para `apps/mobile` (Expo SDK 54, bundle `com.lefrig.app`).
 
+## Estado de publicación
+
+| Plataforma | Estado | Nota |
+| --- | --- | --- |
+| Google Play | **Publicada** | `com.lefrig.app` — [ficha pública](https://play.google.com/store/apps/details?id=com.lefrig.app) |
+| App Store | Pendiente | No declarar como disponible en producto ni web |
+
+Constantes canónicas: `packages/shared/src/constants/stores.ts` (`PLAY_STORE_URL`, `APP_STORE_STATUS`).
+
 ## URLs públicas (obligatorias)
 
 | Uso | URL |
 | --- | --- |
+| Google Play | https://play.google.com/store/apps/details?id=com.lefrig.app |
 | Privacidad | https://www.lefrig.com/legal#privacidad |
 | Términos | https://www.lefrig.com/legal#terminos |
 | Eliminar cuenta (Play) | https://www.lefrig.com/account-deletion |

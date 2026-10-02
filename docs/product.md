@@ -4,6 +4,8 @@
 
 Lefrig es la **superapp saharaui** que conecta campamentos, Tindouf y la diáspora en una sola plataforma digital comunitaria. Por fuera debe ser tan fácil como WhatsApp; por dentro debe ser una infraestructura económica completa centrada en **efectivo con confianza**.
 
+**Distribución:** Android disponible en [Google Play](https://play.google.com/store/apps/details?id=com.lefrig.app). iOS (App Store) en preparación — no declarar como disponible.
+
 ## Problema
 
 Los campamentos saharauis carecen de una plataforma digital unificada que combine:

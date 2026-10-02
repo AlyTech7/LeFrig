@@ -214,6 +214,77 @@
   box-shadow: 0 4px 20px rgba(201, 168, 76, 0.18);
 }
 
+/* ─── Store strip (Play live · App Store soon) ─── */
+.sv-foot-store {
+  display: grid;
+  gap: 1.15rem;
+  margin: -1.25rem 0 2.35rem;
+  padding: 1.15rem 1.35rem 1.25rem;
+  border-radius: var(--sv-r-md);
+  border: 1px solid rgba(244, 241, 234, 0.1);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+@media (min-width: 720px) {
+  .sv-foot-store {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 1.75rem;
+    padding: 1.2rem 1.6rem;
+  }
+}
+
+.sv-foot-store__label {
+  margin: 0;
+  font-family: var(--sv-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6ee7a8;
+}
+
+.sv-foot-store__lead {
+  margin: 0.4rem 0 0;
+  max-width: 48ch;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--sv-foot-muted);
+}
+
+.sv-foot-store__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem 1.25rem;
+}
+
+.sv-play-badge {
+  display: inline-flex;
+  line-height: 0;
+  border-radius: 4px;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.sv-play-badge:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.sv-play-badge img {
+  display: block;
+  height: 52px;
+  width: auto;
+}
+
+.sv-foot-store__ios {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(244, 241, 234, 0.55);
+}
+
 /* ─── Main grid ─── */
 .sv-foot-grid {
   display: grid;

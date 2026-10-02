@@ -109,7 +109,8 @@ Movida a la sección **Producción piloto** arriba (no bloquea piloto web).
 - [ ] Red tiendas verificadas por marsa
 - [ ] Programa vouchers multi-ONG
 - [ ] Diáspora: pasarela internacional (Wise/Stripe manual)
-- [ ] App stores (Google Play, App Store)
+- [x] Google Play (`com.lefrig.app`) — publicada
+- [ ] App Store (iOS)
 - [ ] Modo ultra-ligero (< 1MB/sesión)
 - [ ] Capacitación digital comunitaria
 

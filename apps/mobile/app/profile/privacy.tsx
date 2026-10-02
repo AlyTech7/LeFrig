@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, ScrollView, Pressable, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { PLAY_STORE_URL } from '@lefrig/shared';
 import { AppIcon, type FeatherIconName } from '@/components/AppIcon';
 import { LEGAL_META } from '@/lib/legal-content';
 import { useLocale, useT } from '@/lib/locale';
@@ -50,10 +51,10 @@ export default function PrivacyScreen() {
           </Pressable>
 
           <Text style={styles.sectionLabel}>{t('account.docsTitle')}</Text>
-          {DOCS.map((doc, i) => (
+          {DOCS.map((doc) => (
             <Pressable
               key={doc.href}
-              style={[styles.docRow, i === DOCS.length - 1 && styles.docRowLast]}
+              style={styles.docRow}
               onPress={() => router.push(doc.href as never)}
             >
               <View style={styles.docIcon}>
@@ -63,6 +64,20 @@ export default function PrivacyScreen() {
               <AppIcon name="chevron-right" size={16} color={theme.inkSoft} />
             </Pressable>
           ))}
+
+          <Text style={styles.sectionLabel}>{t('stores.availableOnPlay')}</Text>
+          <Pressable
+            style={[styles.docRow, styles.docRowLast]}
+            onPress={() => Linking.openURL(PLAY_STORE_URL)}
+            accessibilityRole="link"
+            accessibilityLabel={t('stores.playBadgeAria')}
+          >
+            <View style={styles.docIcon}>
+              <AppIcon name="smartphone" size={16} color={theme.dune} />
+            </View>
+            <Text style={styles.docTitle}>{t('account.openPlay')}</Text>
+            <AppIcon name="external-link" size={16} color={theme.inkSoft} />
+          </Pressable>
 
           <Text style={styles.footerNote}>
             {t('legal.lastReview')} {LEGAL_META.lastUpdated}

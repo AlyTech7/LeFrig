@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { AppIcon } from '@/components/AppIcon';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { LefrigBrand } from '@/components/LefrigMark';
+import { PlayStoreBadge } from '@/components/PlayStoreBadge';
 import { useT } from '@/lib/locale';
 
 type FooterLink = { href: string; labelKey: string };
@@ -144,6 +145,19 @@ export function SovereignFooter() {
               <AppIcon name="store" size={18} />
               {t('shops.openShop')}
             </Link>
+          </div>
+        </section>
+
+        <section className="sv-foot-store" aria-label={t('footer.storeAria')}>
+          <div className="sv-foot-store__copy">
+            <p className="sv-foot-store__label">{t('footer.storeAvailable')}</p>
+            <p className="sv-foot-store__lead">{t('footer.storeLead')}</p>
+          </div>
+          <div className="sv-foot-store__actions">
+            <PlayStoreBadge />
+            <p className="sv-foot-store__ios" role="status">
+              {t('footer.storeIosSoon')}
+            </p>
           </div>
         </section>
 
