@@ -12,7 +12,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#1B5E4B"
+      "backgroundColor": "#0A0B10"
     },
     "ios": {
       "supportsTablet": true,
@@ -51,10 +51,10 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#1B5E4B"
+        "backgroundColor": "#0A0B10"
       },
       "package": "com.lefrig.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_MEDIA_IMAGES",
@@ -93,7 +93,7 @@
         "expo-notifications",
         {
           "icon": "./assets/icon.png",
-          "color": "#1B5E4B"
+          "color": "#0A0B10"
         }
       ],
       "expo-font",
