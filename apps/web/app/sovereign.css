@@ -239,11 +239,12 @@ body {
 
 @media (min-width: 1100px) {
   .sv-crown {
-    left: var(--sv-rail-w);
-    right: var(--sv-rail-w);
-    width: auto;
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
+    left: 0;
+    right: 0;
+    width: 100%;
+    /* Full-bleed bar; pad both sides so the deck stays centered with .sv-main */
+    padding-left: calc(var(--sv-rail-w) + 1.25rem);
+    padding-right: calc(var(--sv-rail-w) + 1.25rem);
   }
 }
 
