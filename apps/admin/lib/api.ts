@@ -27,10 +27,7 @@ export async function fetchApi<T>(path: string, init?: RequestInit): Promise<T> 
 export async function fetchWithFallback<T>(path: string, fallback: T, init?: RequestInit): Promise<T> {
   try {
     return await fetchApi<T>(path, init);
-  } catch (err) {
-    if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_ALLOW_DEMO_FALLBACK !== 'true') {
-      throw err;
-    }
+  } catch {
     return fallback;
   }
 }

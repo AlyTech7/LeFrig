@@ -27,7 +27,7 @@ Comandos en [`apps/admin/vercel.json`](../apps/admin/vercel.json).
 
 | Variable | Valor |
 |----------|-------|
-| `NEXT_PUBLIC_API_URL` | `https://api.lefrig.com` |
+| `NEXT_PUBLIC_API_URL` | `https://lefrig-api-8fc4936e5267.herokuapp.com` (hasta que `api.lefrig.com` tenga DNS) |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `pk_live_...` (misma app Clerk que web) |
 | `CLERK_SECRET_KEY` | `sk_live_...` |
 

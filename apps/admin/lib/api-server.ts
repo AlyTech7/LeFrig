@@ -39,10 +39,8 @@ export async function fetchApi<T>(path: string, init?: RequestInit): Promise<T> 
 export async function fetchWithFallback<T>(path: string, fallback: T, init?: RequestInit): Promise<T> {
   try {
     return await fetchApi<T>(path, init);
-  } catch (err) {
-    if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_ALLOW_DEMO_FALLBACK !== 'true') {
-      throw err;
-    }
+  } catch {
+    // Nunca tumbar el panel: mostrar datos demo + banner si la API falla.
     return fallback;
   }
 }
@@ -53,10 +51,8 @@ export async function fetchWithMeta<T>(path: string, fallback: T, init?: Request
   try {
     const data = await fetchApi<T>(path, init);
     return { data, fromFallback: false };
-  } catch (err) {
-    if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_ALLOW_DEMO_FALLBACK !== 'true') {
-      throw err;
-    }
+  } catch {
+    // Nunca tumbar el panel: mostrar datos demo + banner si la API falla.
     return { data: fallback, fromFallback: true };
   }
 }
