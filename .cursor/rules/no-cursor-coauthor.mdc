@@ -1,0 +1,10 @@
+---
+description: Never attribute git commits or PRs to Cursor Agent
+alwaysApply: true
+---
+
+# Sin coautor Cursor
+
+- Nunca añadas `Co-authored-by: Cursor` ni `Made with Cursor` a commits o PRs.
+- Los commits deben quedar solo con el autor humano del repo (AlyTech7).
+- No digas que Cursor es coautor en mensajes de commit.

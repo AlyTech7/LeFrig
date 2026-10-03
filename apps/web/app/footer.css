@@ -64,7 +64,7 @@
 @media (min-width: 1100px) {
   .sv-footer {
     padding-left: calc(var(--sv-rail-w) + 1.25rem);
-    padding-right: 1.5rem;
+    padding-right: calc(var(--sv-rail-w) + 1.25rem);
     padding-bottom: 2.5rem;
   }
 }

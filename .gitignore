@@ -61,3 +61,9 @@ apps/mobile/eas-build-*.json
 
 # Ops locales (secretos de mantenedores)
 scripts/ops/.env.ops
+
+# Local store binaries
+*.aab
+store-assets/play/builds/
+apps/mobile/.eas-submit-watch.log
+

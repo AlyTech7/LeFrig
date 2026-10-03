@@ -115,6 +115,7 @@ body {
 @media (min-width: 1100px) {
   .sv-main {
     padding-left: var(--sv-rail-w);
+    padding-right: var(--sv-rail-w);
     padding-bottom: 2rem;
   }
 }
@@ -239,6 +240,8 @@ body {
 @media (min-width: 1100px) {
   .sv-crown {
     left: var(--sv-rail-w);
+    right: var(--sv-rail-w);
+    width: auto;
     padding-left: 1.25rem;
     padding-right: 1.25rem;
   }
