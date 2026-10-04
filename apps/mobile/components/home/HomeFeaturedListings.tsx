@@ -1,10 +1,13 @@
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ListingSummary } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
 import { ListingCard } from '@/components/ListingCard';
+import { SoftPressable } from '@/components/ui/SoftPressable';
 import { API_URL } from '@/lib/api';
 import { useT } from '@/lib/locale';
+import { pressScale } from '@/lib/motion';
 import { theme, radii } from '@/lib/theme';
 import { fonts } from '@/lib/ui';
 
@@ -25,13 +28,13 @@ export function HomeFeaturedListings({ listings, onPress, onSeeAll }: Props) {
 
   if (!listings.length) {
     return (
-      <Pressable style={styles.empty} onPress={onSeeAll}>
+      <SoftPressable style={styles.empty} onPress={onSeeAll} haptic="selection">
         <View style={styles.emptyIcon}>
           <AppIcon name="shopping-bag" size={20} color={theme.dune} />
         </View>
         <Text style={styles.emptyTitle}>{t('home.emptyFeaturedTitle')}</Text>
         <Text style={styles.emptySub}>{t('home.emptyFeaturedSub')}</Text>
-      </Pressable>
+      </SoftPressable>
     );
   }
 
@@ -40,9 +43,20 @@ export function HomeFeaturedListings({ listings, onPress, onSeeAll }: Props) {
 
   return (
     <View style={styles.wrap}>
-      <Pressable style={styles.hero} onPress={() => onPress(hero.id)}>
+      <SoftPressable
+        style={styles.hero}
+        onPress={() => onPress(hero.id)}
+        scaleTo={pressScale.card}
+        haptic="light"
+      >
         {heroImg ? (
-          <Image source={{ uri: heroImg }} style={styles.heroImage} />
+          <Image
+            source={{ uri: heroImg }}
+            style={styles.heroImage}
+            contentFit="cover"
+            transition={280}
+            cachePolicy="memory-disk"
+          />
         ) : (
           <View style={[styles.heroImage, styles.heroPlaceholder]}>
             <AppIcon name="image" size={28} color={theme.oasis} />
@@ -60,7 +74,7 @@ export function HomeFeaturedListings({ listings, onPress, onSeeAll }: Props) {
             {hero.sellerName}
           </Text>
         </View>
-      </Pressable>
+      </SoftPressable>
 
       <View style={styles.grid}>
         {rest.slice(0, 4).map((item) => (

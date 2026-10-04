@@ -1,5 +1,6 @@
-import { Pressable, Text, StyleSheet, ActivityIndicator, type ViewStyle } from 'react-native';
+import { Text, StyleSheet, ActivityIndicator, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SoftPressable } from '@/components/ui/SoftPressable';
 import { theme, radii } from '@/lib/theme';
 import { type as typo } from '@/lib/ui';
 
@@ -35,9 +36,10 @@ export function Button({
 
   if (isGhost || isDanger) {
     return (
-      <Pressable
+      <SoftPressable
         onPress={onPress}
         disabled={disabled || loading}
+        haptic="selection"
         style={[
           styles.base,
           isGhost && styles.ghost,
@@ -54,14 +56,15 @@ export function Button({
             {label}
           </Text>
         )}
-      </Pressable>
+      </SoftPressable>
     );
   }
 
   return (
-    <Pressable
+    <SoftPressable
       onPress={onPress}
       disabled={disabled || loading}
+      haptic="medium"
       style={[fullWidth && styles.full, (disabled || loading) && styles.disabled, style]}
     >
       <LinearGradient colors={colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.base}>
@@ -71,7 +74,7 @@ export function Button({
           <Text style={[styles.label, styles.onDark]}>{label}</Text>
         )}
       </LinearGradient>
-    </Pressable>
+    </SoftPressable>
   );
 }
 

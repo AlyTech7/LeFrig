@@ -1,3 +1,4 @@
+import 'react-native-gesture-handler';
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import { tokenCache as clerkNativeTokenCache } from '@clerk/clerk-expo/token-cache';
 import {
@@ -16,6 +17,7 @@ import { Stack, useRouter, useSegments, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { Platform, View, StyleSheet, ActivityIndicator } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { theme } from '@/lib/theme';
 import { hasLegacySession } from '@/lib/legacySession';
 import { routeRequiresAuth, isAuthScreen } from '@/lib/auth-routes';
@@ -128,6 +130,11 @@ function RootNavigator() {
               headerTitleStyle: { fontWeight: '800' },
               headerShadowVisible: false,
               contentStyle: { backgroundColor: theme.canvas },
+              animation: Platform.OS === 'ios' ? 'default' : 'fade_from_bottom',
+              animationDuration: Platform.OS === 'ios' ? 320 : 220,
+              gestureEnabled: true,
+              fullScreenGestureEnabled: Platform.OS === 'ios',
+              freezeOnBlur: true,
             }}
           >
             <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -197,13 +204,15 @@ export default function RootLayout() {
   }
 
   return (
-    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <LocaleProvider>
-        <SyncPreferredLanguage />
-        <LanguageGate>
-          <RootNavigator />
-        </LanguageGate>
-      </LocaleProvider>
-    </ClerkProvider>
+    <GestureHandlerRootView style={styles.root}>
+      <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+        <LocaleProvider>
+          <SyncPreferredLanguage />
+          <LanguageGate>
+            <RootNavigator />
+          </LanguageGate>
+        </LocaleProvider>
+      </ClerkProvider>
+    </GestureHandlerRootView>
   );
 }

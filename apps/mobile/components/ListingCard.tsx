@@ -1,11 +1,14 @@
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CAMPS, type ListingSummary } from '@lefrig/shared';
 import { resolveImageUrl } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
+import { SoftPressable } from '@/components/ui/SoftPressable';
 import { API_URL } from '@/lib/api';
 import { pickName } from '@/lib/bilingual';
 import { useLocale, useT } from '@/lib/locale';
+import { pressScale } from '@/lib/motion';
 import { theme, radii } from '@/lib/theme';
 import { fonts } from '@/lib/ui';
 
@@ -41,15 +44,22 @@ export function ListingCard({ item, onPress, grid }: Props) {
 
   if (grid) {
     return (
-      <Pressable
+      <SoftPressable
         onPress={onPress}
-        style={({ pressed }) => [styles.gridWrap, pressed && styles.pressed]}
-        accessibilityRole="button"
+        style={styles.gridWrap}
         accessibilityLabel={item.title}
+        scaleTo={pressScale.card}
+        haptic="selection"
       >
         <View style={styles.media}>
           {imageUri ? (
-            <Image source={{ uri: imageUri }} style={styles.mediaImage} />
+            <Image
+              source={{ uri: imageUri }}
+              style={styles.mediaImage}
+              contentFit="cover"
+              transition={220}
+              cachePolicy="memory-disk"
+            />
           ) : (
             <LinearGradient
               colors={['rgba(168,132,45,0.10)', 'rgba(45,138,98,0.08)']}
@@ -83,20 +93,27 @@ export function ListingCard({ item, onPress, grid }: Props) {
             {item.sellerName}
           </Text>
         )}
-      </Pressable>
+      </SoftPressable>
     );
   }
 
   return (
-    <Pressable
+    <SoftPressable
       onPress={onPress}
-      style={({ pressed }) => [styles.listWrap, pressed && styles.pressed]}
-      accessibilityRole="button"
+      style={styles.listWrap}
       accessibilityLabel={item.title}
+      scaleTo={pressScale.card}
+      haptic="selection"
     >
       <View style={styles.listMedia}>
         {imageUri ? (
-          <Image source={{ uri: imageUri }} style={styles.listImage} />
+          <Image
+            source={{ uri: imageUri }}
+            style={styles.listImage}
+            contentFit="cover"
+            transition={200}
+            cachePolicy="memory-disk"
+          />
         ) : (
           <LinearGradient
             colors={['rgba(168,132,45,0.10)', 'rgba(45,138,98,0.08)']}
@@ -118,7 +135,7 @@ export function ListingCard({ item, onPress, grid }: Props) {
         </Text>
       </View>
       <AppIcon name="chevron-right" size={16} color={theme.inkSoft} />
-    </Pressable>
+    </SoftPressable>
   );
 }
 
@@ -127,7 +144,6 @@ const styles = StyleSheet.create({
     width: '48%',
     marginBottom: 22,
   },
-  pressed: { opacity: 0.92, transform: [{ scale: 0.985 }] },
   media: {
     width: '100%',
     aspectRatio: 0.86,

@@ -1,6 +1,8 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { AppIcon } from '@/components/AppIcon';
+import { SoftPressable } from '@/components/ui/SoftPressable';
 import { useLocale, useT } from '@/lib/locale';
+import { pressScale } from '@/lib/motion';
 import { theme } from '@/lib/theme';
 import { fonts } from '@/lib/ui';
 
@@ -17,13 +19,15 @@ export function HomeCommunityBanner({ onCommunity }: Props) {
       <Text style={[styles.ar, dir === 'rtl' && styles.rtl]}>{t('home.communityBannerAr')}</Text>
       <Text style={styles.title}>{t('home.communityBannerTitle')}</Text>
       <Text style={styles.sub}>{t('home.communityBannerSub')}</Text>
-      <Pressable
-        style={({ pressed }) => [styles.cta, pressed && styles.pressed]}
+      <SoftPressable
+        style={styles.cta}
         onPress={onCommunity}
+        haptic="selection"
+        scaleTo={pressScale.chip}
       >
         <Text style={styles.ctaText}>{t('home.forum')}</Text>
         <AppIcon name="arrow-right" size={15} color={theme.oasisDeep} />
-      </Pressable>
+      </SoftPressable>
     </View>
   );
 }
@@ -73,5 +77,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: theme.oasisDeep,
   },
-  pressed: { opacity: 0.7 },
 });

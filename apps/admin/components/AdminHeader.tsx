@@ -14,92 +14,64 @@ const titles: Record<string, string> = {
   '/moderation': 'Moderación',
   '/disputes': 'Disputas',
   '/analytics': 'Analytics',
+  '/camps': 'Campamentos',
+  '/audit': 'Auditoría',
+  '/cash': 'Efectivo PIN',
+  '/jobs': 'Empleo',
+  '/needs': 'Necesidades',
+  '/community': 'Comunidad',
+  '/drivers': 'Conductores',
+  '/settings': 'Configuración',
 };
 
 export function AdminHeader() {
   const pathname = usePathname();
   const { open } = useCommandPalette();
-  const title = Object.entries(titles).find(([path]) =>
-    path === '/' ? pathname === '/' : pathname.startsWith(path),
-  )?.[1] ?? 'Admin';
+  const title =
+    Object.entries(titles).find(([path]) =>
+      path === '/' ? pathname === '/' : pathname.startsWith(path),
+    )?.[1] ?? 'Admin';
 
   return (
-    <header
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 20,
-        padding: '16px 32px',
-        borderBottom: '1px solid var(--adm-border)',
-        background: 'rgba(10, 15, 20, 0.75)',
-        backdropFilter: 'blur(16px)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
-      }}
-    >
+    <header className="adm-header">
       <div>
-        <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--adm-muted)', letterSpacing: '0.06em' }}>
-          LEFRIG ADMIN / <LiveClock options={{ hour: '2-digit', minute: '2-digit' }} />
+        <div className="adm-header__eyebrow">
+          Lefrig Admin · <LiveClock options={{ hour: '2-digit', minute: '2-digit' }} />
         </div>
-        <div style={{ fontSize: '1.1rem', fontWeight: 800, marginTop: 2, letterSpacing: '-0.02em' }}>{title}</div>
+        <div className="adm-header__title">{title}</div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <button type="button" className="adm-btn adm-btn--ghost" style={{ fontSize: '0.8rem' }} onClick={open}>
-          ⌘K
-        </button>
-
-        <button
-          type="button"
-          style={{
-            position: 'relative',
-            width: 40,
-            height: 40,
-            borderRadius: 12,
-            border: '1px solid var(--adm-border)',
-            background: 'var(--adm-surface-2)',
-            color: 'var(--adm-text)',
-            cursor: 'pointer',
-            fontSize: '1rem',
-          }}
-          aria-label="Notificaciones"
-        >
-          🔔
-          <span
+      <div className="adm-header__actions">
+        <button type="button" className="adm-btn adm-btn--ghost" onClick={open}>
+          Buscar
+          <kbd
             style={{
-              position: 'absolute',
-              top: 6,
-              right: 6,
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: 'var(--adm-coral)',
-              border: '2px solid var(--adm-surface-2)',
+              marginLeft: 4,
+              padding: '2px 6px',
+              borderRadius: 6,
+              border: '1px solid var(--adm-border)',
+              background: 'var(--adm-surface-2)',
+              fontSize: '0.72rem',
+              fontFamily: 'var(--adm-mono)',
             }}
-          />
+          >
+            ⌘K
+          </kbd>
         </button>
 
-        <a
-          href="/api/sign-out"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 40,
-            height: 40,
-            borderRadius: 12,
-            border: '1px solid var(--adm-border)',
-            background: 'var(--adm-surface-2)',
-            color: 'var(--adm-muted)',
-            fontSize: '0.72rem',
-            fontWeight: 700,
-            textDecoration: 'none',
-          }}
-          title="Cerrar sesión"
-        >
-          ⎋
+        <button type="button" className="adm-icon-btn" aria-label="Notificaciones">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden>
+            <path d="M6 17h12l-1.2-2.2A6 6 0 0 1 16 10V9a4 4 0 0 0-8 0v1a6 6 0 0 1-.8 4.8z" />
+            <path d="M10 17a2 2 0 0 0 4 0" />
+          </svg>
+          <span className="adm-icon-btn__dot" />
+        </button>
+
+        <a href="/api/sign-out" className="adm-icon-btn" title="Cerrar sesión" aria-label="Cerrar sesión">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden>
+            <path d="M10 7V5a1 1 0 0 1 1-1h8v16h-8a1 1 0 0 1-1-1v-2" />
+            <path d="M13 12H4m0 0 3-3M4 12l3 3" />
+          </svg>
         </a>
       </div>
     </header>

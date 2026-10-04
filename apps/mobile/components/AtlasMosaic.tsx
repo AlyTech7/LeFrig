@@ -1,12 +1,14 @@
 import { type ReactNode } from 'react';
-import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ImageBackground, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { MarketplaceDepartment } from '@lefrig/shared';
 import { formatVaultOptions } from '@lefrig/shared';
 import { accentColors, getAtlasVisual } from '@/lib/home-visuals';
 import { AppIcon } from '@/components/AppIcon';
+import { SoftPressable } from '@/components/ui/SoftPressable';
 import { pickName } from '@/lib/bilingual';
 import { useLocale } from '@/lib/locale';
+import { pressScale } from '@/lib/motion';
 import { theme, radii } from '@/lib/theme';
 import { fonts } from '@/lib/ui';
 
@@ -120,7 +122,7 @@ function HeroCard({
   const visual = getAtlasVisual(dept.id);
   const [c1, c2] = accentColors(dept.accent);
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.hero, pressed && styles.pressed]}>
+    <SoftPressable onPress={onPress} style={styles.hero} scaleTo={pressScale.card} haptic="light">
       <ImageBackground source={{ uri: visual.uri }} style={styles.heroImg} imageStyle={styles.heroRadius}>
         <LinearGradient colors={['rgba(0,0,0,0.1)', theme.scrimDeep]} style={StyleSheet.absoluteFill} />
         <View style={styles.heroTop}>
@@ -133,7 +135,7 @@ function HeroCard({
           <AppIcon name="arrow-right" size={16} color={theme.pearl} />
         </View>
       </ImageBackground>
-    </Pressable>
+    </SoftPressable>
   );
 }
 
@@ -148,13 +150,13 @@ function TileCard({
 }) {
   const visual = getAtlasVisual(dept.id);
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.tile, pressed && styles.pressed]}>
+    <SoftPressable onPress={onPress} style={styles.tile} scaleTo={pressScale.card} haptic="selection">
       <ImageBackground source={{ uri: visual.uri }} style={styles.tileImg} imageStyle={styles.tileRadius}>
         <LinearGradient colors={['transparent', theme.scrimDeep]} style={StyleSheet.absoluteFill} />
         <IndexMark index={index} />
         <CardTitle dept={dept} />
       </ImageBackground>
-    </Pressable>
+    </SoftPressable>
   );
 }
 
@@ -169,20 +171,19 @@ function BannerCard({
 }) {
   const visual = getAtlasVisual(dept.id);
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.banner, pressed && styles.pressed]}>
+    <SoftPressable onPress={onPress} style={styles.banner} scaleTo={pressScale.card} haptic="selection">
       <ImageBackground source={{ uri: visual.uri }} style={styles.bannerImg} imageStyle={styles.bannerRadius}>
         <LinearGradient colors={['rgba(0,0,0,0.05)', theme.scrimDeep]} style={StyleSheet.absoluteFill} />
         <IndexMark index={index} />
         <CardTitle dept={dept} itemsHint />
       </ImageBackground>
-    </Pressable>
+    </SoftPressable>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: { gap: 8 },
   row: { flexDirection: 'row', gap: 8 },
-  pressed: { opacity: 0.92, transform: [{ scale: 0.995 }] },
   num: {
     fontFamily: fonts.bodySemi,
     fontSize: 11,

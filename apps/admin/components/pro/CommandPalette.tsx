@@ -58,17 +58,23 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
             position: 'fixed',
             inset: 0,
             zIndex: 200,
-            background: 'rgba(5, 8, 12, 0.75)',
-            backdropFilter: 'blur(8px)',
+            background: 'rgba(15, 26, 22, 0.42)',
+            backdropFilter: 'blur(12px)',
             display: 'grid',
             placeItems: 'start center',
-            paddingTop: '15vh',
+            paddingTop: '14vh',
           }}
           onClick={() => setOpen(false)}
         >
           <div
             className="adm-glass"
-            style={{ width: '100%', maxWidth: 520, borderRadius: 20, overflow: 'hidden' }}
+            style={{
+              width: '100%',
+              maxWidth: 560,
+              borderRadius: 24,
+              overflow: 'hidden',
+              boxShadow: 'var(--adm-shadow)',
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--adm-border)' }}>

@@ -1,7 +1,10 @@
-import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SoftPressable } from '@/components/ui/SoftPressable';
 import { CURATED_VISUALS } from '@/lib/home-visuals';
 import { useLocale } from '@/lib/locale';
+import { pressScale } from '@/lib/motion';
 import { theme, radii } from '@/lib/theme';
 
 type Props = {
@@ -16,13 +19,21 @@ export function TrendingChip({ slug, label, hot, onPress }: Props) {
   const visual = CURATED_VISUALS[slug];
 
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.wrap, pressed && styles.pressed]}>
+    <SoftPressable
+      onPress={onPress}
+      style={styles.wrap}
+      scaleTo={pressScale.chip}
+      haptic="selection"
+    >
       <ImageBackground
         source={{ uri: visual?.uri ?? CURATED_VISUALS.mobiles.uri }}
         style={styles.bg}
         imageStyle={styles.bgImage}
       >
-        <LinearGradient colors={['transparent', 'rgba(10,8,6,0.05)', theme.scrimDeep]} style={StyleSheet.absoluteFill} />
+        <LinearGradient
+          colors={['transparent', 'rgba(10,8,6,0.05)', theme.scrimDeep]}
+          style={StyleSheet.absoluteFill}
+        />
         {hot ? (
           <View style={styles.hot}>
             <Text style={styles.hotText}>🔥</Text>
@@ -30,7 +41,7 @@ export function TrendingChip({ slug, label, hot, onPress }: Props) {
         ) : null}
         <Text style={[styles.label, dir === 'rtl' && styles.rtl]}>{label}</Text>
       </ImageBackground>
-    </Pressable>
+    </SoftPressable>
   );
 }
 
@@ -47,7 +58,6 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 4,
   },
-  pressed: { opacity: 0.9, transform: [{ scale: 0.97 }] },
   bg: { flex: 1, padding: 12, justifyContent: 'flex-end' },
   bgImage: { borderRadius: radii.lg },
   hot: {

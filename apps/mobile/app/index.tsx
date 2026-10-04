@@ -1,11 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
-  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,12 +16,15 @@ import { HomeAtlas } from '@/components/home/HomeAtlas';
 import { HomeFeaturedListings } from '@/components/home/HomeFeaturedListings';
 import { HomeCommunityBanner } from '@/components/home/HomeCommunityBanner';
 import { AppIcon, type FeatherIconName } from '@/components/AppIcon';
+import { FadeIn } from '@/components/ui/FadeIn';
+import { SoftPressable } from '@/components/ui/SoftPressable';
 import { useUser } from '@clerk/clerk-expo';
 import { useAuthApi } from '@/lib/useAuthApi';
 import { demoListingsPage, fetchWithMeta, mapListingsResponse, ALLOW_DEMO_FALLBACK } from '@/lib/api';
 import { getQueueCount } from '@/lib/offline';
 import { getLegacyUser } from '@/lib/legacySession';
 import { useLocale, useT } from '@/lib/locale';
+import { pressScale } from '@/lib/motion';
 import { theme, radii } from '@/lib/theme';
 import { fonts, space } from '@/lib/ui';
 
@@ -58,21 +59,11 @@ export default function HomeScreen() {
   const [search, setSearch] = useState('');
   const [listings, setListings] = useState<ListingSummary[]>([]);
 
-  const fade = useRef(new Animated.Value(0)).current;
-  const rise = useRef(new Animated.Value(14)).current;
-
   const avatarInitials = useMemo(() => initialsFrom(name), [name]);
   const firstName = useMemo(() => {
     const raw = name.split(/\s+/)[0] ?? name;
     return raw.length > 14 ? `${raw.slice(0, 13)}…` : raw;
   }, [name]);
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fade, { toValue: 1, duration: 520, useNativeDriver: true }),
-      Animated.timing(rise, { toValue: 0, duration: 520, useNativeDriver: true }),
-    ]).start();
-  }, [fade, rise]);
 
   useEffect(() => {
     syncUser()
@@ -136,22 +127,39 @@ export default function HomeScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <SafeAreaView edges={['top']}>
-          <Animated.View style={{ opacity: fade, transform: [{ translateY: rise }] }}>
+          <FadeIn>
             <View style={styles.topBar}>
               <View style={styles.liveRow}>
                 <View style={styles.liveDot} />
                 <Text style={styles.liveText}>{t('common.live')}</Text>
               </View>
               <View style={styles.headerActions}>
-                <Pressable style={styles.iconBtn} onPress={() => router.push('/notifications')} hitSlop={6}>
+                <SoftPressable
+                  style={styles.iconBtn}
+                  onPress={() => router.push('/notifications')}
+                  hitSlop={6}
+                  haptic="selection"
+                  scaleTo={pressScale.chip}
+                >
                   <AppIcon name="bell" size={18} color={theme.ink} />
-                </Pressable>
-                <Pressable style={styles.iconBtn} onPress={() => router.push('/messages')} hitSlop={6}>
+                </SoftPressable>
+                <SoftPressable
+                  style={styles.iconBtn}
+                  onPress={() => router.push('/messages')}
+                  hitSlop={6}
+                  haptic="selection"
+                  scaleTo={pressScale.chip}
+                >
                   <AppIcon name="message-circle" size={18} color={theme.ink} />
-                </Pressable>
-                <Pressable style={styles.avatar} onPress={() => router.push('/profile')}>
+                </SoftPressable>
+                <SoftPressable
+                  style={styles.avatar}
+                  onPress={() => router.push('/profile')}
+                  haptic="light"
+                  scaleTo={pressScale.chip}
+                >
                   <Text style={styles.avatarText}>{avatarInitials || 'ⵣ'}</Text>
-                </Pressable>
+                </SoftPressable>
               </View>
             </View>
 
@@ -177,50 +185,63 @@ export default function HomeScreen() {
                 <Text style={styles.offlineText}>{t('home.offlineQueue', { count: offlineCount })}</Text>
               </View>
             ) : null}
-          </Animated.View>
+          </FadeIn>
         </SafeAreaView>
 
         <View style={styles.body}>
-          <HomeAtlas
-            onDeptPress={(id) => router.push(`/atlas/${id}`)}
-            onSeeAll={() => router.push('/marketplace')}
-          />
+          <FadeIn delay={60}>
+            <HomeAtlas
+              onDeptPress={(id) => router.push(`/atlas/${id}`)}
+              onSeeAll={() => router.push('/marketplace')}
+            />
+          </FadeIn>
 
-          {/* Rail de cuenta — fuera del hero, sin pills */}
-          <View style={styles.rail}>
-            {HUB_RAIL.map((item) => (
-              <Pressable
-                key={item.href}
-                style={({ pressed }) => [styles.railItem, pressed && styles.railPressed]}
-                onPress={() => router.push(item.href as never)}
+          <FadeIn delay={110}>
+            <View style={styles.rail}>
+              {HUB_RAIL.map((item) => (
+                <SoftPressable
+                  key={item.href}
+                  style={styles.railItem}
+                  onPress={() => router.push(item.href as never)}
+                  haptic="selection"
+                  scaleTo={pressScale.chip}
+                >
+                  <View style={styles.railIcon}>
+                    <AppIcon name={item.icon} size={18} color={theme.dune} />
+                  </View>
+                  <Text style={styles.railLabel} numberOfLines={1}>
+                    {t(item.labelKey)}
+                  </Text>
+                </SoftPressable>
+              ))}
+            </View>
+          </FadeIn>
+
+          <FadeIn delay={160}>
+            <View style={styles.sectionRow}>
+              <SectionHeader eyebrow={t('home.recentEyebrow')} title={t('home.recent')} />
+              <SoftPressable
+                style={styles.seeAllBtn}
+                onPress={() => router.push('/marketplace')}
+                haptic="selection"
+                scaleTo={pressScale.chip}
               >
-                <View style={styles.railIcon}>
-                  <AppIcon name={item.icon} size={18} color={theme.dune} />
-                </View>
-                <Text style={styles.railLabel} numberOfLines={1}>
-                  {t(item.labelKey)}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
+                <Text style={styles.seeAll}>{t('home.seeAll')}</Text>
+                <AppIcon name="arrow-right" size={14} color={theme.dune} />
+              </SoftPressable>
+            </View>
+            <HomeFeaturedListings
+              listings={listings}
+              onPress={(id) => router.push(`/marketplace/${id}`)}
+              onSeeAll={() => router.push('/marketplace')}
+            />
+          </FadeIn>
 
-          <View style={styles.sectionRow}>
-            <SectionHeader eyebrow={t('home.recentEyebrow')} title={t('home.recent')} />
-            <Pressable style={styles.seeAllBtn} onPress={() => router.push('/marketplace')}>
-              <Text style={styles.seeAll}>{t('home.seeAll')}</Text>
-              <AppIcon name="arrow-right" size={14} color={theme.dune} />
-            </Pressable>
-          </View>
-          <HomeFeaturedListings
-            listings={listings}
-            onPress={(id) => router.push(`/marketplace/${id}`)}
-            onSeeAll={() => router.push('/marketplace')}
-          />
-
-          <View style={styles.spacer} />
-          <HomeCommunityBanner onCommunity={() => router.push('/community')} />
-
-          <Text style={styles.footer}>{t('home.footer')}</Text>
+          <FadeIn delay={220}>
+            <View style={styles.spacer} />
+            <HomeCommunityBanner onCommunity={() => router.push('/community')} />
+            <Text style={styles.footer}>{t('home.footer')}</Text>
+          </FadeIn>
         </View>
       </ScrollView>
     </View>
@@ -319,7 +340,6 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 10,
   },
-  railPressed: { opacity: 0.7 },
   railIcon: {
     width: 36,
     height: 36,

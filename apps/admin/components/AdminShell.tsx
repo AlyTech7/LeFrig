@@ -1,8 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { AdminHeader } from './AdminHeader';
-import { AdminSidebar } from './AdminSidebar';
+import { AdminTopNav } from './AdminTopNav';
 import { CommandPaletteProvider } from './pro/CommandPalette';
 
 const AUTH_PATHS = ['/sign-in', '/unauthorized'];
@@ -18,9 +17,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <CommandPaletteProvider>
       <div className="adm-shell">
-        <AdminSidebar />
         <div className="adm-main">
-          <AdminHeader />
+          <AdminTopNav />
           <main className="adm-content">{children}</main>
         </div>
       </div>

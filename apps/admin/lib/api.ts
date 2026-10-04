@@ -1,10 +1,15 @@
 import { readEnv } from './site-url';
 
 function resolveApiUrl(): string {
-  const fromEnv = readEnv('NEXT_PUBLIC_API_URL')?.trim();
-  if (fromEnv) return fromEnv;
+  // Prefer server-only runtime env (not inlined at build like NEXT_PUBLIC_*).
+  const fromServer = readEnv('API_URL') ?? readEnv('LEFRIG_API_URL');
+  if (fromServer) return fromServer.replace(/\/$/, '');
+
+  const fromPublic = readEnv('NEXT_PUBLIC_API_URL');
+  if (fromPublic) return fromPublic.replace(/\/$/, '');
+
   if (process.env.NODE_ENV === 'production') {
-    throw new Error('NEXT_PUBLIC_API_URL es obligatoria en producción');
+    throw new Error('API_URL o NEXT_PUBLIC_API_URL es obligatoria en producción');
   }
   return 'http://localhost:3001';
 }

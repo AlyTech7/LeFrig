@@ -31,10 +31,13 @@ const demoOverview: AdminOverview = {
 };
 
 export default async function AdminDashboardPage() {
-  const { data: overview, fromFallback } = await fetchWithMeta<AdminOverview>('/admin/overview', demoOverview);
+  const { data: overview, fromFallback, errorHint } = await fetchWithMeta<AdminOverview>(
+    '/admin/overview',
+    demoOverview,
+  );
   return (
     <>
-      <AdminApiBanner usingDemo={fromFallback} />
+      <AdminApiBanner usingDemo={fromFallback} errorHint={errorHint} />
       <AdminDashboard overview={overview} />
     </>
   );

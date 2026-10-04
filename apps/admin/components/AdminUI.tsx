@@ -85,9 +85,22 @@ export function CampFilter() {
 
 export function PageHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+        marginBottom: 28,
+        flexWrap: 'wrap',
+        gap: 16,
+        paddingBottom: 18,
+        borderBottom: '1px solid var(--adm-border)',
+      }}
+    >
       <div>
-        <h1 className="adm-page-title">{title}</h1>
+        <h1 className="adm-page-title" style={{ fontSize: 'clamp(1.8rem, 3vw, 2.6rem)' }}>
+          {title}
+        </h1>
         {subtitle ? <p className="adm-page-sub">{subtitle}</p> : null}
       </div>
       {action}

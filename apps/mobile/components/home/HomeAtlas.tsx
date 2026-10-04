@@ -1,8 +1,10 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { MARKETPLACE_DEPARTMENTS, ATLAS_ROOM_COUNT } from '@lefrig/shared';
 import { AppIcon } from '@/components/AppIcon';
 import { AtlasMosaic } from '@/components/AtlasMosaic';
+import { SoftPressable } from '@/components/ui/SoftPressable';
 import { useLocale, useT } from '@/lib/locale';
+import { pressScale } from '@/lib/motion';
 import { theme } from '@/lib/theme';
 import { fonts } from '@/lib/ui';
 
@@ -26,10 +28,15 @@ export function HomeAtlas({ onDeptPress, onSeeAll }: Props) {
         <AtlasMosaic departments={MARKETPLACE_DEPARTMENTS} onPressDept={onDeptPress} />
       </View>
 
-      <Pressable style={({ pressed }) => [styles.cta, pressed && styles.pressed]} onPress={onSeeAll}>
+      <SoftPressable
+        style={styles.cta}
+        onPress={onSeeAll}
+        haptic="selection"
+        scaleTo={pressScale.chip}
+      >
         <Text style={styles.ctaText}>{t('atlas.seeAllRooms', { count: roomCount })}</Text>
         <AppIcon name={dir === 'rtl' ? 'arrow-left' : 'arrow-right'} size={15} color={theme.dune} />
-      </Pressable>
+      </SoftPressable>
     </View>
   );
 }
@@ -60,5 +67,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: theme.dune,
   },
-  pressed: { opacity: 0.9 },
 });

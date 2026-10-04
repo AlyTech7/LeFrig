@@ -22,17 +22,29 @@ async function resolveBearerToken(): Promise<string | null> {
 
 export async function fetchApi<T>(path: string, init?: RequestInit): Promise<T> {
   const token = await resolveBearerToken();
+  if (!token) {
+    throw new Error('Sin sesión admin (token)');
+  }
 
-  const res = await fetch(`${API_URL}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...init?.headers,
-    },
-    cache: 'no-store',
-  });
-  if (!res.ok) throw new Error(`API ${res.status}`);
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        ...init?.headers,
+      },
+      cache: 'no-store',
+    });
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : 'network';
+    throw new Error(`Red/API inaccesible (${reason})`);
+  }
+
+  if (!res.ok) {
+    throw new Error(`API ${res.status}${token ? '' : ' sin token'}`);
+  }
   return res.json() as Promise<T>;
 }
 
@@ -45,14 +57,24 @@ export async function fetchWithFallback<T>(path: string, fallback: T, init?: Req
   }
 }
 
-export type FetchResult<T> = { data: T; fromFallback: boolean };
+export type FetchResult<T> = {
+  data: T;
+  fromFallback: boolean;
+  errorHint?: string;
+};
 
 export async function fetchWithMeta<T>(path: string, fallback: T, init?: RequestInit): Promise<FetchResult<T>> {
   try {
     const data = await fetchApi<T>(path, init);
     return { data, fromFallback: false };
-  } catch {
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Error desconocido';
+    console.error(`[admin] API falló ${API_URL}${path}:`, message);
     // Nunca tumbar el panel: mostrar datos demo + banner si la API falla.
-    return { data: fallback, fromFallback: true };
+    return {
+      data: fallback,
+      fromFallback: true,
+      errorHint: `${message} · ${API_URL}${path}`,
+    };
   }
 }
