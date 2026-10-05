@@ -48,7 +48,7 @@
     "@lefrig/config": "workspace:*",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
-    "@nestjs/testing": "^11.1.18",
+    "@nestjs/testing": "^12.1.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.0",
     "@types/helmet": "^4.0.0",
