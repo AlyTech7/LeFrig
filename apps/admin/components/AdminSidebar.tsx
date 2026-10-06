@@ -44,6 +44,7 @@ const navGroups: {
       { href: '/users', label: 'Usuarios', icon: 'users', badgeKey: null },
       { href: '/listings', label: 'Anuncios', icon: 'ads', badgeKey: 'pendingListings' },
       { href: '/shops', label: 'Tiendas', icon: 'shop', badgeKey: null },
+      { href: '/services', label: 'Servicios', icon: 'jobs', badgeKey: null },
       { href: '/orders', label: 'Pedidos', icon: 'orders', badgeKey: 'ordersCount' },
       { href: '/cash', label: 'Efectivo PIN', icon: 'cash', badgeKey: null },
       { href: '/transport', label: 'Transporte', icon: 'truck', badgeKey: 'transportCount' },

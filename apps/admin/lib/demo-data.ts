@@ -15,6 +15,7 @@ export const demoDashboard: DashboardMetrics = {
   listingsCount: 389,
   ordersCount: 156,
   shopsCount: 42,
+  servicesCount: 1,
   transportCount: 18,
   pendingReports: 7,
   openDisputes: 3,
@@ -41,6 +42,24 @@ export const demoNeedsAdmin = [
 export const demoJobsAdmin = [
   { id: 'j1', title: 'Técnico solar', jobType: 'offer', category: 'skilled', salary: 160000, currency: 'DURU', camp: 'Tindouf', poster: 'ONG Saharaui', isActive: true },
   { id: 'j2', title: 'Busco trabajo de albañil', jobType: 'seeking', category: 'daily', salary: null, currency: 'DURU', camp: 'El Aaiún', poster: 'Ahmed S.', isActive: true },
+];
+
+export const demoServicesAdmin = [
+  {
+    id: 'sv1',
+    title: 'Electricista a domicilio',
+    category: 'Electricista',
+    categorySlug: 'service-electrician',
+    provider: 'Mohamed nwaygm',
+    providerPhone: '0660486290',
+    providerEmail: null,
+    camps: 'Smara, Rabouni, Dakhla',
+    priceFrom: 5,
+    priceTo: 6,
+    currency: 'DURU',
+    isActive: true,
+    createdAt: '2026-10-04T09:34:00.962Z',
+  },
 ];
 
 export const demoListingsAdmin = [

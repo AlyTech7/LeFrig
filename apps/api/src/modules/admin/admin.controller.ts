@@ -124,6 +124,16 @@ export class AdminController {
     return this.adminService.toggleJobActive(id, isActive);
   }
 
+  @Get('services')
+  listServices(@Query() query: Record<string, string>) {
+    return this.adminService.listServices(query);
+  }
+
+  @Patch('services/:id/active')
+  toggleService(@Param('id') id: string, @Body('isActive') isActive: boolean) {
+    return this.adminService.toggleServiceActive(id, isActive);
+  }
+
   @Get('needs')
   listNeeds(@Query() query: Record<string, string>) {
     return this.adminService.listNeeds(query);

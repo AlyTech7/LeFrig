@@ -17,6 +17,7 @@ export class AdminService {
       listingsCount,
       ordersCount,
       shopsCount,
+      servicesCount,
       transportCount,
       pendingReports,
       openDisputes,
@@ -27,6 +28,7 @@ export class AdminService {
       this.prisma.listing.count({ where: { status: 'active' } }),
       this.prisma.order.count(),
       this.prisma.shop.count({ where: { isActive: true } }),
+      this.prisma.service.count({ where: { isActive: true } }),
       this.prisma.transportRequest.count({ where: { status: { in: ['requested', 'accepted'] } } }),
       this.prisma.report.count({ where: { status: 'pending' } }),
       this.prisma.dispute.count({ where: { status: { in: ['open', 'mediation'] } } }),
@@ -39,6 +41,7 @@ export class AdminService {
       listingsCount,
       ordersCount,
       shopsCount,
+      servicesCount,
       transportCount,
       pendingReports,
       openDisputes,
@@ -695,6 +698,67 @@ export class AdminService {
 
   toggleJobActive(id: string, isActive: boolean) {
     return this.prisma.job.update({ where: { id }, data: { isActive } });
+  }
+
+  async listServices(query: unknown) {
+    const { page, limit } = paginationSchema.parse(query);
+    const { skip, take } = skipTake(page, limit);
+    const q = query as Record<string, string>;
+
+    const where = {
+      ...(q.active === 'true' && { isActive: true }),
+      ...(q.active === 'false' && { isActive: false }),
+      ...(q.category && {
+        category: { slug: { contains: q.category, mode: 'insensitive' as const } },
+      }),
+      ...(q.q && {
+        OR: [
+          { title: { contains: q.q, mode: 'insensitive' as const } },
+          { description: { contains: q.q, mode: 'insensitive' as const } },
+          { provider: { displayName: { contains: q.q, mode: 'insensitive' as const } } },
+        ],
+      }),
+    };
+
+    const [data, total] = await Promise.all([
+      this.prisma.service.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          provider: { select: { displayName: true, phone: true, email: true } },
+          category: { select: { slug: true, nameEs: true, nameEn: true, nameAr: true } },
+          camps: { include: { camp: { select: { nameEs: true, slug: true } } } },
+        },
+      }),
+      this.prisma.service.count({ where }),
+    ]);
+
+    return paginate(
+      data.map((s) => ({
+        id: s.id,
+        title: s.title,
+        category: s.category.nameEs || s.category.nameEn || s.category.slug,
+        categorySlug: s.category.slug,
+        provider: s.provider.displayName,
+        providerPhone: s.provider.phone,
+        providerEmail: s.provider.email,
+        camps: s.camps.map((c) => c.camp.nameEs).join(', '),
+        priceFrom: s.priceFrom != null ? Number(s.priceFrom) : null,
+        priceTo: s.priceTo != null ? Number(s.priceTo) : null,
+        currency: s.currency,
+        isActive: s.isActive,
+        createdAt: s.createdAt.toISOString(),
+      })),
+      total,
+      page,
+      limit,
+    );
+  }
+
+  toggleServiceActive(id: string, isActive: boolean) {
+    return this.prisma.service.update({ where: { id }, data: { isActive } });
   }
 
   async listNeeds(query: unknown) {

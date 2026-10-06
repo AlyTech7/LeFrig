@@ -3,6 +3,7 @@ export interface DashboardMetrics {
   listingsCount: number;
   ordersCount: number;
   shopsCount: number;
+  servicesCount?: number;
   transportCount: number;
   pendingReports: number;
   openDisputes: number;
@@ -62,6 +63,22 @@ export interface AdminJobRow {
   currency: string;
   camp: string;
   poster: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface AdminServiceRow {
+  id: string;
+  title: string;
+  category: string;
+  categorySlug: string;
+  provider: string;
+  providerPhone?: string | null;
+  providerEmail?: string | null;
+  camps: string;
+  priceFrom: number | null;
+  priceTo: number | null;
+  currency: string;
   isActive: boolean;
   createdAt: string;
 }

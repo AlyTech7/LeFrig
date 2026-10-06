@@ -96,6 +96,12 @@ export function AdminDashboard({ overview }: { overview: AdminOverview }) {
           </div>
         </div>
         <div className="adm-card adm-panel adm-horizon__4">
+          <div className="adm-stat-tile__label">Servicios</div>
+          <div className="adm-stat-tile__value" style={{ fontSize: '2.2rem', marginTop: 10 }}>
+            {metrics.servicesCount ?? 0}
+          </div>
+        </div>
+        <div className="adm-card adm-panel adm-horizon__4">
           <div className="adm-stat-tile__label">Transporte</div>
           <div className="adm-stat-tile__value" style={{ fontSize: '2.2rem', marginTop: 10 }}>
             {metrics.transportCount}

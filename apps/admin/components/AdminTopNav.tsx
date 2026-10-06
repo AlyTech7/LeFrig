@@ -20,6 +20,7 @@ const links: {
   { href: '/listings', label: 'Anuncios', badgeKey: 'pendingListings' },
   { href: '/orders', label: 'Pedidos', badgeKey: 'ordersCount' },
   { href: '/shops', label: 'Tiendas', badgeKey: null },
+  { href: '/services', label: 'Servicios', badgeKey: null },
   { href: '/transport', label: 'Transporte', badgeKey: 'transportCount' },
   { href: '/cash', label: 'Efectivo', badgeKey: null },
   { href: '/jobs', label: 'Empleo', badgeKey: null },
