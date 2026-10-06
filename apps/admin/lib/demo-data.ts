@@ -3,6 +3,7 @@
   listingsCount: number;
   ordersCount: number;
   shopsCount: number;
+  servicesCount?: number;
   transportCount: number;
   pendingReports: number;
   openDisputes: number;
