@@ -57,7 +57,7 @@
     "react-native-worklets": "0.10.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.0",
+    "@babel/core": "^8.0.6",
     "@expo/ngrok": "^4.1.0",
     "@lefrig/config": "workspace:*",
     "@types/react": "~19.2.18",
